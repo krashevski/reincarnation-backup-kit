@@ -1,6 +1,6 @@
 # Shotcut - settings for quick editing and export
 
-[🇬🇧 English](README_SHOTCUT_EN.md) | [🇷🇺 Русский](README_SHOTCUT_RU.md)
+[🇬🇧 English](README_SHOTCUT_EN.md) | [🇷🇺 Русский](../RU/README_SHOTCUT_RU.md)
 
 **Author:** Vladislav Krashevsky
 **Support:** ChatGPT

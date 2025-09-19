@@ -1,6 +1,6 @@
 # 📦 backup-ubuntu-22.04.sh — system backup (Ubuntu 24.04)
 
-[🇬🇧 English](README.backup-ubuntu-24.04.sh_EN.md) | [🇷🇺 Русский](README.backup-ubuntu-24.04.sh_RU.md)
+[🇬🇧 English](README.backup-ubuntu-24.04.sh_EN.md) | [🇷🇺 Русский](../RU/README.backup-ubuntu-24.04.sh_RU.md)
 
 **Author:** Vladislav Krashevsky
 **Support:** ChatGPT

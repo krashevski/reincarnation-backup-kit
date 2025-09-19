@@ -1,6 +1,6 @@
 # README_DIFF.md — Using Backup Kit Diff Patches
 
-[🇬🇧 English](README_DIFF_EN.md) | [🇷🇺 Русский](README_DIFF_RU.md)
+[🇬🇧 English](README_DIFF_EN.md) | [🇷🇺 Русский](../RU/README_DIFF_RU.md)
 
 ## 1️⃣ Preparation
 

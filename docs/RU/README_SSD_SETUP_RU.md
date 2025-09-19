@@ -1,6 +1,6 @@
 # SSD + HDD разметка для Linux (оптимизировано под монтаж в Shotcut)
 
-[🇬🇧 English](README_SSD_SETUP_EN.md) | [🇷🇺 Русский](README_SSD_SETUP_RU.md)
+[🇬🇧 English](../EN/README_SSD_SETUP_EN.md) | [🇷🇺 Русский](README_SSD_SETUP_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT

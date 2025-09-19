@@ -1,6 +1,6 @@
 # SSD + HDD partitioning for Linux (optimized for editing in Shotcut)
 
-[🇬🇧 English](README_SSD_SETUP_EN.md) | [🇷🇺 Русский](README_SSD_SETUP_RU.md)
+[🇬🇧 English](README_SSD_SETUP_EN.md) | [🇷🇺 Русский](../RU/README_SSD_SETUP_RU.md)
 
 **Author:** Vladislav Krashevskiy
 **Support:** ChatGPT

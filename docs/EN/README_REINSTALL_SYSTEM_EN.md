@@ -1,6 +1,6 @@
 # README_REINSTALL_SYSTEM.md
 
-[🇬🇧 English](README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](README_REINSTALL_SYSTEM_RU.md)
+[🇬🇧 English](README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](../RU/README_REINSTALL_SYSTEM_RU.md)
 
 **Author:** Vladislav Krashevskiy
 **Support:** ChatGPT

@@ -1,6 +1,6 @@
 # README_DIFF.md — Использование diff-патчей Backup Kit
 
-[🇬🇧 English](README_DIFF_EN.md) | [🇷🇺 Русский](README_DIFF_RU.md)
+[🇬🇧 English](../EN/README_DIFF_EN.md) | [🇷🇺 Русский](README_DIFF_RU.md)
 
 ## 1️⃣ Подготовка
 

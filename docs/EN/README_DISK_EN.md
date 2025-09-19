@@ -1,6 +1,6 @@
 # Connecting a Second Drive in Linux
 
-[🇬🇧 English](README_DISK_EN.md) | [🇷🇺 Русский](README_DISK_RU.md)
+[🇬🇧 English](README_DISK_EN.md) | [🇷🇺 Русский](../RU/README_DISK_RU.md)
 
 **Author:** Vladislav Krashevsky
 **Support:** ChatGPT

@@ -1,6 +1,6 @@
 # Shotcut - настройки для быстрого редактирования и экспорта
 
-[🇬🇧 English](README_SHOTCUT_EN.md) | [🇷🇺 Русский](README_SHOTCUT_RU.md)
+[🇬🇧 English](../EN/README_SHOTCUT_EN.md) | [🇷🇺 Русский](README_SHOTCUT_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
