@@ -1,0 +1,36 @@
+diff --git a/backup-restore-userdata.sh b/backup-restore-userdata.sh
+--- a/backup-restore-userdata.sh
++++ b/backup-restore-userdata.sh
+
+# Применяем патч
+# patch -p1 < global-backupkit.diff
+
+@@
+-# старый вариант
++# новый вариант с user1/user2/user3 и screen
+
+diff --git a/restore-ubuntu-22.04.sh b/restore-ubuntu-22.04.sh
+--- a/restore-ubuntu-22.04.sh
++++ b/restore-ubuntu-22.04-v1.3.sh
+@@
+-# старый вариант
++# новый вариант с логами, RESTORE_PACKAGES, RESTORE_LOGS
+diff --git a/restore.sh b/restore.sh
+--- a/restore.sh
++++ b/restore.sh
+@@
+-# старый вариант
++# новый вариант: GUI wrapper с логированием и spinner
+diff --git a/install.sh b/install.sh
+--- a/install.sh
++++ b/install.sh
+@@
+-# старый вариант
++# новый вариант, с копированием скриптов, проверкой PATH и зависимостей
+diff --git a/hdd-setup-profiles.sh b/hdd-setup-profiles.sh
+--- a/hdd-setup-profiles.sh
++++ b/hdd-setup-profiles.sh
+@@
+-# старый вариант
++# новый вариант: создание пользователей и разделов на HDD, с fstab
+

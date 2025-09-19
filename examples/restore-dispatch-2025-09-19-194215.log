@@ -1,0 +1,19 @@
+[2025-09-19_19:42:15] Dispatcher started
+[0;34m[INFO][0m ======================================================
+[0;34m[INFO][0m Backup Kit — Запуск восстановления системы (Ubuntu 24.04)
+[0;34m[INFO][0m ======================================================
+[0;34m[INFO][0m Extracting archive...
+[0;32m[OK][0m Extracting archive completed.
+[0;34m[INFO][0m Restoring repositories and keyrings...
+[0;32m[OK][0m Restoring repositories and keyrings completed.
+[0;34m[INFO][0m Restoring packages...
+[0;32m[OK][0m Restoring packages completed.
+[0;34m[INFO][0m Restoring logs...
+[0;32m[OK][0m Restoring logs completed.
+[0;34m[INFO][0m ======================================================
+[0;32m[OK][0m Backup Kit — Восстановление системы успешно завершено!
+[0;34m[INFO][0m Log file: /mnt/backups/logs/restore-2025-09-19-194215.log
+[0;34m[INFO][0m ======================================================
+[0;34m[INFO][0m Очистка временных файлов восстановления...
+[0;32m[OK][0m Временные файлы удалены.
+[2025-09-19_19:42:52] Dispatcher finished successfully
