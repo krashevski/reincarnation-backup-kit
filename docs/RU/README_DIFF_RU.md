@@ -1,6 +1,6 @@
 # README_DIFF.md — Использование diff-патчей Backup Kit
 
-[🇬🇧 English](docs/EN/README_DIFF_EN.md) | [🇷🇺 Русский](docs/RU/README_DIFF_RU.md)
+[🇬🇧 English](README_DIFF_EN.md) | [🇷🇺 Русский](README_DIFF_RU.md)
 
 ## 1️⃣ Подготовка
 
@@ -45,6 +45,6 @@ patch -p1 -d backup-old < backup-update.patch
 
 ## См. также:
 
-- сохранение системной конфигурации Ubuntu 24.04: пакеты, репозитории, ключи см. файл [README.backup-ubuntu-24.04_RU.md](docs/RU/README.backup-ubuntu-24.04_RU.md)
+- сохранение системной конфигурации Ubuntu 24.04: пакеты, репозитории, ключи см. файл [README.backup-ubuntu-24.04_RU.md](README.backup-ubuntu-24.04_RU.md)
 
 

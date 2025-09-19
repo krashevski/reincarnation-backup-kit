@@ -1,6 +1,6 @@
 # SSD + HDD разметка для Linux (оптимизировано под монтаж в Shotcut)
 
-[🇬🇧 English](docs/EN/README_SSD_SETUP_EN.md) | [🇷🇺 Русский](docs/RU/README_SSD_SETUP_RU.md)
+[🇬🇧 English](README_SSD_SETUP_EN.md) | [🇷🇺 Русский](README_SSD_SETUP_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
@@ -68,7 +68,7 @@
 
 ## См. также
 
-- Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](docs/RU/README_REINSTALL_SYSTEM_RU.md)
-- Подключения второго диска в Linux см. файл [README_DISK_RU.md](docs/RU/README_DISK_RU.md)
-- Настройки Shotcut для быстрого редактирования и экспорта [README_SHOTCUT_RU.md](docs/RU/README_SHOTCUT_RU.md)
-- Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](docs/RU/README_ALL_RU.md)
+- Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
+- Подключения второго диска в Linux см. файл [README_DISK_RU.md](README_DISK_RU.md)
+- Настройки Shotcut для быстрого редактирования и экспорта [README_SHOTCUT_RU.md](README_SHOTCUT_RU.md)
+- Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](README_ALL_RU.md)

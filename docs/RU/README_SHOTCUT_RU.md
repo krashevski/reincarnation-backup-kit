@@ -1,6 +1,6 @@
 # Shotcut - настройки для быстрого редактирования и экспорта
 
-[🇬🇧 English](docs/EN/README_SHOTCUT_EN.md) | [🇷🇺 Русский](docs/RU/README_SHOTCUT_RU.md)
+[🇬🇧 English](README_SHOTCUT_EN.md) | [🇷🇺 Русский](README_SHOTCUT_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
@@ -57,4 +57,4 @@ flatpak run org.shotcut.Shotcut
 
 ## См. также
 
-- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](docs/RU/README_SSD_SETUP_RU.md)
+- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)

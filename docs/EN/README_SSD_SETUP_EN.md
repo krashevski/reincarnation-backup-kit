@@ -1,6 +1,6 @@
 # SSD + HDD partitioning for Linux (optimized for editing in Shotcut)
 
-[🇬🇧 English](docs/EN/README_SSD_SETUP_EN.md) | [🇷🇺 Русский](docs/RU/README_SSD_SETUP_RU.md)
+[🇬🇧 English](README_SSD_SETUP_EN.md) | [🇷🇺 Русский](README_SSD_SETUP_RU.md)
 
 **Author:** Vladislav Krashevskiy
 **Support:** ChatGPT
@@ -68,7 +68,7 @@ Post-installation check:
 
 ## See also
 
-- For operating system reinstallation, see [README_REINSTALL_SYSTEM_EN.md](docs/EN/README_REINSTALL_SYSTEM_EN.md)
-- For connecting a second disk in Linux, see [README_DISK_EN.md](docs/EN/README_DISK_EN.md)
-- Shotcut settings for quick editing and export [README_SHOTCUT_EN.md](docs/EN/README_SHOTCUT_EN.md)
-- For installation and usage of Backup Kit, see [README_ALL_EN.md](docs/EN/README_ALL_EN.md)
+- For operating system reinstallation, see [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
+- For connecting a second disk in Linux, see [README_DISK_EN.md](README_DISK_EN.md)
+- Shotcut settings for quick editing and export [README_SHOTCUT_EN.md](README_SHOTCUT_EN.md)
+- For installation and usage of Backup Kit, see [README_ALL_EN.md](README_ALL_EN.md)

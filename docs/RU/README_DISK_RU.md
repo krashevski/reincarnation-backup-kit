@@ -1,6 +1,6 @@
 # Подключение второго диска под Linux
 
-[🇬🇧 English](docs/EN/README_DISK_EN.md) | [🇷🇺 Русский](docs/RU/README_DISK_RU.md)
+[🇬🇧 English](README_DISK_EN.md) | [🇷🇺 Русский](README_DISK_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
@@ -97,8 +97,8 @@ BACKUP_DIR="/mnt/backups"
 
 ## См. также
 
-- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](docs/RU/README_SSD_SETUP_RU.md)
-- Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](docs/RU/README_REINSTALL_SYSTEM_RU.md)
-- Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](docs/RU/README_ALL_RU.md)
+- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
+- Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
+- Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](README_ALL_RU.md)
 
 

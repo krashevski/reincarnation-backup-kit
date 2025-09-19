@@ -1,6 +1,6 @@
 # Backup Kit — Ubuntu System Backup & Restore
 
-[🇬🇧 English](docs/EN/README_EN.md) | [🇷🇺 Русский](docs/RU/README_RU.md)
+[🇬🇧 English](README_EN.md) | [🇷🇺 Русский](README_RU.md)
 
 **Reincarnation Backup Kit** is a set of Bash scripts for backup and restore when reinstalling **Ubuntu** on an SSD, as well as for creating a multimedia environment (Shotcut, GIMP+G'MIC, Krita, Audacity).
 

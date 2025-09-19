@@ -1,6 +1,6 @@
 # Shotcut - settings for quick editing and export
 
-[🇬🇧 English](docs/EN/README_SHOTCUT_EN.md) | [🇷🇺 Русский](docs/RU/README_SHOTCUT_RU.md)
+[🇬🇧 English](README_SHOTCUT_EN.md) | [🇷🇺 Русский](README_SHOTCUT_RU.md)
 
 **Author:** Vladislav Krashevsky
 **Support:** ChatGPT
@@ -58,4 +58,4 @@ flatpak run org.shotcut.Shotcut
 
 ## See also
 
-- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](docs/EN/README_SSD_SETUP_EN.md)
+- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)

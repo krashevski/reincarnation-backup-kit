@@ -1,6 +1,6 @@
 # Reincarnation Backup Kit — Installation and Usage
 
-[🇬🇧 English](docs/EN/README_EN.md) | [🇷🇺 Русский](docs/RU/README_RU.md)
+[🇬🇧 English](README_EN.md) | [🇷🇺 Русский](README_RU.md)
 
 **Reincarnation Backup Kit** is a set of Bash scripts for backup and restore when reinstalling **Ubuntu** on an SSD, as well as for creating a multimedia environment (Shotcut, GIMP+G'MIC, Krita, Audacity).
 
@@ -36,9 +36,9 @@ Consists of two steps:
 5. Copies the `backup_kit` archive package to `/media/backups` if necessary.
 
 ### See also
-- Reinstalling the operating system, see [README_REINSTALL_SYSTEM_EN.md](docs/EN/README_REINSTALL_SYSTEM_EN.md)
-- SSD + HDD partitioning for Linux (for mounting in Shotcut), see [README_SSD_SETUP_EN.md](docs/EN/README_SSD_SETUP_EN.md)
-- Connecting a second disk in Linux, see [README_DISK_EN.md](docs/EN/README_DISK_EN.md)
+- Reinstalling the operating system, see [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
+- SSD + HDD partitioning for Linux (for mounting in Shotcut), see [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
+- Connecting a second disk in Linux, see [README_DISK_EN.md](README_DISK_EN.md)
 
 ### System backup
 - `backup-ubuntu-22.04.sh` — archiving Ubuntu 22.04 packages and configurations.
@@ -82,7 +82,7 @@ backup-ubuntu-24.04.sh
 ```
 
 See also:
-To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see the file [README.backup-ubuntu-24.04_EN.md](docs/EN/README.backup-ubuntu-24.04_EN.md)
+To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see the file [README.backup-ubuntu-24.04_EN.md](README.backup-ubuntu-24.04_EN.md)
 
 - To backup user data (can be done in the local TTY3 console [Cirl+Alt+F3]):
 ```bash
@@ -105,7 +105,7 @@ install-mediatools-flatpak.sh
 > ⚠️ Important: For fast operation of the Shotcut video editor when installing Ubuntu on an SSD, it is necessary to create a partition on the SSD for Shotcut proxy files.
 
 See also:
-SSD + HDD partitioning for Linux (for editing in Shotcut) see file [README_SSD_SETUP_EN.md](docs/EN/README_SSD_SETUP_EN.md)
+SSD + HDD partitioning for Linux (for editing in Shotcut) see file [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
 
 ```bash
 install-mediatools-apt.sh

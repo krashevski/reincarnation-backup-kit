@@ -1,6 +1,6 @@
 # Connecting a Second Drive in Linux
 
-[🇬🇧 English](docs/EN/README_DISK_EN.md) | [🇷🇺 Русский](docs/RU/README_DISK_RU.md)
+[🇬🇧 English](README_DISK_EN.md) | [🇷🇺 Русский](README_DISK_RU.md)
 
 **Author:** Vladislav Krashevsky
 **Support:** ChatGPT
@@ -96,6 +96,6 @@ BACKUP_DIR="/mnt/backups"
 
 ## See also
 
-- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](docs/EN/README_SSD_SETUP_EN.md)
-- Reinstalling the operating system see [README_REINSTALL_SYSTEM_EN.md](docs/EN/README_REINSTALL_SYSTEM_EN.md)
-- Backup Kit - Installation and Usage see [README_ALL_EN.md](docs/EN/README_ALL_EN.md)
+- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
+- Reinstalling the operating system see [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
+- Backup Kit - Installation and Usage see [README_ALL_EN.md](README_ALL_EN.md)

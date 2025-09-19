@@ -1,6 +1,6 @@
 # README_DIFF.md — Using Backup Kit Diff Patches
 
-[🇬🇧 English](docs/EN/README_DIFF_EN.md) | [🇷🇺 Русский](docs/RU/README_DIFF_RU.md)
+[🇬🇧 English](README_DIFF_EN.md) | [🇷🇺 Русский](README_DIFF_RU.md)
 
 ## 1️⃣ Preparation
 
@@ -45,4 +45,4 @@ After this, your old version will be updated to the new one.
 
 ## See also:
 
-- To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see the file [README.backup-ubuntu-24.04_EN.md](docs/EN/README.backup-ubuntu-24.04_EN.md)
+- To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see the file [README.backup-ubuntu-24.04_EN.md](README.backup-ubuntu-24.04_EN.md)

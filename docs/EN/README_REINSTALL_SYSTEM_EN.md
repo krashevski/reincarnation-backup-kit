@@ -1,6 +1,6 @@
 # README_REINSTALL_SYSTEM.md
 
-[🇬🇧 English](docs/EN/README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](docs/RU/README_REINSTALL_SYSTEM_RU.md)
+[🇬🇧 English](README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](README_REINSTALL_SYSTEM_RU.md)
 
 **Author:** Vladislav Krashevskiy
 **Support:** ChatGPT
@@ -75,6 +75,6 @@ install_mediatools_apt.sh
 
 ## See also
 
-- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](docs/EN/README_SSD_SETUP_EN.md)
-- Connecting a second drive in Linux see [README_DISK_EN.md](docs/EN/README_DISK_EN.md)
-- Reincarnation Backup Kit - Installation and Usage see [README_ALL_EN.md](docs/EN/README_ALL_EN.md)
+- SSD + HDD partitioning for Linux (for mounting in Shotcut) see [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
+- Connecting a second drive in Linux see [README_DISK_EN.md](README_DISK_EN.md)
+- Reincarnation Backup Kit - Installation and Usage see [README_ALL_EN.md](README_ALL_EN.md)

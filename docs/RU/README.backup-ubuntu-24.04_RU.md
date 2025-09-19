@@ -1,6 +1,6 @@
 # 📦 backup-ubuntu-24.04.sh — системный бэкап (Ubuntu 24.04)
 
-[🇬🇧 English](docs/EN/README.backup-ubuntu-24.04.sh_EN.md) | [🇷🇺 Русский](docs/RU/README.backup-ubuntu-24.04.sh_RU.md)
+[🇬🇧 English](README.backup-ubuntu-24.04.sh_EN.md) | [🇷🇺 Русский](README.backup-ubuntu-24.04.sh_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
@@ -63,4 +63,4 @@ logs/
 
 ## См. также
 
-- Reincarnation Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](docs/RU/README_ALL_RU.md)
+- Reincarnation Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](README_ALL_RU.md)

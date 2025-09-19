@@ -1,6 +1,6 @@
 # README_REINSTALL_SYSTEM.md
 
-[🇬🇧 English](docs/EN/README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](docs/RU/README_REINSTALL_SYSTEM_RU.md)
+[🇬🇧 English](README_REINSTALL_SYSTEM_EN.md) | [🇷🇺 Русский](README_REINSTALL_SYSTEM_RU.md)
 
 **Автор:** Владислав Крашевский
 **Поддержка:** ChatGPT
@@ -76,8 +76,8 @@ install_mediatools_apt.sh
 
 ## См. также
 
-- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](docs/RU/README_SSD_SETUP_RU.md)
-- Подключения второго диска в Linux см. файл [README_DISK_RU.md](docs/RU/README_DISK_RU.md)
-- Reincarnation Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](docs/RU/README_ALL_RU.md)
+- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
+- Подключения второго диска в Linux см. файл [README_DISK_RU.md](README_DISK_RU.md)
+- Reincarnation Backup Kit — Установка и Использование см. файл [README_ALL_RU.md](README_ALL_RU.md)
 
 
