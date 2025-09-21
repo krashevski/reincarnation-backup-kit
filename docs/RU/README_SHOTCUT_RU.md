@@ -51,7 +51,7 @@ flatpak run org.shotcut.Shotcut
 
 <div align="center">
 
-[![Инфографика Shotcut и пресеты](images/Backup_Kit_Shotcut_presets_ChatGPTChart)](images/Backup_Kit_Shotcut_presets_ChatGPTChart.png)
+[![Инфографика Shotcut и пресеты](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart)](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png)
 *Нажмите, чтобы увеличить*
 </div>
 
