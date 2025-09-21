@@ -52,8 +52,8 @@ flatpak run org.shotcut.Shotcut
 ## Productivity Infographics
 
 <div align="center">
-[![Shotcut Infographics and Presets](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png)](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png)
-*Click to enlarge*
+
+[![Shotcut Infographics and Presets](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png)](../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png) *Click to enlarge*
 </div>
 
 ## See also
