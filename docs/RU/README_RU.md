@@ -34,7 +34,7 @@ cd reincarnation-backup-kit
 
 # Пример резервного копирования
 ./backup-system.sh
-sudo ./backup-userdata.sh backup
+sudo ./backup-userdata.sh
 
 # Пример полное обновление архива (с удалением старого зеркала)
 sudo ./backup-userdata.sh --fresh

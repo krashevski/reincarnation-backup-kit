@@ -88,12 +88,12 @@ To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see
 
 - To backup user data (can be done in the local TTY3 console [Cirl+Alt+F3]):
 ```bash
-sudo ./backup-userdata.sh backup
+sudo ./backup-userdata.sh
 ```
 
 - Example of a complete archive update (with deletion of the old mirror)
 ```bash
-sudo ./backup-userdata.sh backup --fresh
+sudo ./backup-userdata.sh --fresh
 ```
 
 ### Format HDD and create users in SSD/HDD logic

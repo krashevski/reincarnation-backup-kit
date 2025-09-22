@@ -88,12 +88,12 @@ cd reincarnation-backup-kit
 
 - Для бэкапа пользовательских данных (может быть в локальной консоли TTY3 [Cirl+Alt+F3]):
 ```bash
-sudo ./backup-userdata.sh backup
+sudo ./backup-userdata.sh
 ```
 
 - Пример полное обновление архива (с удалением старого зеркала)
 ```bash
-sudo ./backup-userdata.sh backup --fresh
+sudo ./backup-userdata.sh --fresh
 ```
 
 ### Форматирование HDD и создание пользователей в логике SSD/HDD

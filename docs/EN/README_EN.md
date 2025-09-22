@@ -34,7 +34,7 @@ cd reincarnation-backup-kit
 
 # Backup example
 ./backup-system.sh
-udo ./backup-userdata.sh backup
+udo ./backup-userdata.sh
 
 # Example of a complete archive update (with deletion of the old mirror)
 sudo ./backup-userdata.sh --fresh
