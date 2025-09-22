@@ -130,7 +130,25 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; }
 # --- Wrapper for localized messages ---
 msg() {
     local key="$1"; shift
-    printf "${MSG[${LANG_CHOICE}.${key}]}" "$@"
+    local lookup="${LANG_CHOICE}.${key}"
+    local text="${MSG[$lookup]:-}"
+
+    # fallback на английский
+    if [[ -z "$text" ]]; then
+        lookup="en.${key}"
+        text="${MSG[$lookup]:-}"
+    fi
+
+    if [[ -n "$text" ]]; then
+       if (( $# )); then
+          # строка может содержать %s → подставляем аргументы
+          printf -- "$text\n" "$@"
+       else
+          printf "%s\n" "$text"
+       fi
+    else
+       printf "⚠ Unknown message key: %s\n" "$lookup" >&2
+    fi
 }
 
 # --- Root check ---
@@ -341,4 +359,3 @@ else
 fi
 
 exit $status
-
