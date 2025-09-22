@@ -42,56 +42,35 @@ Consists of two steps:
 
 > ⚠️ Important: You can only use the multimedia environment creation feature under Ubuntu, regardless of a backup.
 
-## 📂 Structure
+## 📂 Brief instructions
 
-backup_kit/
-├── scripts/
-│ ├── install.sh # installer
-│ ├── backup-ubuntu-22.04.sh # Ubuntu 22.04 backup
-│ ├── backup-ubuntu-24.04.sh # Ubuntu 24.04 backup
-│ ├── backup-debian-12.sh # Debian 12 backup
-│ ├── restore.sh # system restore
-│ ├── restore-ubuntu-22.04.sh # Ubuntu 22.04 restore
-│ ├── restore-ubuntu-24.04.sh # Ubuntu 24.04 restore
-│ ├── restore-debian-12.sh # Debian 12 restore
-│ ├── backup-restore-userdata.sh # user data backup/restore
-│ ├── safe-restore.sh # safe user data restore
-│ ├── hdd-setup-profiles.sh # format HDD and create users
-│ ├── install-mediatools-apt.sh # install media software via APT
-│ ├── install-mediatools-flatpak.sh # install media software via Flathub
-│ ├── install-nvidia-cuda.sh # installation of the NVIDIA and CUDA drivers
-│ ├── check-shotcut-gpu.sh # NVIDIA GPU check
-│ └── check-last-archive.sh # view available archives
-├── docs/
-│ ├── EN/
-│ │ ├── README_EN.md # main README (English)
-│ │ ├── README_ALL_EN.md # full documentation
-│ │ ├── README_DIFF_EN.md # differences between versions
-│ │ ├── README_DISK_EN.md # working with SSD/HDD
-│ │ ├── README_REINSTALL_SYSTEM_EN.md # reinstalling the system
-│ │ ├── README_SHOTCUT_EN.md # using Shotcut
-│ └── RU/
-│ ├── README_RU.md # main README (Russian)
-│ ├── README_ALL_RU.md # полная документация
-│ ├── README_DIFF_RU.md # отличия версий
-│ ├── README_DISK_RU.md # работа с SSD/HDD
-│ ├── README_REINSTALL_SYSTEM_RU.md # переустановка системы
-│ ├── README_SHOTCUT_RU.md # работа с Shotcut
-│ ├── README_SSD_SETUP_RU.md # настройка системы на SSD
-├── images/
-│ ├── Backup_Kit_SSD_partitions.png
-│ ├── Backup_Kit_HDD_userdata_partitions.png
-│ ├── Backup_Kit_Install.png
-│ ├── Backup_Kit_Directory.png
-│ ├── Backup_Kit_System_backup.png
-│ ├── Backup_Kit_Ranger_logs_read.png
-│ ├── Backup_Kit_Backup_userdata.png
-│ ├── Backup_Kit_Restore_userdata.png
-│ └── Backup_Kit_Shotcut_presets_ChatGPTChart.png
-├── patches/
-│ ├── hdd-setup-profiles.patch
-│ └── global-backupkit.diff
-└── LICENSE
+### 1. System Backup Scripts
+| Script | Description |
+|--------|---------|
+| `backup-system.sh` | Creates a backup of system files and settings. |
+| `restore-system.sh` | Restores system files from a backup. |
+
+### 2. User Data Scripts
+| Script | Description |
+|--------|---------|
+| `backup-userdata.sh` | Daily/manual backup of user data. |
+| `restore-userdata.sh` | Safely restores user data. |
+
+### 3. Utilities and Wrappers
+| Script | Description |
+|--------|----------|
+| `check-last-archive.sh` | Checks for the presence of the user's last archive. |
+| `install.sh` | Installs Backup Kit and creates directories and permissions. |
+| `add-cron-backup.sh` | Adds a cron job for daily backups with logging, location verification, and time selection. |
+| `clean-backup-logs.sh` | Deletes old backup logs from `backup-userdata.sh`. |
+
+### 4. Media and GPU Tools
+| Script | Description |
+|--------|---------|
+| `install-nvidia-cuda.sh` | Installs NVIDIA and CUDA drivers. |
+| `check-shotcut-gpu.sh` | Checks GPU availability for Shotcut. |
+| `install-mediatools-flatpak.sh` | Install media tools via Flatpak. |
+| `install-mediatools-apt.sh` | Install media tools via APT. |
 
 ## 🚀 Quick Start / Быстрый старт
 
@@ -99,11 +78,11 @@ backup_kit/
 git clone https://github.com/username/backup-kit.git
 cd backup-kit
 ./install.sh
-./backup-ubuntu-24.04.sh
-./restore
-./backup-restore-userdata.sh backup
-./backup-restore-userdata.sh backup --fresh
-./backup-restore-userdata.sh restore
+./backup-system.sh
+./restore-system.sh
+./backup-userdata.sh
+./backup-userdata.sh --fresh
+./restore-userdata.sh
 ```
 
 ## 📖 Documentation / Документация
