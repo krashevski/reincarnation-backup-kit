@@ -1,25 +1,8 @@
 #!/bin/bash
 # =============================================================
 # Reincarnation Backup Kit — MIT License
-# Copyright (c) 2025 Vladislav Krashevsky
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, subject to the following:
-# The above copyright notice and this permission notice shall
-# be included in all copies or substantial portions of the Software.
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# install.sh v3.0 — универсальный установщик Backup Kit (RU/EN)
 # =============================================================
-:<<'DOC'
-=============================================================
-install.sh v2.8 — универсальный установщик Backup Kit (RU/EN)
-Part of Backup Kit — minimal restore script with simple logging
-   Author: Vladislav Krashevsky with support from ChatGPT
-   License: MIT
-=============================================================
-DOC
 
 set -euo pipefail
 
@@ -36,15 +19,19 @@ warn()  { echo -e "${YELLOW}[WARNING]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 # === Определение языка ===
-if [[ "${LANG:-}" == ru* ]]; then
-    LANG_MODE="ru"
-else
-    LANG_MODE="en"
-fi
+determine_language() {
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        local user_lang
+        user_lang=$(sudo -u "$SUDO_USER" bash -c 'echo "${LANG:-}"')
+        [[ "$user_lang" == ru* ]] && echo "ru" || echo "en"
+        return
+    fi
+    [[ "${LANG:-}" == ru* ]] && echo "ru" || echo "en"
+}
+LANG_MODE=$(determine_language)
 
 # === Сообщения ===
 declare -A MSG
-
 if [[ $LANG_MODE == "ru" ]]; then
     MSG[installer]="=== Установщик Backup Kit ==="
     MSG[distro_found]="Обнаружен дистрибутив"
@@ -62,6 +49,8 @@ if [[ $LANG_MODE == "ru" ]]; then
     MSG[copy_missing]="Исходный каталог не найден, копирование пропущено"
     MSG[done]="Backup Kit установлен"
     MSG[path_update]="Обновите окружение (source ~/.bashrc или source ~/.profile) или перелогиньтесь"
+    MSG[can_run]="Вы можете запускать скрипты в"
+    MSG[scripts_list]="Скрипты, доступные для запуска пользователем:"
 else
     MSG[installer]="=== Backup Kit Installer ==="
     MSG[distro_found]="Detected distribution"
@@ -79,9 +68,11 @@ else
     MSG[copy_missing]="Source directory not found, skipping copy"
     MSG[done]="Backup Kit installed"
     MSG[path_update]="Update environment (source ~/.bashrc or source ~/.profile) or relogin"
+    MSG[can_run]="You can run scripts in"
+    MSG[scripts_list]="Scripts available for user execution:"
 fi
 
-# === Настройки ===
+# === Пути и переменные ===
 TARGET_DIR="$HOME/bin"
 BASHRC="$HOME/.bashrc"
 PROFILE="$HOME/.profile"
@@ -91,7 +82,7 @@ BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 
-# --- Проверка каталога BACKUP_DIR ---
+# --- Проверка BACKUP_DIR ---
 if [ -d "$BACKUP_DIR" ]; then
     owner=$(stat -c %U "$BACKUP_DIR")
     if [ "$owner" != "$RUN_USER" ]; then
@@ -104,15 +95,15 @@ else
     exit 1
 fi
 
-# --- Очистка workdir ---
+# --- Очистка WORKDIR ---
 if [[ -d "$WORKDIR" ]]; then
     info "${MSG[workdir_clean]} $WORKDIR"
     rm -rf "$WORKDIR"/*
     ok "${MSG[workdir_cleaned]}"
 fi
 
-# --- Символическая ссылка ---
-ln -sfn /mnt/backups "$HOME/backups"
+# --- Символическая ссылка /mnt/backups → ~/backups ---
+ln -sfn "$BACKUP_DIR" "$HOME/backups"
 
 echo "${MSG[installer]}"
 
@@ -126,10 +117,13 @@ mkdir -p "$TARGET_DIR"
 ok "$TARGET_DIR — ${MSG[dir_created]}"
 
 # --- Списки скриптов ---
-SCRIPTS_USERDATA=("backup-restore-userdata.sh" "safe-restore-userdata.sh" "check-last-archive.sh")
+SCRIPTS_SYSTEM=("backup-system.sh" "restore-system.sh")
+SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-userdata.sh" "check-last-archive.sh")
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
-declare -a SCRIPTS_OS=()
+SCRIPTS_OS=()
+HDD_SETUP=("hdd-setup-profiles.sh")
 
+# --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
     if [[ "$DISTRO_VER" == "22.04" ]]; then
         SCRIPTS_OS=("backup-ubuntu-22.04.sh" "restore-ubuntu-22.04.sh")
@@ -146,14 +140,11 @@ else
     exit 1
 fi
 
-SCRIPTS=("install.sh" "-" "${SCRIPTS_OS[@]}" "restore.sh" "-" "${SCRIPTS_USERDATA[@]}" "-" "hdd-setup-profiles.sh" "-" "${SCRIPTS_MEDIA[@]}")
+SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}")
 
 # --- Копирование скриптов ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for script in "${SCRIPTS[@]}"; do
-    if [[ "$script" == "-" ]]; then
-        continue
-    fi
     if [[ -f "$SCRIPT_DIR/$script" ]]; then
         cp "$SCRIPT_DIR/$script" "$TARGET_DIR/"
         chmod +x "$TARGET_DIR/$script"
@@ -166,19 +157,15 @@ done
 # --- PATH ---
 PATH_ADDED=false
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
-    if [ -w "$BASHRC" ]; then
-        if ! grep -Fxq "$EXPORT_LINE" "$BASHRC"; then
-            echo "$EXPORT_LINE" >> "$BASHRC"
-            PATH_ADDED=true
-            warn "${MSG[path_added_bashrc]}"
-        fi
+    if [ -w "$BASHRC" ] && ! grep -Fxq "$EXPORT_LINE" "$BASHRC"; then
+        echo "$EXPORT_LINE" >> "$BASHRC"
+        PATH_ADDED=true
+        warn "${MSG[path_added_bashrc]}"
     fi
-    if [ -w "$PROFILE" ]; then
-        if ! grep -Fxq "$EXPORT_LINE" "$PROFILE"; then
-            echo "$EXPORT_LINE" >> "$PROFILE"
-            PATH_ADDED=true
-            warn "${MSG[path_added_profile]}"
-        fi
+    if [ -w "$PROFILE" ] && ! grep -Fxq "$EXPORT_LINE" "$PROFILE"; then
+        echo "$EXPORT_LINE" >> "$PROFILE"
+        PATH_ADDED=true
+        warn "${MSG[path_added_profile]}"
     fi
 else
     ok "~/bin already in PATH"
@@ -188,8 +175,8 @@ fi
 mkdir -p "$WORKDIR" "$LOG_DIR"
 ok "Created: $WORKDIR, $LOG_DIR"
 
-# --- Зависимости ---
-REQUIRED_PKGS=("rsync" "tar" "gzip")
+# --- Проверка зависимостей ---
+REQUIRED_PKGS=("rsync" "tar" "gzip" "pv")
 for pkg in "${REQUIRED_PKGS[@]}"; do
     if ! command -v "$pkg" &> /dev/null; then
         error "'$pkg' ${MSG[deps_missing]}"
@@ -208,25 +195,18 @@ if [[ -d "$SRC_DIR" ]]; then
     else
         cp -r "$SRC_DIR" "$BACKUP_DIR/"
         ok "${MSG[copy_done]} → $DEST_DIR"
-        info "cd $DEST_DIR/scripts && ./restore.sh"
     fi
 else
     warn "${MSG[copy_missing]} ($SRC_DIR)"
 fi
 
-# --- Итог ---
-info "============================================================="
-ok "${MSG[done]}: $DISTRO_ID $DISTRO_VER"
-echo "Scripts installed in $TARGET_DIR:"
-for script in "${SCRIPTS[@]}"; do
-    if [[ "$script" != "-" ]]; then
-        echo "   $script"
-    fi
+# --- Итоговый вывод скриптов для запуска пользователем ---
+info "${MSG[scripts_list]}"
+for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}"; do
+    [[ "$script" == "backup-restore-userdata.sh" ]] && continue
+    echo "  - $script"
 done
-if [ "$PATH_ADDED" = true ]; then
-    warn "${MSG[path_update]}"
-fi
-info "============================================================="
 
-exit 0
+# --- Завершение ---
+ok "${MSG[done]}: $DISTRO_ID $DISTRO_VER"
 

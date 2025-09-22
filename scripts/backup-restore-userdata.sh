@@ -34,13 +34,35 @@ DOC
 
 set -euo pipefail
 
-# --- Language auto-detect ---
-if [[ -z "${LANG_CHOICE:-}" ]]; then
-    case "${LANG:-en}" in
-        ru* ) LANG_CHOICE="ru" ;;
-        *   ) LANG_CHOICE="en" ;;
-    esac
-fi
+# --- Выбор языка ---
+determine_language() {
+    # Сначала проверяем LANG_CHOICE
+    if [[ -n "${LANG_CHOICE:-}" ]]; then
+        echo "$LANG_CHOICE"
+        return
+    fi
+
+    # Если через sudo — смотрим LANG оригинального пользователя
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        local user_lang
+        user_lang=$(sudo -u "$SUDO_USER" bash -c 'echo "${LANG:-}"')
+        if [[ "$user_lang" == ru* ]]; then
+            echo "ru"
+        else
+            echo "en"
+        fi
+        return
+    fi
+
+    # Иначе берем LANG текущего пользователя
+    if [[ "${LANG:-}" == ru* ]]; then
+        echo "ru"
+    else
+        echo "en"
+    fi
+}
+
+LANG_CHOICE=$(determine_language)
 
 # --- Messages ---
 declare -A MSG
@@ -170,7 +192,20 @@ if [[ "${1:-}" != "backup" && "${1:-}" != "restore" ]]; then
     info "$(msg example_restore "$0")"
     exit 1
 fi
-OPERATION="$1"
+OPERATION=""
+FRESH_MODE=false
+for arg in "$@"; do
+    case $arg in
+        backup|restore) OPERATION="$arg" ;;
+        --fresh) FRESH_MODE=true ;;
+        *) warn "Unknown argument: $arg" ;;
+    esac
+done
+
+if [[ -z "$OPERATION" ]]; then
+    warn "$(msg usage "$0")"
+    exit 1
+fi
 
 warn "$(msg warn_time)"
 

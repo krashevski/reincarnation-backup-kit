@@ -14,7 +14,7 @@
 # =============================================================
 :<<'DOC'
 =============================================================
-restore.sh v1.16 — Universal Restore Dispatcher (Ubuntu/Debian)
+restore-sytem.sh v1.0 — Universal Restore Dispatcher (Ubuntu/Debian)
 Part of Backup Kit — minimal restore script with logging
 Author: Vladislav Krashevsky with support from ChatGPT
 =============================================================
@@ -159,4 +159,3 @@ info "$(say log_file)$RUN_LOG"
 info "============================================================="
 
 exit 0
-

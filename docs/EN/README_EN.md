@@ -33,29 +33,31 @@ cd reincarnation-backup-kit
 ./install.sh
 
 # Backup example
-./backup-ubuntu-24.04.sh
-./backup-restore-userdata.sh backup
+./backup-system.sh
+udo ./backup-userdata.sh backup
 
 # Example of a complete archive update (with deletion of the old mirror)
-sudo ./backup-restore-userdata.sh backup --fresh
+sudo ./backup-userdata.sh --fresh
 
 # Restore example
-./restore-ubuntu-24.04.sh
-./backup-restore-userdata.sh restore
+./restore-system.sh
+./bacsudo ./restore-userdata.sh
 ```
 
 ## 📜 Available Scripts
 
 - `install.sh` — universal installer for the Reincarnation Backup Kit.
+- `backup-system.sh` - backup system settings and packages (shell).
 - `backup-ubuntu-22.04.sh` — archiving Ubuntu 22.04 packages and configurations.
 - `backup-ubuntu-24.04.sh` — archiving Ubuntu 24.04 packages and configurations.
 - `backup-debian-12.sh` — archiving Debian 12 packages and configurations.
-- `restore.sh` — universal system restore script.
+- `restore-system.sh` — universal system restore (shell).
 - `restore-ubuntu-22.04.sh` — restore for Ubuntu 22.04.
 - `restore-ubuntu-24.04.sh` — restore for Ubuntu 24.04.
 - `restore-debian-12.sh` — restore for Debian 12.
 - `backup-restore-userdata.sh` — carefully backup or restore user data.
-- `safe-restore.sh` — safely initiates user data recovery, a wrapper for backup-restore-userdata.sh automates the restore readiness check.
+- `backup-userdata.sh` - backup user data (wrapper for backup-restore-userdata.sh).
+- `restore-userdata.sh` — secure data recovery (wrapper for backup-restore-userdata.sh).
 - `hdd-setup-profiles.sh` — format the selected hard drive (HDD) and create users.
 - `install-mediatools-apt.sh` —  installs multimedia software from APT.
 - `check-shotcut-gpu.sh` — automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.

@@ -41,19 +41,21 @@ Consists of two steps:
 - Connecting a second disk in Linux, see [README_DISK_EN.md](README_DISK_EN.md)
 
 ### System backup
+- `backup-system.sh` - creates a backup copy of system settings and packages.
 - `backup-ubuntu-22.04.sh` — archiving Ubuntu 22.04 packages and configurations.
 - `backup-ubuntu-24.04.sh` — archiving Ubuntu 24.04 packages and configurations.
 - `backup-debian-12.sh` — archiving Debian 12 packages and configurations.
 
 ### System Restore
-- `restore.sh` — a universal system restore script.
+- `restore-ыныеуь.sh` — a universal system restore script.
 - `restore-ubuntu-22.04.sh` — restore for Ubuntu 22.04.
 - `restore-ubuntu-24.04.sh` — restore for Ubuntu 24.04.
 - `restore-debian-12.sh` — restore for Debian 12.
 
 ### Working with User Data
 - `backup-restore-userdata.sh` — carefully backup or restore user data.
-- `safe-restore.sh` - safely initiates user data recovery, a wrapper for `backup-restore-userdata.sh` automates the restore readiness check.
+- `backup-userdata.sh` - creates a backup of user data, a wrapper for `backup-restore-userdata.sh`.
+- `restore-userdata.sh` - safely initiates user data recovery, a wrapper for `backup-restore-userdata.sh` automates readiness checks for recovery.
 
 ### Additional scripts
 - `hdd-setup-profiles.sh` - format the selected hard drive (HDD) and create users.
@@ -78,7 +80,7 @@ After installation, all necessary scripts are available from $HOME/bin/
 ### Backup
 - For a system backup, use one of the installed scripts, for example:
 ```bash
-backup-ubuntu-24.04.sh
+./backup-system.sh
 ```
 
 See also:
@@ -86,12 +88,12 @@ To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see
 
 - To backup user data (can be done in the local TTY3 console [Cirl+Alt+F3]):
 ```bash
-sudo /home/<username>/bin/backup-restore-userdata.sh backup
+sudo ./backup-userdata.sh backup
 ```
 
 - Example of a complete archive update (with deletion of the old mirror)
 ```bash
-sudo ./backup-restore-userdata.sh backup --fresh
+sudo ./backup-userdata.sh backup --fresh
 ```
 
 ### Format HDD and create users in SSD/HDD logic
@@ -114,12 +116,15 @@ install-mediatools-apt.sh
 ### Recovery
 Run the universal system recovery script:
 ```bash
-./restore.sh
+./restore-system.sh
 ```
 
 > [I] The script will automatically detect your system and call the appropriate restore script.
 
-After restoring the system, you can run the script to
+After restoring the system, you can run a script to safely restore user data (this can be done in the local TTY3 console [Cirl+Alt+F3] without a graphical shell):
+```bash
+sudo ./restore-userdata.sh
+```
 
 ## ⚖️ License
 
