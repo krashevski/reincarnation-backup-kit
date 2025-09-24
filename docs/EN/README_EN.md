@@ -62,8 +62,13 @@ sudo ./backup-userdata.sh --fresh
 - `install-mediatools-apt.sh` —  installs multimedia software from APT.
 - `check-shotcut-gpu.sh` — automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
 - `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
-- `install-mediatools-flatpak.sh` — checks NVIDIA GPU and CUDA, installs multimedia software from Flathub (Shotcut, GIMP+G'MIC, Krita, Audacity) and creates Shotcut presets.
+- `install-mediatools-flatpak.sh` — NVIDIA + CUDA check, media installation from Flathub, Shotcut presets.
 - `check-last-archive.sh` — views archives available to the user.
+- `add-cron-backup.sh` - adds a cron job for daily backups.
+- `clean-backup-logs.sh` - deletes old backup logs.
+- `cron-backup-userdata.sh` - archives user data to /mnt/backups/user_data/.
+- `clean-backup-logs.sh` - deletes old backup logs.
+- `remove-cron-backup.sh` - removes the backup cron job.
 
 ## ⚖️ License
 

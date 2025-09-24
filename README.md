@@ -62,7 +62,7 @@ Consists of two steps:
 | `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
 | `add-cron-backup.sh` | Adds a cron job for daily backups with logging, location verification, and time selection. |
-| `clean-backup-logs.sh` | Deletes old backup logs from `backup-userdata.sh`. |
+| `clean-backup-logs.sh` | Deletes old backup logs. |
 
 ### 4. Media and GPU Tools
 | Script | Description |
@@ -71,6 +71,14 @@ Consists of two steps:
 | `check-shotcut-gpu.sh` | Checks GPU availability for Shotcut. |
 | `install-mediatools-flatpak.sh` | Install media tools via Flatpak. |
 | `install-mediatools-apt.sh` | Install media tools via APT. |
+
+### 5. Automatic backup via cron
+| Script | Description |
+|--------|---------|
+| `add-cron-backup.sh` | Adds a cron job for daily backups. |
+| `cron-backup-userdata.sh` | Archives user data to /mnt/backups/user_data// |
+| `clean-backup-logs.sh` | Clears old logs. |
+| `remove-cron-backup.sh` | Removes the backup cron job. |
 
 ## 🚀 Quick Start / Быстрый старт
 

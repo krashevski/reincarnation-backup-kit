@@ -1,8 +1,24 @@
 #!/bin/bash
 # =============================================================
 # Reincarnation Backup Kit — MIT License
-# install.sh v3.0 — универсальный установщик Backup Kit (RU/EN)
-# =============================================================
+# Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# ============================================================= 
+:<<'DOC'
+=============================================================
+install.sh v3.0 — универсальный установщик Backup Kit (RU/EN)
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
+=============================================================
+DOC
 
 set -euo pipefail
 
@@ -121,6 +137,7 @@ SCRIPTS_SYSTEM=("backup-system.sh" "restore-system.sh")
 SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-userdata.sh" "check-last-archive.sh")
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
 SCRIPTS_OS=()
+SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
 HDD_SETUP=("hdd-setup-profiles.sh")
 
 # --- OS-specific ---
@@ -140,7 +157,7 @@ else
     exit 1
 fi
 
-SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}")
+SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}")
 
 # --- Копирование скриптов ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -202,8 +219,11 @@ fi
 
 # --- Итоговый вывод скриптов для запуска пользователем ---
 info "${MSG[scripts_list]}"
-for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}"; do
-    [[ "$script" == "backup-restore-userdata.sh" ]] && continue
+for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}"; do
+    # пропускаем служебные скрипты
+    if [[ "$script" == "backup-restore-userdata.sh" || "$script" == "cron-backup-userdata.sh" ]]; then
+        continue
+    fi
     echo "  - $script"
 done
 

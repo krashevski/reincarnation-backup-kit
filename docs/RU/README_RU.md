@@ -64,6 +64,10 @@ sudo ./restore-userdata.sh
 - `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
 - `install-mediatools-flatpak.sh` — проверка NVIDIA + CUDA, установка мультимедиа из Flathub, пресеты Shotcut.
 - `check-last-archive.sh` — просмотр доступных архивов.
+- `add-cron-backup.sh` - добавление задания cron для ежедневного резервного копирования.
+- `cron-backup-userdata.sh` - выполняет архивирование данных пользователя в /mnt/backups/user_data/.
+- `clean-backup-logs.sh` - удаление старые журналы резервного копирования. 
+- `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
 
 ## ⚖️ Лицензия
 

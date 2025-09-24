@@ -64,6 +64,10 @@ Consists of two steps:
 - `install-nvidia-cuda.sh` - installation of the NVIDIA and CUDA drivers.
 - `install-mediatools-apt.sh` - cleans unnecessary repositories and installs software from the APT repository.
 - `check-last-archive.sh` - views archives available to the user.
+- `add-cron-backup.sh` - Adds a cron job for daily backups with logging, location verification, and time selection.
+- `cron-backup-userdata.sh` - Archives user data to /mnt/backups/user_data/.
+- `clean-backup-logs.sh` - Clears old logs (by default, older than 30 days); called automatically when space is low.
+- `remove-cron-backup.sh` - Removes the backup cron job.
 
 ## Installation and Launch
 
@@ -125,6 +129,32 @@ After restoring the system, you can run a script to safely restore user data (th
 ```bash
 sudo ./restore-userdata.sh
 ```
+
+## Automatic backup via cron
+
+This package implements a set of four bash scripts that automate scheduled backups of user data.
+Usage examples:
+- Add a daily task at 10:30 AM
+```bash
+sudo ./add-cron-backup.sh 10:30
+```
+- Run backup manually
+```bash
+./cron-backup-userdata.sh $USER
+```
+
+- Clear old logs older than 14 days
+```bash
+./clean-backup-logs.sh 14
+```
+
+- Delete cron task
+```bash
+sudo ./remove-cron-backup.sh
+```
+
+See also
+- Backup Kit — Cron Backup Scripts, see [README_CRON_EN.md](README_CRON_EN.md)
 
 ## ⚖️ License
 

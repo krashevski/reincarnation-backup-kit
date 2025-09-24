@@ -1,17 +1,29 @@
 #!/bin/bash
 # =============================================================
 # Reincarnation Backup Kit — MIT License
-# Safe restore wrapper v2.0
+# Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
 :<<'DOC'
-restore-userdata.sh v2.0 — безопасное восстановление Backup Kit
--------------------------------------------------------------
-Особенности:
-- Корректно выводит локализованные сообщения
-- Гарантированно запускает безопасное восстановление (SAFE=1)
-- Проверяет оба каталога резервных копий отдельно
-- Логирование и прогресс совпадают с backup-restore-userdata.sh
 =============================================================
+restore-userdata.sh v2.0 — Backup Kit Safe Restore
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
+------------------------------------------------------------
+Features:
+- Correctly displays localized messages
+- Guaranteed to initiate a safe restore (SAFE=1)
+- Checks both backup directories separately
+- Logging and progress are the same as backup-restore-userdata.sh
+======================================================================
 DOC
 
 set -euo pipefail
