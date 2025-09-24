@@ -61,8 +61,7 @@ Consists of two steps:
 |--------|----------|
 | `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
-| `add-cron-backup.sh` | Adds a cron job for daily backups with logging, location verification, and time selection. |
-| `clean-backup-logs.sh` | Deletes old backup logs. |
+
 
 ### 4. Media and GPU Tools
 | Script | Description |
