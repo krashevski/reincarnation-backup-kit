@@ -1,6 +1,6 @@
 # 📦 Backup Kit — Cron Backup Scripts
 
-[🇬🇧 English](README_CRON_EN.md) | [🇷🇺 Русский](,,/RU/README_CRON_RU.md)
+[🇬🇧 English](README_CRON_EN.md) | [🇷🇺 Русский](../RU/README_CRON_RU.md)
 
 A set of 4 scripts for automatic backup of user data using cron.
 
