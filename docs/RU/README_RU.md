@@ -68,6 +68,7 @@ sudo ./restore-userdata.sh
 - `cron-backup-userdata.sh` - выполняет архивирование данных пользователя в /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - удаление старые журналы резервного копирования. 
 - `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
+- `show-system-mounts.sh` - Просмотр точек монтирования системы, символических ссылок и заданий cron.
 
 ## ⚖️ Лицензия
 
@@ -87,4 +88,5 @@ sudo ./restore-userdata.sh
 <img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> 
 <img src="../../images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="80%"/> </p> 
+<img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
+<img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 

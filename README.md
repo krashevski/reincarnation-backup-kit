@@ -61,7 +61,11 @@ Consists of two steps:
 |--------|----------|
 | `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
+<<<<<<< HEAD
 
+=======
+| `hdd-setup-profiles.sh` | Format the selected hard drive (HDD) and create users. |
+| `show-system-mounts.sh` | View system mount points, symbolic links, and cron jobs. |
 
 ### 4. Media and GPU Tools
 | Script | Description |
@@ -115,5 +119,6 @@ Support: ChatGPT and project documentation
 <img src="images/Backup_Kit_Backup_userdata.png" width="45%"/> 
 <img src="images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="80%"/> </p> 
+<img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
+<img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
 

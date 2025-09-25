@@ -69,6 +69,7 @@ sudo ./backup-userdata.sh --fresh
 - `cron-backup-userdata.sh` - archives user data to /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - deletes old backup logs.
 - `remove-cron-backup.sh` - removes the backup cron job.
+- `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
 
 ## ⚖️ License
 
@@ -88,6 +89,7 @@ Support: ChatGPT + project documentation
 <img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> 
 <img src="../../images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="80%"/> </p> 
+<img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
+<img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
 
 

@@ -68,6 +68,7 @@ Consists of two steps:
 - `cron-backup-userdata.sh` - Archives user data to /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - Clears old logs (by default, older than 30 days); called automatically when space is low.
 - `remove-cron-backup.sh` - Removes the backup cron job.
+- `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
 
 ## Installation and Launch
 
@@ -155,6 +156,15 @@ sudo ./remove-cron-backup.sh
 
 See also
 - Backup Kit — Cron Backup Scripts, see [README_CRON_EN.md](README_CRON_EN.md)
+
+## Information about the system and Backup Kit settings
+
+An informational script that displays useful information about the system and Backup Kit settings:
+- list of mount points with labels and UUIDs;
+- symbolic links in the current user's home directory;
+- list of cron jobs (via `sudo crontab -l`).
+```bash
+./show-system-mounts.sh
 
 ## ⚖️ License
 
