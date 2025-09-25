@@ -88,5 +88,5 @@ sudo ./restore-userdata.sh
 <img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> 
 <img src="../../images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
-<img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
+<img src="../../images/Backup_Kit_System_Mounts.png" width="45%"/>
+<img src="../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
