@@ -61,9 +61,6 @@ Consists of two steps:
 |--------|----------|
 | `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
-<<<<<<< HEAD
-
-=======
 | `hdd-setup-profiles.sh` | Format the selected hard drive (HDD) and create users. |
 | `show-system-mounts.sh` | View system mount points, symbolic links, and cron jobs. |
 
