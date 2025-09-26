@@ -80,6 +80,7 @@ sudo ./restore-userdata.sh
 - `clean-backup-logs.sh` - удаление старые журналы резервного копирования. 
 - `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
 - `show-system-mounts.sh` - Просмотр точек монтирования системы, символических ссылок и заданий cron.
+- `check-cuda-tools.sh` - проверка и управление CUDA Toolkit.
 - `menu.sh` - Текстовое меню для Reincarnation Backup Kit.
 
 ## ⚖️ Лицензия

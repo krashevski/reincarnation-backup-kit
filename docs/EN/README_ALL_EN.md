@@ -69,6 +69,7 @@ Consists of two steps:
 - `clean-backup-logs.sh` - Clears old logs (by default, older than 30 days); called automatically when space is low.
 - `remove-cron-backup.sh` - Removes the backup cron job.
 - `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
+- `check-cuda-tools.sh` - Checking and managing CUDA Toolkit.
 - `menu.sh` - Text menu for Reincarnation Backup Kit.
 
 ## Installation and Launch

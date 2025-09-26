@@ -80,7 +80,8 @@ sudo ./backup-userdata.sh --fresh
 - `cron-backup-userdata.sh` - archives user data to /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - deletes old backup logs.
 - `remove-cron-backup.sh` - removes the backup cron job.
-- `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
+- `show-system-mounts.sh` - view system mount points, symbolic links, and cron jobs.
+- `check-cuda-tools.sh` - checking and managing CUDA Toolkit.
 - `menu.sh` - Text menu for Reincarnation Backup Kit.
 
 ## ⚖️ License

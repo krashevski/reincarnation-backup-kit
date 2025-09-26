@@ -68,7 +68,8 @@
 - `cron-backup-userdata.sh` - выполняет архивирование данных пользователя в /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - очищает старые логи (по умолчанию старше 30 дней), вызывается автоматически при нехватке места.
 - `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
-- `show-system-mounts.sh` - Просмотр точек монтирования системы, символических ссылок и заданий cron.
+- `show-system-mounts.sh` - просмотр точек монтирования системы, символических ссылок и заданий cron.
+- `check-cuda-tools.sh` - проверка и управление CUDA Toolkit.
 - `menu.sh` - Текстовое меню для Reincarnation Backup Kit.
 
 ## Установка и запуск
