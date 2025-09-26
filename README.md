@@ -63,6 +63,7 @@ Consists of two steps:
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
 | `hdd-setup-profiles.sh` | Format the selected hard drive (HDD) and create users. |
 | `show-system-mounts.sh` | View system mount points, symbolic links, and cron jobs. |
+| `check-cuda-tools.sh` | Checking and managing CUDA Toolkit |
 | `menu.sh` | Text menu for Reincarnation Backup Kit |
 
 ### 4. Media and GPU Tools
