@@ -29,10 +29,11 @@ DOC
 set -euo pipefail
 
 # === Цвета ===
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-BLUE="\033[0;34m"
-NC="\033[0m"
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARNING]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 # === Сообщения ===
 declare -A MSG
@@ -83,14 +84,9 @@ say() {
     fi
 }
 
-info()  { echo -e "${BLUE}[INFO]${NC} $(say "$1" "$@")"; }
-ok()    { echo -e "${GREEN}[OK]${NC} $(say "$1" "$@")"; }
-error() { echo -e "${RED}[ERROR]${NC} $(say "$1" "$@")"; }
-
 # === Пути ===
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 RESTORE_SCRIPT="$SCRIPT_DIR/backup-restore-userdata.sh"
-
 BACKUP_DIR="/mnt/backups"
 BR_USERDATA="$BACKUP_DIR/br_workdir/user_data"
 BR_ARCHIVE="$BACKUP_DIR/br_workdir/tar_archive"

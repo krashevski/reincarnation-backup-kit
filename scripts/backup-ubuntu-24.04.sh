@@ -23,43 +23,18 @@ DOC
 
 set -euo pipefail
 
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
+fi
+
 # === Colors ===
 RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
 ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARNING]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# === Messages ===
-declare -A MSG_RU=(
-    [start]="Запуск резервного копирования системы (Ubuntu 24.04)"
-    [change_owner]="Меняю владельца каталога на"
-    [no_dir]="Каталог не существует, проверьте монтирование."
-    [clean_tmp]="Очистка временных файлов..."
-    [tmp_cleaned]="Временные файлы очищены."
-    [backup_pkgs]="Резервное копирование пакетов и репозиториев..."
-    [pkgs_done]="Системные пакеты сохранены."
-    [create_archive]="Создание архива"
-    [archive_exists]="Архив уже существует. Переименовываю в .old"
-    [archive_done]="Архив создан"
-    [archive_fail]="Ошибка при создании архива"
-    [done]="Резервное копирование завершено успешно!"
-)
-
-declare -A MSG_EN=(
-    [start]="Starting system backup (Ubuntu 24.04)"
-    [change_owner]="Changing owner of directory to"
-    [no_dir]="Directory does not exist, check mount point."
-    [clean_tmp]="Cleaning temporary files..."
-    [tmp_cleaned]="Temporary files cleaned."
-    [backup_pkgs]="Backing up system packages and repositories..."
-    [pkgs_done]="System packages saved."
-    [create_archive]="Creating archive"
-    [archive_exists]="Archive already exists. Renaming to .old"
-    [archive_done]="Archive created"
-    [archive_fail]="Archive creation failed"
-    [done]="System backup completed successfully!"
-)
 
 # === Language autodetect ===
 if [[ "${LANG:-}" =~ ^ru ]]; then
@@ -68,28 +43,70 @@ else
     declare -n MSG=MSG_EN
 fi
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
-fi
+# === Messages ===
+declare -A MSG_RU=(
+    [start]="Запуск резервного копирования системы (Ubuntu 24.04)"
+    [change_owner]="Меняю владельца каталога на"
+    [no_dir]="Каталог не существует, проверьте монтирование."
+    [clean_tmp]="Очистка временных файлов..."
+    [tmp_cleaned]="Временные файлы очищены."
+    [dir_missing]="Каталог \$BACKUP_DIR не найден. Смонтируйте диск!"
+    [backup_pkgs]="Резервное копирование пакетов и репозиториев..."
+    [pkgs_done]="Системные пакеты сохранены."
+    [create_archive]="Создание архива"
+    [archive_exists]="Архив уже существует. Переименовываю в .old"
+    [archive_done]="Архив создан"
+    [archive_fail]="Ошибка при создании архива"
+    [done]="Резервное копирование завершено успешно!"
+    [run_sudo]="Скрипт нужно запускать с правами root (sudo)"
+    [step_ok]="Шаг выполнен."
+    [step_fail]="Шаг завершился с ошибкой. Проверьте лог."
+)
+
+declare -A MSG_EN=(
+    [start]="Starting system backup (Ubuntu 24.04)"
+    [change_owner]="Changing owner of directory to"
+    [no_dir]="Directory does not exist, check mount point."
+    [clean_tmp]="Cleaning temporary files..."
+    [tmp_cleaned]="Temporary files cleaned."
+    [dir_missing]="Directory \$BACKUP_DIR not found. Please mount the disk!"
+    [backup_pkgs]="Backing up system packages and repositories..."
+    [pkgs_done]="System packages saved."
+    [create_archive]="Creating archive"
+    [archive_exists]="Archive already exists. Renaming to .old"
+    [archive_done]="Archive created"
+    [archive_fail]="Archive creation failed"
+    [done]="System backup completed successfully!"
+    [run_sudo]="The script must be run with root rights (sudo)"
+    [step_ok]="Step completed."
+    [step_fail]="Step completed with an error. Check the log."
+)
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "${MSG[run_sudo]}"
+        return 1
+    fi
+}
 
 # === Paths ===
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
-BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-
 mkdir -p "$WORKDIR" "$LOG_DIR"
+BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
 RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
 
 # === Ownership check ===
 if [ -d "$BACKUP_DIR" ]; then
+    real_user="${SUDO_USER:-$USER}"
     owner=$(stat -c %U "$BACKUP_DIR")
-    if [ "$owner" != "$USER" ]; then
-        info "${MSG[change_owner]} $USER:$USER"
-        sudo chown -R "$USER:$USER" "$BACKUP_DIR"
-        sudo chmod -R 755 "$BACKUP_DIR"
+
+    if [ "$owner" != "$real_user" ]; then
+        info "${MSG[change_owner]} $real_user:$real_user"
+        sudo chown -R "$real_user:$real_user" "$BACKUP_DIR"
+        sudo chmod -R u+rwX,go+rX "$BACKUP_DIR"
     fi
 else
     error "${MSG[no_dir]}"
@@ -171,9 +188,9 @@ run_step() {
     local name="$1"; local func="$2"
     info "$name..."
     if "$func" >>"$RUN_LOG" 2>&1; then
-        ok "$name completed."
+        ok "$name — ${MSG[step_ok]}"
     else
-        error "$name failed. Check $RUN_LOG"
+        error "$name — ${MSG[step_fail]}: $RUN_LOG"
         exit 1
     fi
 }
@@ -185,8 +202,11 @@ create_archive() {
 
     if [ -f "$BACKUP_NAME" ]; then
         warn "${MSG[archive_exists]}"
-        mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
+        sudo rm -f "${BACKUP_NAME}.old"
+        sudo mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
     fi
+    
+    require_root && { error "${MSG[run_sudo]}"; exit 1; }
 
     if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" | gzip > "$BACKUP_NAME" 2>>"$RUN_LOG"; then
         ok "${MSG[archive_done]}: $BACKUP_NAME"

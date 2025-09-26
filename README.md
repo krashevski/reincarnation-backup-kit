@@ -1,4 +1,4 @@
-# Backup Kit — Ubuntu System Backup & Restore Scripts
+# Reincarnation Backup Kit — Ubuntu System Backup & Restore Scripts
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Made with Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)
@@ -63,6 +63,7 @@ Consists of two steps:
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
 | `hdd-setup-profiles.sh` | Format the selected hard drive (HDD) and create users. |
 | `show-system-mounts.sh` | View system mount points, symbolic links, and cron jobs. |
+| `menu.sh` | Text menu for Reincarnation Backup Kit |
 
 ### 4. Media and GPU Tools
 | Script | Description |
@@ -79,6 +80,25 @@ Consists of two steps:
 | `cron-backup-userdata.sh` | Archives user data to /mnt/backups/user_data// |
 | `clean-backup-logs.sh` | Clears old logs. |
 | `remove-cron-backup.sh` | Removes the backup cron job. |
+
+## Reincarnation Backup Kit Text Menu
+
+After installation, you can use a simple text menu:
+```bash
+~/bin/menu.sh
+```
+
+The menu allows you to:
+- Run a system backup
+- Run a user data backup
+- Set up regular cron runs
+- Clear old logs
+- Manage the CUDA Toolkit (optional)
+
+> ⚠️ The menu will launch automatically after successful installation..
+
+> ⚠️ Some operations require root (sudo) privileges.
+Other options are accessible without privileges.
 
 ## 🚀 Quick Start / Быстрый старт
 
@@ -111,10 +131,10 @@ Support: ChatGPT and project documentation
 
 <p align="center"> 
 <img src="images/Backup_Kit_Install.png" width="45%"/> 
-<img src="images/Backup_Kit_System_backup.png" width="45%"/> </p> 
+<img src="images/Backup_Kit_Text_Menu.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="images/Backup_Kit_Backup_userdata.png" width="45%"/> 
-<img src="images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
+<img src="images/Backup_Kit_System_backup.png" width="45%"/>
+<img src="images/Backup_Kit_Backup_userdata.png" width="45%"/> </p>
 <p align="center"> 
 <img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
 <img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 

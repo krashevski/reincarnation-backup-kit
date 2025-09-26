@@ -67,6 +67,8 @@ if [[ $LANG_MODE == "ru" ]]; then
     MSG[path_update]="Обновите окружение (source ~/.bashrc или source ~/.profile) или перелогиньтесь"
     MSG[can_run]="Вы можете запускать скрипты в"
     MSG[scripts_list]="Скрипты, доступные для запуска пользователем:"
+    MSG[text_menu]="\nЗапускаем текстовое меню Reincarnation Backup Kit..."
+    MSG[menu_not]="\n[WARN] Скрипт menu.sh не найден или не исполняемый. Показываем стандартный вывод:"
 else
     MSG[installer]="=== Backup Kit Installer ==="
     MSG[distro_found]="Detected distribution"
@@ -86,6 +88,8 @@ else
     MSG[path_update]="Update environment (source ~/.bashrc or source ~/.profile) or relogin"
     MSG[can_run]="You can run scripts in"
     MSG[scripts_list]="Scripts available for user execution:"
+    MSG[text_menu]="\nLaunching the Reincarnation Backup Kit text menu..."
+    MSG[menu_not]="\n[WARN] Script menu.sh not found or not executable. Showing standard output:"
 fi
 
 # === Пути и переменные ===
@@ -138,7 +142,7 @@ SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-use
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
 SCRIPTS_OS=()
 SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
-HDD_SETUP=("hdd-setup-profiles.sh")
+HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -215,6 +219,30 @@ if [[ -d "$SRC_DIR" ]]; then
     fi
 else
     warn "${MSG[copy_missing]} ($SRC_DIR)"
+fi
+
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "Требуются права root!"
+        return 1
+    fi
+}
+
+# --- Проверка ошибок ---
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+if [[ ${ERROR_COUNT:-0} -eq 0 ]]; then
+    # Запуск текстового меню Reincarnation Backup Kit
+    if [[ -x "$REAL_HOME/bin/menu.sh" ]]; then
+        echo -e "${MSG[text_menu]}"
+        # Запуск меню от текущего пользователя
+        exec "$REAL_HOME/bin/menu.sh"
+    else
+        echo -e "${MSG[menu_not]}"
+    fi
 fi
 
 # --- Итоговый вывод скриптов для запуска пользователем ---

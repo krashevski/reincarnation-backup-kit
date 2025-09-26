@@ -34,6 +34,19 @@ DOC
 
 set -euo pipefail
 
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
+fi
+
+# --- Цвета ---
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
 # --- Язык сообщений ---
 declare -A MSG=(
     [en_start]="Backup Kit — Starting restore (Debian 12)"
@@ -61,23 +74,21 @@ declare -A MSG=(
 
     [en_done]="Backup Kit — Restore completed successfully!"
     [ru_done]="Backup Kit — Восстановление завершено успешно!"
+    
+    [en_run_sudo]="The script must be run with root rights (sudo)"
+    [ru_run_sudo]="Скрипт нужно запускать с правами root (sudo)"
 )
 
 L=${LANG_CHOICE:-ru}
 say() { echo "${MSG[${L}_$1]}"; }
 
-# --- Цвета ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
-fi
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "$(say run_sudo)"
+        return 1
+    fi
+}
 
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"

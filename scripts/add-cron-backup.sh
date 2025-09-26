@@ -70,12 +70,6 @@ msg() {
   esac
 }
 
-# --- Root check ---
-if [[ $EUID -ne 0 ]]; then
-    error "$(msg run_root)"
-    exit 1
-fi
-
 # --- Args ---
 if [[ $# -lt 1 ]]; then
     msg usage "$0" >&2

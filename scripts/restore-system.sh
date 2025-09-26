@@ -22,8 +22,31 @@ DOC
 
 set -euo pipefail
 
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
+fi
+
+# === Цвета ===
+RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
+# === Выбор языка ===
+L=${LANG_CHOICE:-ru}
+say() { 
+    local key="${L}_$1"
+    shift
+    printf "${MSG[$key]}" "$@"
+}
+
 # === Двуязычные сообщения ===
-declare -A MSG=(
+declare -A MSG=( 
+  [ru_help]="Если АРХИВ не указан, будут использоваться значения по умолчанию в зависимости от системы."
+  [en_help]="If ARCHIVE not specified, defaults will be used depending on system."
+  
   [ru_detect_system]="Определение системы: "
   [en_detect_system]="Detected system: "
 
@@ -47,6 +70,9 @@ declare -A MSG=(
 
   [ru_dispatcher_finished]="Dispatcher finished."
   [en_dispatcher_finished]="Dispatcher finished."
+  
+  [ru_create_simlink]="Создание символической ссылки"
+  [en_create_simlink]="Creating a symbolic link"
 
   [ru_restore_finished]="Восстановление завершено"
   [en_restore_finished]="Restore finished"
@@ -55,36 +81,22 @@ declare -A MSG=(
   [en_log_file]="Log file: "
 )
 
-# === Выбор языка ===
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}" "${2:-}"; }
-
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Usage: $0 [ARCHIVE]"
+    echo "$(help)"
+    exit 0
 fi
 
 # --- Настройки ---
-# безопасное задание BACKUP_DIR с дефолтом
-if [ -z "${BACKUP_DIR+x}" ]; then
-    BACKUP_DIR="/mnt/backups"
-fi
-
+BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
-mkdir -p "$LOG_DIR"
+mkdir -p "$BACKUP_DIR""$LOG_DIR"
 RUN_LOG="$LOG_DIR/restore-dispatch-$(date +%F-%H%M%S).log"
 
-cleanup() {
-    info "$(say dispatcher_finished)"
-}
-trap cleanup EXIT INT TERM
+# cleanup() {
+#    info "$(say dispatcher_finished)"
+# }
+# trap cleanup EXIT INT TERM
 
 # --- Проверки ---
 if [ ! -d "$BACKUP_DIR" ]; then
@@ -102,27 +114,32 @@ else
     exit 1
 fi
 
-info "$(say detect_system)$DISTRO $VERSION"
+info "$(say detect_system $DISTRO $VERSION)"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
 ARCHIVE="${1:-}"
 
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
 case "$DISTRO-$VERSION" in
     ubuntu-24.04)
-        SCRIPT="$HOME/bin/restore-ubuntu-24.04.sh"
+        SCRIPT="$REAL_HOME/bin/restore-ubuntu-24.04.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
         ;;
     ubuntu-22.04)
-        SCRIPT="$HOME/bin/restore-ubuntu-22.04.sh"
+        SCRIPT="$REAL_HOME/bin/restore-ubuntu-22.04.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-22.04.tar.gz}"
         ;;
     debian-12)
-        SCRIPT="$HOME/bin/restore-debian-12.sh"
+        SCRIPT="$REAL_HOME/bin/restore-debian-12.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-debian-12.tar.gz}"
         ;;
     *)
-        error "$(printf "$(say not_supported)" "$DISTRO" "$VERSION")"
+        error "$(say not_supported $DISTRO $VERSION)"
         exit 1
         ;;
 esac
@@ -132,14 +149,15 @@ if [ ! -x "$SCRIPT" ]; then
     error "$(printf "$(say not_found_script)" "$SCRIPT")"
     exit 1
 fi
+
 if [ ! -f "$ARCHIVE" ]; then
-    error "$(printf "$(say not_found_archive)" "$ARCHIVE")"
+    error "$(printf "(say not_found_archive)" "$ARCHIVE")"
     exit 1
 fi
 
 # --- Запуск ---
 info "============================================================="
-info "$(say running)$SCRIPT $ARCHIVE"
+info "$(say running $SCRIPT $ARCHIVE)"
 info "============================================================="
 
 {
@@ -148,14 +166,14 @@ info "============================================================="
     echo "[$(date +%F_%T)] Dispatcher finished successfully"
 } 2>&1 | tee -a "$RUN_LOG"
 
-info "Создание символической ссылки"
-mkdir -p /mnt/backups
-ln -sfn /mnt/backups "$HOME/backups"
+info "$(say create_simlink)"
+
+ln -sfn "$BACKUP_DIR" "$REAL_HOME/backups"
 ok "$(say link_created)"
 
 info "============================================================="
 ok "$(say restore_finished)"
-info "$(say log_file)$RUN_LOG"
+info "$(say log_file)" $RUN_LOG
 info "============================================================="
 
 exit 0

@@ -34,6 +34,19 @@ DOC
 
 set -euo pipefail
 
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
+fi
+
+# --- Colors ---
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
 # --- Выбор языка ---
 determine_language() {
     # Сначала проверяем LANG_CHOICE
@@ -142,12 +155,8 @@ MSG[ru.all_done]="Все операции %s завершены успешно."
 MSG[en.some_failed]="Some %s operations failed. See log: %s"
 MSG[ru.some_failed]="Некоторые операции %s не были выполнены. См. лог: %s"
 
-# --- Colors ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
+MSG[en.run_sudo]="Скрипт нужно запускать с правами root (sudo)"
+MSG[ru.run_sudo]="The script must be run with root rights (sudo)"
 
 # --- Wrapper for localized messages ---
 msg() {
@@ -173,11 +182,13 @@ msg() {
     fi
 }
 
-# --- Root check ---
-if [[ $EUID -ne 0 ]]; then
-    error "$(msg error_root)"
-    exit 1
-fi
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "$(say run_sudo)"
+        return 1
+    fi
+}
 
 # --- X-session warning ---
 if [[ -n "${DISPLAY:-}" && -z "${X_WARNING_SHOWN:-}" ]]; then

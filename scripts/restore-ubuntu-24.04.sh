@@ -35,6 +35,12 @@ DOC
 
 set -euo pipefail
 
+# --- Защита от рекурсии при systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="restore running" "$0" "$@"
+fi
+
 # --- Цвета ---
 RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
 ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
@@ -110,15 +116,22 @@ MSG[ru_START]="Backup Kit — Запуск восстановления сист
 MSG[en_DONE]="Backup Kit — System restore completed successfully!"
 MSG[ru_DONE]="Backup Kit — Восстановление системы успешно завершено!"
 
+MSG[en_run_sudo]="The script must be run with root rights (sudo)"
+MSG[ru_run_sudo]="Скрипт нужно запускать с правами root (sudo)"
+
 # --- Определение языка ---
 get_lang() {
-    if [[ "${LANG_CHOICE:-}" =~ ^(ru|en)$ ]]; then
+    if [[ -n "${LANG_CHOICE:-}" ]]; then
         echo "$LANG_CHOICE"
-    elif [[ "${LANG:-}" == ru* ]]; then
-        echo "ru"
-    else
-        echo "en"
+        return
     fi
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        local user_lang
+        user_lang=$(sudo -u "$SUDO_USER" bash -c 'echo "${LANG:-}"')
+        [[ "$user_lang" == ru* ]] && echo "ru" || echo "en"
+        return
+    fi
+    [[ "${LANG:-}" == ru* ]] && echo "ru" || echo "en"
 }
 L=$(get_lang)
 
@@ -127,21 +140,19 @@ say() {
     echo "${MSG[${L}_$key]}"
 }
 
-# --- Защита от рекурсии при systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="restore running" "$0" "$@"
-fi
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "$(say run_sudo)"
+        return 1
+    fi
+}
 
 # === Настройки ===
-# безопасное задание BACKUP_DIR с дефолтом
-if [ -z "${BACKUP_DIR+x}" ]; then
-    BACKUP_DIR="/mnt/backups"
-fi
+BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/restore_workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-
 mkdir -p "$WORKDIR" "$LOG_DIR"
 RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
 

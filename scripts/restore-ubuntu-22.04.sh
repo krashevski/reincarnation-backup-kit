@@ -30,6 +30,19 @@ DOC
 
 set -euo pipefail
 
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
+fi
+
+# --- Цвета ---
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
 # --- Язык сообщений ---
 declare -A MSG=(
     [en_start]="Backup Kit — Starting system restore (Ubuntu 22.04)"
@@ -65,13 +78,18 @@ declare -A MSG=(
 
     [en_restore_logs]="Restoring logs..."
     [ru_restore_logs]="Восстановление логов..."
+    
     [en_restore_logs_done]="Logs restored."
     [ru_restore_logs_done]="Логи восстановлены."
+    
     [en_restore_logs_skip]="Skipping logs restore"
     [ru_restore_logs_skip]="Пропуск восстановления логов"
 
     [en_done]="Backup Kit — System restore completed successfully!"
     [ru_done]="Backup Kit — Восстановление системы завершено успешно!"
+    
+    [en_run_sudo]="The script must be run with root rights (sudo)"
+    [ru_run_sudo]="Скрипт нужно запускать с правами root (sudo)"
 )
 
 # --- Выбор языка ---
@@ -79,25 +97,19 @@ L=${LANG_CHOICE:-ru}
 
 say() { echo "${MSG[${L}_$1]}"; }
 
-# --- Цвета ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
-fi
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "$(say run_sudo)"
+        return 1
+    fi
+}
 
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/restore_workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-22.04.tar.gz"
-
 mkdir -p "$WORKDIR" "$LOG_DIR"
 RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
 

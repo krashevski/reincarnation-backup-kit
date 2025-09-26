@@ -22,11 +22,10 @@
 
 set -euo pipefail
 
-# === Определение языка ===
-if [[ "${LANG:-}" == ru* ]]; then
-    LANG_MODE="ru"
-else
-    LANG_MODE="en"
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running system backup" "$0" "$@"
 fi
 
 # === Цвета ===
@@ -35,10 +34,18 @@ ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running system backup" "$0" "$@"
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "Root privileges required!"
+        return 1
+    fi
+}
+
+# === Определение языка ===
+if [[ "${LANG:-}" == ru* ]]; then
+    LANG_MODE="ru"
+else
+    LANG_MODE="en"
 fi
 
 # === Сообщения ===

@@ -69,6 +69,7 @@ Consists of two steps:
 - `clean-backup-logs.sh` - Clears old logs (by default, older than 30 days); called automatically when space is low.
 - `remove-cron-backup.sh` - Removes the backup cron job.
 - `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
+- `menu.sh` - Text menu for Reincarnation Backup Kit.
 
 ## Installation and Launch
 
@@ -81,6 +82,24 @@ cd reincarnation-backup-kit
 After installation, all necessary scripts are available from $HOME/bin/
 
 ## Usage
+
+### Reincarnation Backup Kit Text Menu
+
+After installation, you can use a simple text menu:
+```bash
+~/bin/menu.sh
+```
+
+The menu allows you to:
+- Run a system backup
+- Run a user data backup
+- Set up regular cron runs
+- Clear old logs
+- Manage the CUDA Toolkit (optional)
+
+> ⚠️ The menu will launch automatically after successful installation..
+> ⚠️ Some operations require root (sudo) privileges.
+Other options are accessible without privileges.
 
 ### Backup
 - For a system backup, use one of the installed scripts, for example:

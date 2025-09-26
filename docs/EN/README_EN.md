@@ -25,6 +25,17 @@ Consists of two steps:
 
 > ⚠️ Important: You can use the multimedia environment setup independently, without backup.
 
+## Reincarnation Backup Kit Text Menu
+
+After installation, you can use a simple text menu:
+```bash
+~/bin/menu.sh
+```
+
+> ⚠️ The menu will launch automatically after successful installation..
+> ⚠️ Some operations require root (sudo) privileges.
+Other options are accessible without privileges.
+
 ## 🚀 Quick Usage
 
 ```bash
@@ -70,6 +81,7 @@ sudo ./backup-userdata.sh --fresh
 - `clean-backup-logs.sh` - deletes old backup logs.
 - `remove-cron-backup.sh` - removes the backup cron job.
 - `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
+- `menu.sh` - Text menu for Reincarnation Backup Kit.
 
 ## ⚖️ License
 
@@ -84,10 +96,10 @@ Support: ChatGPT + project documentation
 
 <p align="center"> 
 <img src="../../images/Backup_Kit_Install.png" width="45%"/> 
-<img src="../../images/Backup_Kit_System_backup.png" width="45%"/> </p> 
+<img src="../../images/Backup_Kit_Text_Menu.png" width="45%"/> </p>  </p> 
 <p align="center"> 
-<img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> 
-<img src="../../images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
+<img src="../../images/Backup_Kit_System_backup.png" width="45%"/>
+<img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> </p> 
 <p align="center"> 
 <img src="../../images/Backup_Kit_System_Mounts.png" width="45%"/>
 <img src="../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 

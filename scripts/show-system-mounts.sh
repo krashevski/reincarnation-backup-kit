@@ -13,12 +13,14 @@ set -euo pipefail
 LANGUAGE="${LANGUAGE:-ru}"  # default Russian
 
 declare -A MSG_RU=(
+  [physical_disks]="===== Информация о физических дисках ====="
   [mounts_header]="===== Список точек монтирования ====="
   [symlinks_header]="===== Символические ссылки в %s ====="
   [crontab_header]="===== Строка в crontab ====="
 )
 
 declare -A MSG_EN=(
+  [physical_disks]="===== Information about physical disks ====="
   [mounts_header]="===== List of mount points ====="
   [symlinks_header]="===== Symbolic links in %s ====="
   [crontab_header]="===== Crontab entries ====="
@@ -33,6 +35,18 @@ msg() {
   esac
 }
 
+# --- Функция для информации о дисках ---
+show_disks_info() {
+    for dev in /sys/block/sd*; do
+        name=$(basename "$dev")
+        rota=$(cat "$dev/queue/rotational")
+        type=$([ "$rota" -eq 1 ] && echo "HDD" || echo "SSD")
+        size=$(lsblk -dn -o SIZE "/dev/$name")
+        model=$(cat "/sys/block/$name/device/model" 2>/dev/null || echo "Unknown")
+        echo "$name: $type, $size, $model"
+    done
+}
+
 # ----------------------------
 # Determine home of real user
 # ----------------------------
@@ -45,6 +59,11 @@ fi
 # ----------------------------
 # Output
 # ----------------------------
+
+echo
+msg physical_disks
+show_disks_info
+
 echo
 msg mounts_header
 lsblk -o NAME,PATH,LABEL,MOUNTPOINT,FSTYPE,UUID -e 7,11
@@ -60,4 +79,5 @@ if sudo crontab -l 2>/dev/null; then
 else
   echo "(empty)"
 fi
+echo
 

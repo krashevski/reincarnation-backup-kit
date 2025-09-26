@@ -44,9 +44,12 @@ declare -A MSG=(
 
   [ru_cuda_check]="Шаг 6: Проверка поддержки CUDA"
   [en_cuda_check]="Step 6: Checking CUDA support"
-
-  [ru_cuda_install]="CUDA toolkit не найден, устанавливаем..."
-  [en_cuda_install]="CUDA toolkit not found, installing..."
+  
+  [ru_cuda_manage]="Для управления CUDA Toolkit используйте опциональный скрипт:"
+  [en_cuda_manage]="To manage the CUDA Toolkit, use the optional script:"
+  
+  [ru_cuda_install]="С его помощью можно установить или удалить CUDA Toolkit в любое время."
+  [en_cuda_install]="This allows you to install or uninstall the CUDA Toolkit at any time."
 
   [ru_cuda_version]="Шаг 7: Проверка версии CUDA"
   [en_cuda_version]="Step 7: Checking CUDA version"
@@ -97,13 +100,10 @@ sudo modprobe nvidia
 info "$(say gpu_info)"
 nvidia-smi
 
-info "$(say cuda_check)"
-if ! command -v nvcc &>/dev/null; then
-    info "$(say cuda_install)"
-    sudo apt install -y nvidia-cuda-toolkit
-else
-    ok "CUDA toolkit found"
-fi
+info "$(say cuda_manage)"
+echo "    check-cuda-tools.sh"
+info "$(say cuda_install)"
+
 
 info "$(say cuda_version)"
 nvcc --version || warn "$(say cuda_warn)"

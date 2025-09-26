@@ -37,30 +37,10 @@ DOC
 
 set -euo pipefail
 
-# ===================== Localization =====================
-LANG_CHOICE="${LANG_CHOICE:-en}"
-declare -A MSG
-
-if [[ "$LANG_CHOICE" == "ru" ]]; then
-    MSG[START]="Backup Kit — запуск бэкапа (Debian 12)"
-    MSG[END_OK]="Backup Kit — бэкап успешно завершён!"
-    MSG[CLEAN]="Временные файлы очищены."
-    MSG[INTERRUPT]="Бэкап прерван. Очистка временных файлов..."
-    MSG[PKG]="Резервное копирование пакетов и репозиториев..."
-    MSG[PKG_OK]="system_packages сохранён."
-    MSG[ARCHIVE]="Создание архива"
-    MSG[ARCHIVE_OK]="Архив создан"
-    MSG[ARCHIVE_FAIL]="Ошибка при создании архива"
-else
-    MSG[START]="Backup Kit — Starting backup (Debian 12)"
-    MSG[END_OK]="Backup Kit — Backup completed successfully!"
-    MSG[CLEAN]="Temporary files cleaned."
-    MSG[INTERRUPT]="Backup interrupted. Cleaning temporary files..."
-    MSG[PKG]="Backing up installed packages and repositories..."
-    MSG[PKG_OK]="system_packages saved."
-    MSG[ARCHIVE]="Creating archive"
-    MSG[ARCHIVE_OK]="Archive created"
-    MSG[ARCHIVE_FAIL]="Archive creation failed"
+# --- systemd-inhibit (sleep protection) ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup running" "$0" "$@"
 fi
 
 # ===================== Colors =====================
@@ -70,20 +50,72 @@ info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
-# --- systemd-inhibit (sleep protection) ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup running" "$0" "$@"
+# ===================== Localization =====================
+LANG_CHOICE="${LANG_CHOICE:-en}"
+declare -A MSG
+
+if [[ "$LANG_CHOICE" == "ru" ]]; then
+    MSG[START]="Backup Kit — запуск бэкапа (Debian 12)"
+    MSG[END_OK]="Backup Kit — бэкап успешно завершён!"
+    MSG[CHANGE_OWNER]="Меняю владельца каталога на"
+    MSG[NO_DIR]="Каталог не существует, проверьте монтирование."
+    MSG[CLEAN]="Временные файлы очищены."
+    MSG[INTERRUPT]="Бэкап прерван. Очистка временных файлов..."
+    MSG[PKG]="Резервное копирование пакетов и репозиториев..."
+    MSG[PKG_OK]="system_packages сохранён."
+    MSG[ARCHIVE]="Создание архива"
+    MSG[ARCHIVE_OK]="Архив создан"
+    MSG[ARCHIVE_FAIL]="Ошибка при создании архива"
+    MSG[run_sudo]="Скрипт нужно запускать с правами root (sudo)"
+    MSG[step_ok]="Шаг выполнен."
+    MSG[step_fail]="Шаг завершился с ошибкой. Проверьте лог."
+else
+    MSG[START]="Backup Kit — Starting backup (Debian 12)"
+    MSG[END_OK]="Backup Kit — Backup completed successfully!"
+    MSG[CHANGE_OWNER]="Changing directory owner to"
+    MSG[NO_DIR]="Directory does not exist, check mounting."
+    MSG[CLEAN]="Temporary files cleaned."
+    MSG[INTERRUPT]="Backup interrupted. Cleaning temporary files..."
+    MSG[PKG]="Backing up installed packages and repositories..."
+    MSG[PKG_OK]="system_packages saved."
+    MSG[ARCHIVE]="Creating archive"
+    MSG[ARCHIVE_OK]="Archive created"
+    MSG[ARCHIVE_FAIL]="Archive creation failed"
+    MSG[run_sudo]="The script must be run with root rights (sudo)"
+    MSG[step_ok]="Step completed."
+    MSG[step_fail]="Step completed with an error. Check the log."
 fi
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "${MSG[run_sudo]}"
+        return 1
+    fi
+}
 
 # === Paths ===
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
-BACKUP_NAME="$BACKUP_DIR/backup-debian-12.tar.gz"
-
 mkdir -p "$WORKDIR" "$LOG_DIR"
+BACKUP_NAME="$BACKUP_DIR/backup-debian-12.tar.gz"
 RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
+
+# === Ownership check ===
+if [ -d "$BACKUP_DIR" ]; then
+    real_user="${SUDO_USER:-$USER}"
+    owner=$(stat -c %U "$BACKUP_DIR")
+
+    if [ "$owner" != "$real_user" ]; then
+        info "${MSG[CHANGE_OWNER]} $real_user:$real_user"
+        sudo chown -R "$real_user:$real_user" "$BACKUP_DIR"
+        sudo chmod -R u+rwX,go+rX "$BACKUP_DIR"
+    fi
+else
+    error "${MSG[NO_DIR]}"
+    exit 1
+fi
 
 # Cleanup
 cleanup() {
@@ -100,6 +132,7 @@ backup_packages() {
 
     dpkg --get-selections > "$PKG_DIR/installed-packages.list"
     apt-mark showmanual > "$PKG_DIR/manual-packages.list"
+    
     ls /etc/apt/sources.list.d/ > "$PKG_DIR/custom-repos.list" || true
     cp /etc/apt/sources.list "$PKG_DIR/sources.list"
     mkdir -p "$PKG_DIR/sources.list.d"
@@ -141,10 +174,10 @@ run_step() {
     local func="$2"
     info "$name..."
     if "$func" >>"$RUN_LOG" 2>&1; then
-        ok "$name completed."
+        ok "$name — ${MSG[step_ok]}"
         echo "[$(date +%F_%T)] $name completed" >>"$RUN_LOG"
     else
-        error "$name failed. Check $RUN_LOG"
+        error "$name — ${MSG[step_fail]}: $RUN_LOG"
         echo "[$(date +%F_%T)] $name failed" >>"$RUN_LOG"
         exit 1
     fi
@@ -156,6 +189,9 @@ create_archive() {
     if [ -f "$BACKUP_NAME" ]; then
         warn "$BACKUP_NAME already exists. Overwriting."
     fi
+    
+    require_root &&  { error "Root required for backup"; exit 1; }
+    
     if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" -n -w 80 | gzip > "$BACKUP_NAME"; then
         ok "${MSG[ARCHIVE_OK]}: $BACKUP_NAME"
         echo "[$(date +%F_%T)] Archive created" >>"$RUN_LOG"

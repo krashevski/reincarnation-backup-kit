@@ -25,6 +25,17 @@
 
 > ⚠️ Важно: Вы можете использовать настройку мультимедийной среды независимо, без резервной копии.
 
+## Текстовое меню Reincarnation Backup Kit
+
+После установки вы можете использовать простое текстовое меню:
+```bash
+~/bin/menu.sh
+```
+
+> ⚠️ Меню запустится автоматически после успешной установки.
+> ⚠️ Для некоторых операций требуются права root (sudo).
+
+
 ## 🚀 Быстрое использование
 
 ```bash
@@ -69,6 +80,7 @@ sudo ./restore-userdata.sh
 - `clean-backup-logs.sh` - удаление старые журналы резервного копирования. 
 - `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
 - `show-system-mounts.sh` - Просмотр точек монтирования системы, символических ссылок и заданий cron.
+- `menu.sh` - Текстовое меню для Reincarnation Backup Kit.
 
 ## ⚖️ Лицензия
 
@@ -83,10 +95,10 @@ sudo ./restore-userdata.sh
 
 <p align="center"> 
 <img src="../../images/Backup_Kit_Install.png" width="45%"/> 
-<img src="../../images/Backup_Kit_System_backup.png" width="45%"/> </p> 
+<img src="../../images/Backup_Kit_Text_Menu.png" width="45%"/> </p>  </p> 
 <p align="center"> 
-<img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> 
-<img src="../../images/Backup_Kit_Restore_userdata.png" width="45%"/> </p> 
+<img src="../../images/Backup_Kit_System_backup.png" width="45%"/>
+<img src="../../images/Backup_Kit_Backup_userdata.png" width="45%"/> </p> 
 <p align="center"> 
 <img src="../../images/Backup_Kit_System_Mounts.png" width="45%"/>
 <img src="../../images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
