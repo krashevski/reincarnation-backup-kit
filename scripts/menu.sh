@@ -1,93 +1,27 @@
 #!/bin/bash
 # =============================================================
+# Reincarnation Backup Kit — MIT License
+# Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# =============================================================
+# menu.sh
 # Reincarnation Backup Kit — Text Menu Interface (draft)
-# MIT License — Copyright (c) 2025 Vladislav Krashevsky
+# MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 # =============================================================
 
 set -euo pipefail
 
-# --- Цвета ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# === Язык ===
-LANG_CHOICE="${LANG_CHOICE:-ru}"  # можно менять извне
-declare -A MSG_RU MSG_EN
-MSG_RU=(
-    [main_menu]="Главное меню"
-    [backup]="Резервное копирование"
-    [restore]="Восстановление"
-    [logs]="Просмотр логов"
-    [exit]="Выход"
-    [incorrect_choice]="Неверный выбор, попробуйте снова"
-    [run_sudo]="Скрипт нужно запускать с правами root (sudo)"
-    [no_logs]="Логи не найдены."
-    [install_ranger]="Ranger не найден, установка..."
-    [failed_ranger]="Не удалось установить Ranger, возвращаемся к ls"
-    [sel_opt]=" Выберите вариант: "
-    [invalid_choice]="Неверный выбор, попробуйте еще раз."
-    [back_main]=" 0) Вернуться в главное меню"
-    [enter_time]="Введите время (ЧЧ:ММ): "
-    [enter_user]="Введите имя пользователя: "
-    [cron_installed]="Cron backup установлен."
-    [empty_entered]="Введены пустые параметры!"
-    [press_continue]="Нажмите Enter для продолжения..."
-    [press_return]="Нажмите Enter, чтобы вернуться..."
-    [list_logs]=" Вы увидите список log-файлов"
-    [in_ranger]=" в консольном браузере ranger."
-    [sel_file]=" - Выберите файл и нажмите Enter для просмотра файла."
-    [exit_file]=" - Нажмите CTRL+X для выхода из файла."
-    [exit_ranger]=" - Нажмите q для выхода из ranger."
-    [run_return]=" Нажмите Enter для запуска ranger... или введите q для возврата: "
-    [return_menu]="Возврат в меню..."
-    [lang_not]="Выбор языка пока не реализован"
-    [backupdir_not]="Настройка каталогов бэкапов пока не реализована"
-    [checkcuda_not]="Скрипт check-cuda-tools.sh не найден или не исполняемый."
-    [adding_cron]="Добавление cron-задачи: %s для %s"
-)
-MSG_EN=(
-    [main_menu]="Main Menu"
-    [backup]="Backup"
-    [restore]="Restore"
-    [logs]="View Logs"
-    [exit]="Exit"
-    [incorrect_choice]="Incorrect choice, please try again"
-    [run_sudo]="The script must be run with root rights (sudo)"
-    [no_logs]="No logs found."
-    [install_ranger]="Ranger not found, installing..."
-    [failed_ranger]="Failed to install ranger, falling back to ls"
-    [sel_opt]=" Select an option: "
-    [invalid_choice]="Invalid choice, try again."
-    [back_main]=" 0) Back to main menu"
-    [enter_time]="Enter time (HH:MM): "
-    [enter_user]="Enter username: "
-    [cron_installed]="Cron backup installed."
-    [empty_entered]="Empty parameters entered!"
-    [press_continue]="Press Enter to continue..."
-    [press_return]="Press Enter to return..."
-    [list_logs]="You will see a list of log files"
-    [in_ranger]=" in the ranger console browser."
-    [sel_file]=" - Select a file and press Enter to view the file."
-    [exit_file]=" - Press CTRL+X to exit the file."
-    [exit_ranger]=" - Press q to exit ranger."
-    [run_return]=" Press Enter to run ranger... or type q to return: "
-    [return_menu]="Return to menu..."
-    [lang_not]="Language selection is not yet implemented"
-    [backupdir_not]="Backup directory configuration is not yet implemented"
-    [checkcuda_not]="Script check-cuda-tools.sh not found or not executable."
-    [adding_cron]="Adding cron job: %s for %s"
-)
-say() {
-    local key="$1"
-    case "$LANG_CHOICE" in
-        ru) echo "${MSG_RU[$key]}" ;;
-        en) echo "${MSG_EN[$key]}" ;;
-        *) echo "${MSG_EN[$key]}" ;; # по умолчанию EN
-    esac
-}
+# --- Подключаем файл с сообщениями (messages.sh) ---
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+source "$SCRIPT_DIR/messages.sh"
 
 # --- Проверка root только для команд, где нужны права ---
 require_root() {
@@ -95,30 +29,6 @@ require_root() {
         error "$(say run_sudo)"
         return 1
     fi
-}
-
-# === Главное меню ===
-main_menu() {
-    while true; do
-        clear
-        echo "===================================="
-        echo "       $(say main_menu)"
-        echo "===================================="
-        echo "1) $(say backup)"
-        echo "2) $(say restore)"
-        echo "3) $(say logs)"
-        echo "0) $(say exit)"
-        echo "------------------------------------"
-        read -rp "Select an option: " choice
-        case "$choice" in
-            1) info "Выбрано: $(say backup)" ;;
-            2) info "Выбрано: $(say restore)" ;;
-            3) info "Выбрано: $(say logs)" ;;
-            0) ok "$(say exit)"; exit 0 ;;
-            *) error "$(say incorrect_choice)" ;;
-        esac
-        read -rp "Press Enter to continue..."
-    done
 }
 
 REAL_HOME="${HOME:-/home/$USER}"
@@ -142,6 +52,7 @@ MEDIA_APT="$BIN_DIR/install-mediatools-apt.sh"
 LAST_ARCHIVE="$BIN_DIR/check-last-archive.sh"
 SYSTEM_MOUNTS="$BIN_DIR/show-system-mounts.sh"
 HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
+CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 
 # --- Дистрибутив ---
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -175,16 +86,16 @@ main_menu() {
     while true; do
         clear
         echo "========================================="
-        echo "   Reincarnation Backup Kit — Main Menu"
+        echo "   Reincarnation Backup Kit — $(say main_menu)"
         echo "========================================="
-        echo " 1) Backup"
-        echo " 2) Restore"
+        echo " 1) $(say backup)"
+        echo " 2) $(say restore)"
         echo " 3) Manage cron jobs"
-        echo " 4) Media"
-        echo " 5) Tools"
-        echo " 6) Logs"
-        echo " 7) Settings"
-        echo " 0) Exit"
+        echo " 4) $(say media)"
+        echo " 5) $(say tools)"
+        echo " 6) $(say logs)"
+        echo " 7) $(say settings)"
+        echo " 0) $(say exit)"
         echo "-----------------------------------------"
         read -rp "$(say sel_opt)" choice
         case "$choice" in
@@ -348,7 +259,7 @@ tools_menu() {
     echo "-----------------------------------------"
     read -rp "$(say sel_opt)" choice
     case "$choice" in
-        1) "$LAST_ARCHIVE" ;;
+        1) "$LAST_ARCHIVE" --list "$USER";;
         2) "$SYSTEM_MOUNTS" ;;
         3) "$HDD_SETUP" ;;
         0) return ;;
@@ -373,7 +284,7 @@ logs_menu() {
     read -rp "$(say run_return)" choice
 
     if [[ -z "$choice" ]]; then
-        ranger /mnt/backups/logs || warn "No logs found."
+        ranger /mnt/backups/logs || warn "$(no_logs)"
     else
         echo "$(say return_menu)"
         sleep 1
@@ -397,15 +308,14 @@ settings_menu() {
         case "$choice" in
             1)
                 echo "$(say lang_not)"
-                read -rp "Press Enter to continue..."
+                read -rp "$(say press_continue)"
                 ;;
             2)
                 echo "$(say backupdir_not)"
-                read -rp "Press Enter to continue..."
+                read -rp "$(say press_continue)"
                 ;;
             3)
                 # Проверяем наличие скрипта
-                CUDA_SCRIPT="$BIN_DIR/check-shotcut-gpu.sh"
                 if [[ -x "$CUDA_SCRIPT" ]]; then
                     "$CUDA_SCRIPT"
                 else

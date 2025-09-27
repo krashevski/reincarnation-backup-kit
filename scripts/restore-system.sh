@@ -79,24 +79,33 @@ declare -A MSG=(
 
   [ru_log_file]="Файл лога: "
   [en_log_file]="Log file: "
+  
+  [ru_not_system]="Не удаётся обнаружить систему (нет /etc/os-release)"
+  [en_not_system]="Cannot detect system (no /etc/os-release)"
+  
+  [ru_dispatcher_started]="Диспетчер запущен"
+  [en_dispatcher_started]="Dispatcher started"
+  
+  [ru_dispatcher_finished]="Диспетчер успешно завершил работу"
+  [en_dispatcher_finished]="Dispatcher finished successfully"
 )
 
 if [[ "${1:-}" == "--help" ]]; then
     echo "Usage: $0 [ARCHIVE]"
-    echo "$(help)"
+    echo "$(say help)"
+    echo
     exit 0
 fi
 
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
-mkdir -p "$BACKUP_DIR""$LOG_DIR"
 RUN_LOG="$LOG_DIR/restore-dispatch-$(date +%F-%H%M%S).log"
 
-# cleanup() {
-#    info "$(say dispatcher_finished)"
-# }
-# trap cleanup EXIT INT TERM
+cleanup() {
+   info "$(say dispatcher_finished)"
+}
+trap cleanup EXIT INT TERM
 
 # --- Проверки ---
 if [ ! -d "$BACKUP_DIR" ]; then
@@ -110,11 +119,11 @@ if [ -r /etc/os-release ]; then
     DISTRO="$ID"
     VERSION="$VERSION_ID"
 else
-    error "Cannot detect system (no /etc/os-release)"
+    error "$(say not_system)"
     exit 1
 fi
 
-info "$(say detect_system $DISTRO $VERSION)"
+info "$(say detect_system)" "$DISTRO" "$VERSION"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
@@ -146,28 +155,27 @@ esac
 
 # --- Проверки наличия ---
 if [ ! -x "$SCRIPT" ]; then
-    error "$(printf "$(say not_found_script)" "$SCRIPT")"
+    error printf "$(say not_found_script "$SCRIPT")"
     exit 1
 fi
 
 if [ ! -f "$ARCHIVE" ]; then
-    error "$(printf "(say not_found_archive)" "$ARCHIVE")"
+    error printf "$(say not_found_archive "$ARCHIVE")"
     exit 1
 fi
 
 # --- Запуск ---
 info "============================================================="
-info "$(say running $SCRIPT $ARCHIVE)"
+info "$(say running)" "$SCRIPT" "$ARCHIVE"
 info "============================================================="
 
 {
-    echo "[$(date +%F_%T)] Dispatcher started"
+    echo "[$(date +%F_%T)] $(say dispatcher_started)"
     "$SCRIPT" "$ARCHIVE"
-    echo "[$(date +%F_%T)] Dispatcher finished successfully"
+    echo "[$(date +%F_%T)] $(say dispatcher_finished)"
 } 2>&1 | tee -a "$RUN_LOG"
 
 info "$(say create_simlink)"
-
 ln -sfn "$BACKUP_DIR" "$REAL_HOME/backups"
 ok "$(say link_created)"
 

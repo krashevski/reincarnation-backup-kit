@@ -119,6 +119,39 @@ MSG[ru_DONE]="Backup Kit — Восстановление системы усп�
 MSG[en_run_sudo]="The script must be run with root rights (sudo)"
 MSG[ru_run_sudo]="Скрипт нужно запускать с правами root (sudo)"
 
+MSG[en_started]="Restore started"
+MSG[ru_started]="Восстановление началось"
+
+MSG[en_extracting]="Extracting archive"
+MSG[ru_extracting]="Извлечение архива"
+
+MSG[en_repos_keys]="Restoring repositories and keyrings"
+MSG[ru_repos_keys]="Восстановление репозиториев и связок ключей"
+
+MSG[en_packages]="Restoring packages"
+MSG[ru_packages]="Восстановление пакетов"
+
+MSG[en_logs]="Restoring logs"
+MSG[ru_logs]="Восстановление журналов"
+
+MSG[en_success]="Restore finished successfully"
+MSG[ru_success]="Восстановление завершено успешно"
+
+MSG[en_completed]="completed"
+MSG[ru_completed]="завершено"
+
+MSG[en_compl]="completed."
+MSG[ru_compl]="завершено."
+
+MSG[en_failed]="failed"
+MSG[ru_failed]="неуспешно"
+
+MSG[en_check]="failed. Check"
+MSG[ru_check]="неуспешно. Проверьте"
+
+MSG[en_log_file]="Log file:"
+MSG[ru_log_file]="Файл журнала:"
+
 # --- Определение языка ---
 get_lang() {
     if [[ -n "${LANG_CHOICE:-}" ]]; then
@@ -150,7 +183,7 @@ require_root() {
 
 # === Настройки ===
 BACKUP_DIR="/mnt/backups"
-WORKDIR="$BACKUP_DIR/restore_workdir"
+WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
 mkdir -p "$WORKDIR" "$LOG_DIR"
@@ -236,8 +269,8 @@ restore_packages() {
 restore_logs() {
     if [ "${RESTORE_LOGS:-false}" = "true" ]; then
         info "$(say LOGS)"
-        mkdir -p "$BACKUP_DIR/logs_restored"
-        cp -a "$WORKDIR/system_packages/README" "$BACKUP_DIR/logs_restored/" || true
+        mkdir -p "$BACKUP_DIR/logs"
+        cp -a "$WORKDIR/system_packages/README" "$BACKUP_DIR/logs/" || true
         ok "$(say LOGS_OK)"
     else
         info "$(say LOGS_SKIP)"
@@ -249,11 +282,11 @@ run_step() {
     local func="$2"
     info "$name..."
     if "$func" >>"$RUN_LOG" 2>&1; then
-        ok "$name completed."
-        echo "[$(date +%F_%T)] $name completed" >>"$RUN_LOG"
+        ok "$name $(say compl)"
+        echo "[$(date +%F_%T)] $name $(say completed)" >>"$RUN_LOG"
     else
-        error "$name failed. Check $RUN_LOG"
-        echo "[$(date +%F_%T)] $name failed" >>"$RUN_LOG"
+        error "$name $(say check) $RUN_LOG"
+        echo "[$(date +%F_%T)] $name $(say failed)" >>"$RUN_LOG"
         exit 1
     fi
 }
@@ -263,19 +296,19 @@ info "======================================================"
 info "$(say START)"
 info "======================================================"
 
-echo "[$(date +%F_%T)] Restore started" >>"$RUN_LOG"
+echo "[$(date +%F_%T)] $(say started)" >>"$RUN_LOG"
 
-run_step "Extracting archive" extract_archive
-run_step "Restoring repositories and keyrings" restore_repos_and_keys
-run_step "Restoring packages" restore_packages
-run_step "Restoring logs" restore_logs
+run_step "$(say extracting)" extract_archive
+run_step "$(say repos_keys)" restore_repos_and_keys
+run_step "$(say packages)" restore_packages
+run_step "$(say logs)" restore_logs
 
 info "======================================================"
 ok "$(say DONE)"
-info "Log file: $RUN_LOG"
+info "$(say log_file) $RUN_LOG"
 info "======================================================"
 
-echo "[$(date +%F_%T)] Restore finished successfully" >>"$RUN_LOG"
+echo "[$(date +%F_%T)] $(say success)" >>"$RUN_LOG"
 
 exit 0
 
