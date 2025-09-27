@@ -52,6 +52,7 @@ MEDIA_APT="$BIN_DIR/install-mediatools-apt.sh"
 LAST_ARCHIVE="$BIN_DIR/check-last-archive.sh"
 SYSTEM_MOUNTS="$BIN_DIR/show-system-mounts.sh"
 HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
+SEIUP_SYMLINKS="$BIN_DIR/setup-symlinks.sh"
 CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 
 # --- Дистрибутив ---
@@ -254,6 +255,7 @@ tools_menu() {
     echo " SYSTEM:"
     echo "   2) Show system mounts"
     echo "   3) HDD setup profiles"
+    echo "   4) Setup symlinks"
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
@@ -262,6 +264,7 @@ tools_menu() {
         1) "$LAST_ARCHIVE" --list "$USER";;
         2) "$SYSTEM_MOUNTS" ;;
         3) "$HDD_SETUP" ;;
+        4) "$SEIUP_SYMLINKS" ;;
         0) return ;;
         *) warn "S(say invalid_choice)" ;;
     esac

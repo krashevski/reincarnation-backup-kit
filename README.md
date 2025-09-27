@@ -59,12 +59,14 @@ Consists of two steps:
 ### 3. Utilities and Wrappers
 | Script | Description |
 |--------|----------|
-| `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
 | `hdd-setup-profiles.sh` | Format the selected hard drive (HDD) and create users. |
 | `show-system-mounts.sh` | View system mount points, symbolic links, and cron jobs. |
-| `check-cuda-tools.sh` | Checking and managing CUDA Toolkit |
-| `menu.sh` | Text menu for Reincarnation Backup Kit |
+| `setup-symlinks.sh` | Creates directories on /mnt/storage and gracefully recreates symlinks. |
+| `check-last-archive.sh` | Checks for the presence of the user's last archive. |
+| `check-cuda-tools.sh` | Checking and managing CUDA Toolkit. |
+| `menu.sh` | Text menu for Reincarnation Backup Kit. |
+| `messages.sh` | Unified messages for all scripts. |
 
 ### 4. Media and GPU Tools
 | Script | Description |

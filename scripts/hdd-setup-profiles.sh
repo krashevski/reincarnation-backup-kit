@@ -120,30 +120,47 @@ done
 
 # --- Настройка /etc/fstab ---
 info "$(say hdd_start)"
+
 add_fstab_entry() {
-    local UUID=$1
-    local MOUNTPOINT=$2
-    local FS=ext4
-    local OPTS="defaults"
+    local UUID="$1"
+    local MOUNTPOINT="$2"
+    local FSTYPE="${3:-ext4}"
+    local OPTIONS="${4:-defaults}"
     local PASS="0 2"
 
+    # если каталог существует — ищем свободное имя
+    if [ -d "$MOUNTPOINT" ]; then
+        local base="$MOUNTPOINT"
+        local n=1
+        while [ -d "$MOUNTPOINT" ]; do
+            MOUNTPOINT="${base}${n}"
+            n=$((n+1))
+        done
+        info "$(printf "${MSG[${L}_mountpoint_exists]}" "$MOUNTPOINT")"
+    fi
+
+    # создаём каталог
+    sudo mkdir -p "$MOUNTPOINT"
+
+    # проверка: нет ли уже записи с этим UUID или этим MOUNTPOINT
     if grep -q "UUID=$UUID" /etc/fstab || grep -q "[[:space:]]$MOUNTPOINT[[:space:]]" /etc/fstab; then
-        info "$(say fstab_exists)"
+        warn "$(say fstab_exists)"
     else
-        echo "UUID=$UUID $MOUNTPOINT $FS $OPTS $PASS" >> /etc/fstab
+        echo "UUID=$UUID  $MOUNTPOINT  $FSTYPE  $OPTIONS  $PASS" | sudo tee -a /etc/fstab
         ok "$(say fstab_added)" "$MOUNTPOINT"
     fi
 }
 
-# add_fstab_entry "$UUID1" "/home/$EXISTING_USER"
+add_fstab_entry "$UUID1" "/mnt/storage"
 add_fstab_entry "$UUID2" "/home/$USER2"
 add_fstab_entry "$UUID3" "/home/$USER3"
 
 # --- Монтирование ---
-mount -a
+sudo mount -a
 
 # --- Проверка ---
 df -h | grep -E "$EXISTING_USER|$USER2|$USER3" >&3
+
 
 ok "$(say done_disks_users)"
 info "$(say restore_hint)"

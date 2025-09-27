@@ -57,31 +57,33 @@ sudo ./restore-userdata.sh
 
 ## 📜 Доступные скрипты
 
-- `install.sh` — универсальный установщик для Reincarnation Backup Kit.
-- `backup-system.sh` - резервное копирование системных настроек и пакетов (оболочка).
-- `backup-ubuntu-22.04.sh` — резервное копирование Ubuntu 22.04.
-- `backup-ubuntu-24.04.sh` — резервное копирование Ubuntu 24.04.
-- `backup-debian-12.sh` — резервное копирование Debian 12.
-- `restore-system.sh` — универсальное восстановление системы (оболочка).
-- `restore-ubuntu-22.04.sh` — восстановление для Ubuntu 22.04.
-- `restore-ubuntu-24.04.sh` — восстановление для Ubuntu 24.04.
-- `restore-debian-12.sh` — восстановление для Debian 12.
-- `backup-restore-userdata.sh` — резервное копирование и восстановление пользовательских данных.
-- `backup-userdata.sh` - резервное копирование пользовательских данных (оболочка для backup-restore-userdata.sh).
-- `restore-userdata.sh` — безопасное восстановление данных (оболочка для backup-restore-userdata.sh).
-- `hdd-setup-profiles.sh` — форматирование HDD и создание пользователей.
-- `install-mediatools-apt.sh` — установка мультимедиа из APT.
-- `check-shotcut-gpu.sh` — автоконфигурация NVIDIA, проброс GPU в Flatpak, тестирование NVENC.
-- `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
-- `install-mediatools-flatpak.sh` — проверка NVIDIA + CUDA, установка мультимедиа из Flathub, пресеты Shotcut.
-- `check-last-archive.sh` — просмотр доступных архивов.
-- `add-cron-backup.sh` - добавление задания cron для ежедневного резервного копирования.
-- `cron-backup-userdata.sh` - выполняет архивирование данных пользователя в /mnt/backups/user_data/.
-- `clean-backup-logs.sh` - удаление старые журналы резервного копирования. 
-- `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
-- `show-system-mounts.sh` - Просмотр точек монтирования системы, символических ссылок и заданий cron.
-- `check-cuda-tools.sh` - проверка и управление CUDA Toolkit.
-- `menu.sh` - Текстовое меню для Reincarnation Backup Kit.
+- `install.sh` — universal installer for the Reincarnation Backup Kit.
+- `backup-system.sh` - backup system settings and packages (shell).
+- `backup-ubuntu-22.04.sh` — archiving Ubuntu 22.04 packages and configurations.
+- `backup-ubuntu-24.04.sh` — archiving Ubuntu 24.04 packages and configurations.
+- `backup-debian-12.sh` — archiving Debian 12 packages and configurations.
+- `restore-system.sh` - universal system restore (shell).
+- `restore-ubuntu-22.04.sh` - restore for Ubuntu 22.04.
+- `restore-ubuntu-24.04.sh` - restore for Ubuntu 24.04.
+- `restore-debian-12.sh` — restore for Debian 12.
+- `backup-restore-userdata.sh` — carefully backup or restore user data.
+- `backup-userdata.sh` - backup user data (wrapper for backup-restore-userdata.sh).
+- `restore-userdata.sh` - secure data recovery (wrapper for backup-restore-userdata.sh).
+- `check-last-archive.sh` — views archives available to the user.
+- `add-cron-backup.sh` - adds a cron job for daily backups.
+- `cron-backup-userdata.sh` - archives user data to /mnt/backups/user_data/.
+- `clean-backup-logs.sh` - deletes old backup logs.
+- `remove-cron-backup.sh` - removes the backup cron job.
+- `install-nvidia-cuda.sh` - installation of the NVIDIA and CUDA driver.
+- `check-shotcut-gpu.sh` - automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
+- `install-mediatools-flatpak.sh` - NVIDIA + CUDA check, media installation from Flathub, Shotcut presets.
+- `install-mediatools-apt.sh` — installs multimedia software from APT.
+- `hdd-setup-profiles.sh` - format the selected hard drive (HDD) and create users.
+- `show-system-mounts.sh` - view system mount points, symbolic links, and cron jobs.
+- `setup-symlinks.sh`- Creates directories on /mnt/storage and gracefully recreates symlinks.
+- `check-cuda-tools.sh` - checking and managing CUDA Toolkit.
+- `menu.sh` - Text menu for Reincarnation Backup Kit.
+- `messages.sh` - Unified messages for all scripts.
 
 ## ⚖️ Лицензия
 

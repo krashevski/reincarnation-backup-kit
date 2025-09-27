@@ -58,19 +58,22 @@ Consists of two steps:
 - `restore-userdata.sh` - safely initiates user data recovery, a wrapper for `backup-restore-userdata.sh` automates readiness checks for recovery.
 
 ### Additional scripts
-- `hdd-setup-profiles.sh` - format the selected hard drive (HDD) and create users.
-- `ininstall-mediatools-flatpak.sh` - checks NVIDIA GPU and CUDA and installs the Shotcut, GIMP+G'MIC, Krita, and Audacity multimedia environments, and creates Shotcut presets.
-- `check-shotcut-gpu.sh` - automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
-- `install-nvidia-cuda.sh` - installation of the NVIDIA and CUDA drivers.
-- `install-mediatools-apt.sh` - cleans unnecessary repositories and installs software from the APT repository.
-- `check-last-archive.sh` - views archives available to the user.
 - `add-cron-backup.sh` - Adds a cron job for daily backups with logging, location verification, and time selection.
 - `cron-backup-userdata.sh` - Archives user data to /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - Clears old logs (by default, older than 30 days); called automatically when space is low.
 - `remove-cron-backup.sh` - Removes the backup cron job.
+- `install-nvidia-cuda.sh` - installation of the NVIDIA and CUDA drivers.
+- `check-shotcut-gpu.sh` - automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
+- `install-mediatools-flatpak.sh` - checks NVIDIA GPU and CUDA and installs the Shotcut, GIMP+G'MIC, Krita, and Audacity multimedia environments, and creates Shotcut presets.
+- `install-mediatools-apt.sh` - cleans unnecessary repositories and installs software from the APT repository.
+- `hdd-setup-profiles.sh` - format the selected hard drive (HDD) and create users.
 - `show-system-mounts.sh` - View system mount points, symbolic links, and cron jobs.
+- `setup-symlinks.sh`- Creates directories on /mnt/storage and gracefully recreates symlinks.
+- `check-last-archive.sh` - views archives available to the user.
 - `check-cuda-tools.sh` - Checking and managing CUDA Toolkit.
 - `menu.sh` - Text menu for Reincarnation Backup Kit.
+- `messages.sh` - Unified messages for all scripts.
+
 
 ## Installation and Launch
 

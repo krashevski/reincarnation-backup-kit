@@ -142,7 +142,7 @@ SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-use
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
 SCRIPTS_OS=()
 SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
-HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh")
+HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh" "setup-symlinks.sh" "messages.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then

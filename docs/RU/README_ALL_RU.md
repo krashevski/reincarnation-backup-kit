@@ -58,19 +58,21 @@
 - `restore-userdata.sh.` - безопасный запуск восстановления пользовательских данных, обёртка для `backup-restore-userdata.sh` автоматизирует проверку готовности для восстановления.
 
 ### Дополнительные скрипты
-- `hdd-setup-profiles.sh` — форматирование выбранного жёсткий диск (HDD) с созданием пользователей.
-- `install-mediatools-flatpak.sh` - проверка NVIDIA GPU и CUDA и установка мультимедийной среды Shotcut, GIMP+G'MIC, Krita, Audacity и созданием пресетов для Shotcut.
-- `check-shotcut-gpu.sh` - автоматическая настройка NVIDIA, проброс GPU в Flatpak, тест NVENC.
-- `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
-- `install-mediatools-apt.sh` - очистка лишних репозиториев и установка софта из репозитария APT.
-- `check-last-archive.sh` - просмотр архивов доступных для пользователя.
-- `add-cron-backup.sh` - добавляет задание cron для ежедневного резервного копирования с ведением журнала, проверкой местоположения и выбором времени.
-- `cron-backup-userdata.sh` - выполняет архивирование данных пользователя в /mnt/backups/user_data/.
-- `clean-backup-logs.sh` - очищает старые логи (по умолчанию старше 30 дней), вызывается автоматически при нехватке места.
-- `remove-cron-backup.sh` - удаляет cron-задачу резервного копирования.
-- `show-system-mounts.sh` - просмотр точек монтирования системы, символических ссылок и заданий cron.
-- `check-cuda-tools.sh` - проверка и управление CUDA Toolkit.
+- `add-cron-backup.sh` — добавляет cron-задание для ежедневного резервного копирования с ведением журнала, проверкой местоположения и выбором времени.
+- `cron-backup-userdata.sh` — архивирует пользовательские данные в /mnt/backups/user_data/.
+- `clean-backup-logs.sh` — очищает старые журналы (по умолчанию старше 30 дней); вызывается автоматически при нехватке места.
+- `remove-cron-backup.sh` — удаляет cron-задание для резервного копирования.
+- `install-nvidia-cuda.sh` — установка драйверов NVIDIA и CUDA.
+- `check-shotcut-gpu.sh` — автоматическая настройка NVIDIA, сквозное подключение GPU к Flatpak и тестирование NVENC.
+- `install-mediatools-flatpak.sh` — проверяет видеокарту NVIDIA и CUDA, устанавливает мультимедийные среды Shotcut, GIMP+G'MIC, Krita и Audacity, а также создаёт шаблоны настроек Shotcut.
+- `install-mediatools-apt.sh` — очищает ненужные репозитории и устанавливает ПО из репозитория APT.
+- `hdd-setup-profiles.sh` — форматирует выбранный жёсткий диск (HDD) и создаёт пользователей.
+- `show-system-mounts.sh` — просматривает точки монтирования системы, символические ссылки и задания cron.
+- `setup-symlinks.sh` — создаёт каталоги в /mnt/storage и корректно пересоздаёт символические ссылки.
+- `check-last-archive.sh` — просматривает архивы, доступные пользователю.
+- `check-cuda-tools.sh` — проверяет и управляет CUDA Toolkit.
 - `menu.sh` - Текстовое меню для Reincarnation Backup Kit.
+- `messages.sh` - Унифицированные сообщения для всех скриптов.
 
 ## Установка и запуск
 

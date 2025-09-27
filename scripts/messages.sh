@@ -14,7 +14,7 @@
 # =============================================================
 # messages.sh
 # Reincarnation Backup Kit — Messages Library
-# Унифицированные сообщения для всех скриптов
+# Unified messages for all scripts
 # MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 # ==============================================================
 # В каждом скрипте подключать:
@@ -72,6 +72,8 @@ declare -A MSG=(
     [ru_fstab_added]="fstab: добавлена запись для "
     [ru_done_disks_users]="Операция завершена. Диски смонтированы, пользователи настроены."
     [ru_restore_hint]="Для восстановления пользовательских данных используйте rsync-restore-userdata.sh"
+    [ru_mountpoint_exists]="Точка монтирования уже существует, будет создана: %s"
+    [ru_uuid_exists]="UUID $UUID уже есть в /etc/fstab"
     # menu.sh
     [ru_main_menu]="Главное меню"
     [ru_backup]="Резервное копирование"
@@ -105,6 +107,18 @@ declare -A MSG=(
     [ru_backupdir_not]="Настройка каталогов бэкапов пока не реализована"
     [ru_checkcuda_not]="Скрипт check-cuda-tools.sh не найден или не исполняемый."
     [ru_adding_cron]="Добавление cron-задачи: %s для %s"
+    #setup-symlinks.sh
+    [ru_musik]="Музыка"
+    [ru_video]="Видео"
+    [ru_images]="Изображения"
+    [ru_create_catalog]="Создан каталог: %s"
+    [ru_link_exists]="Ссылка уже существует: %s -> %s"
+    [ru_replaced_empty]="Заменён пустой каталог на ссылку: %s -> %s"
+    [ru_not_empty]="Каталог %s не пустой. Заменить ссылкой? [y/N] "
+    [ru_user_replace]="Каталог %s был не пустым, пользователь согласился заменить → %s"
+    [ru_user_refused]="Каталог %s был не пустым, пользователь отказался от замены"
+    [ru_link_created]="Создана ссылка: %s -> %s"
+    [ru_script_termination]="=== Завершение работы скрипта ==="
     # common
     [ru_backup_start]="Запуск резервного копирования..."
     [ru_backup_pkgs]="Резервное копирование пакетов и репозиториев..."
@@ -166,6 +180,8 @@ declare -A MSG=(
     [en_fstab_added]="fstab: added entry for "
     [en_done_disks_users]="Operation completed. Disks mounted, users configured."
     [en_restore_hint]="To restore user data, use rsync-restore-userdata.sh"
+    [en_mountpoint_exists]="The mount point already exists, it will be created: %s"
+    [en_uuid_exists]="UUID $UUID already exists in /etc/fstab"
     # menu.sh
     [en_main_menu]="Main Menu"
     [en_backup]="Backup"
@@ -201,6 +217,18 @@ declare -A MSG=(
     [en_backupdir_not]="Backup directory configuration is not yet implemented"
     [en_checkcuda_not]="Script check-cuda-tools.sh not found or not executable."
     [en_adding_cron]="Adding cron job: %s for %s"
+    #setup-symlinks.sh
+    [en_musik]="Musik"
+    [en_video]="Videa"
+    [en_images]="Images"
+    [en_create_catalog]="Created catalog: %s"
+    [en_link_exists]="Link already exists: %s -> %s"
+    [en_replaced_empty]="Replaced the empty directory with a link: %s -> %s"
+    [en_not_empty]="The %s directory is not empty. Replace with a link? [y/N] "
+    [en_user_replace]="The %s directory was not empty, the user agreed to replace → %s"
+    [en_user_refused]="The %s directory was not empty, the user refused the replacement"
+    [en_link_created]="Link created: %s -> %s"
+    [en_script_termination]="=== Script termination ==="
     # common
     [en_backup_start]="Starting backup..."
     [en_backup_done]="Backup completed successfully!"

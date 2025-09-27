@@ -69,20 +69,21 @@ sudo ./backup-userdata.sh --fresh
 - `backup-restore-userdata.sh` — carefully backup or restore user data.
 - `backup-userdata.sh` - backup user data (wrapper for backup-restore-userdata.sh).
 - `restore-userdata.sh` — secure data recovery (wrapper for backup-restore-userdata.sh).
-- `hdd-setup-profiles.sh` — format the selected hard drive (HDD) and create users.
-- `install-mediatools-apt.sh` —  installs multimedia software from APT.
-- `check-shotcut-gpu.sh` — automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
-- `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
-- `install-mediatools-flatpak.sh` — NVIDIA + CUDA check, media installation from Flathub, Shotcut presets.
 - `check-last-archive.sh` — views archives available to the user.
 - `add-cron-backup.sh` - adds a cron job for daily backups.
-- `clean-backup-logs.sh` - deletes old backup logs.
 - `cron-backup-userdata.sh` - archives user data to /mnt/backups/user_data/.
 - `clean-backup-logs.sh` - deletes old backup logs.
 - `remove-cron-backup.sh` - removes the backup cron job.
+- `install-nvidia-cuda.sh` - установка драйвера NVIDIA и CUDA.
+- `check-shotcut-gpu.sh` — automatic NVIDIA configuration, GPU passthrough to Flatpak, and NVENC testing.
+- `install-mediatools-flatpak.sh` — NVIDIA + CUDA check, media installation from Flathub, Shotcut presets.
+- `install-mediatools-apt.sh` —  installs multimedia software from APT.
+- `hdd-setup-profiles.sh` — format the selected hard drive (HDD) and create users.
 - `show-system-mounts.sh` - view system mount points, symbolic links, and cron jobs.
+- `setup-symlinks.sh`- Creates directories on /mnt/storage and gracefully recreates symlinks.
 - `check-cuda-tools.sh` - checking and managing CUDA Toolkit.
 - `menu.sh` - Text menu for Reincarnation Backup Kit.
+- `messages.sh` - Unified messages for all scripts.
 
 ## ⚖️ License
 
