@@ -73,7 +73,7 @@ declare -A MSG=(
     [ru_done_disks_users]="Операция завершена. Диски смонтированы, пользователи настроены."
     [ru_restore_hint]="Для восстановления пользовательских данных используйте rsync-restore-userdata.sh"
     [ru_mountpoint_exists]="Точка монтирования уже существует, будет создана: %s"
-    [ru_uuid_exists]="UUID $UUID уже есть в /etc/fstab"
+    [ru_uuid_exists]="UUID %s уже есть в /etc/fstab"
     # menu.sh
     [ru_main_menu]="Главное меню"
     [ru_backup]="Резервное копирование"
@@ -181,7 +181,7 @@ declare -A MSG=(
     [en_done_disks_users]="Operation completed. Disks mounted, users configured."
     [en_restore_hint]="To restore user data, use rsync-restore-userdata.sh"
     [en_mountpoint_exists]="The mount point already exists, it will be created: %s"
-    [en_uuid_exists]="UUID $UUID already exists in /etc/fstab"
+    [en_uuid_exists]="UUID %s already exists in /etc/fstab"
     # menu.sh
     [en_main_menu]="Main Menu"
     [en_backup]="Backup"
