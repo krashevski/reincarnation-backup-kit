@@ -41,17 +41,35 @@ exec 3>&1 4>&2
 trap 'exec 1>&3 2>&4' EXIT
 info "$(say log_enabled)" "$LOG_FILE"
 
-# --- Список дисков ---
-info "$(say hdd_start)"
-lsblk -d -o NAME,SIZE,MODEL | grep -v loop >&3
+# --- Поиск доступных дисков ---
+info "$(say hdd_detect)"
 
-read -rp "$(say prompt_disk)" DISK
-HDD="/dev/$DISK"
+ALL_DISKS=($(lsblk -ndo NAME,TYPE | awk '$2=="disk"{print $1}'))
+AVAILABLE_DISKS=()
 
-if [[ ! -b "$HDD" ]]; then
-    error "$(say error_no_disk)"
+for d in "${ALL_DISKS[@]}"; do
+    dev="/dev/$d"
+    # проверяем, есть ли у диска смонтированные разделы как архивы
+    if mount | grep -qE "^$dev.* (/(mnt/)?backups?|/(mnt/)?backup)(\s|$)"; then
+        warn "$(printf "${MSG[${L}_skip_archive]}" "$dev")"
+        continue
+    fi
+    AVAILABLE_DISKS+=("$d")
+done
+
+if [ ${#AVAILABLE_DISKS[@]} -eq 0 ]; then
+    error "$(say no_partitioning)"
     exit 1
 fi
+
+# --- Выбор диска пользователем ---
+echo "$(say sel_partition)"
+select DISK in "${AVAILABLE_DISKS[@]}"; do
+    [ -n "$DISK" ] && break
+done
+
+HDD="/dev/$DISK"
+info "$(printf "${MSG[${L}_disk_selected]}" "$HDD")"
 
 # --- Подтверждение удаления данных ---
 read -rp "$(say warn_delete)" CONFIRM
@@ -60,66 +78,107 @@ if [[ "$CONFIRM" != "y" ]]; then
     exit 0
 fi
 
-# --- Пользователи ---
-EXISTING_USER=$(logname)
-read -rp "$(say prompt_user2)" USER2
-read -rp "$(say prompt_user3)" USER3
+# --- Выбор диска пользователем ---
+echo "$(say sel_partition)"
+select DISK in "${AVAILABLE_DISKS[@]}"; do
+    [ -n "$DISK" ] && break
+done
+
+HDD="/dev/$DISK"
+info "$(printf "${MSG[${L}_disk_selected]}" "$HDD")"
 
 # --- Размер диска ---
 DISK_SIZE=$(lsblk -b -dn -o SIZE "$HDD")
 DISK_SIZE_GB=$((DISK_SIZE / 1024 / 1024 / 1024))
 info "$(say disk_size)" "$DISK_SIZE_GB GB"
 
-# --- Запрос размеров разделов ---
-read -rp "$(printf "${MSG[${L}_user_size]}" "$EXISTING_USER")" SIZE1
-FREE=$((DISK_SIZE_GB - SIZE1))
+FREE=$DISK_SIZE_GB
+
+# --- Запрос размеров с проверкой ---
+ask_size() {
+    local USERNAME=$1
+    local SIZE
+    while true; do
+        read -rp "$(printf "${MSG[${L}_user_size]}" "$USERNAME")" SIZE
+        if (( SIZE < 1 )); then
+            error "$(say error_min_size)"
+            continue
+        fi
+        if (( SIZE > FREE )); then
+            error "$(say error_not_enough)"  # добавить в messages.sh
+            continue
+        fi
+        break
+    done
+    echo "$SIZE"
+}
+
+# --- $EXISTING_USER ---
+SIZE1=$(ask_size "$EXISTING_USER")
+FREE=$((FREE - SIZE1))
 info "$(say remaining)" "$FREE GB"
 
-read -rp "$(printf "${MSG[${L}_user_size]}" "$USER2")" SIZE2
-FREE=$((FREE - SIZE2))
-info "$(say remaining)" "$FREE GB"
+# --- $USER2 ---
+read -p "Хотите ли создать второго пользователя ($USER2)? (y/n): " CREATE_USER2
+if [[ "$CREATE_USER2" == "y" ]]; then
+    SIZE2=$(ask_size "$USER2")
+    FREE=$((FREE - SIZE2))
+    info "$(say remaining)" "$FREE GB"
+else
+    SIZE2=0
+fi
 
-read -rp "$(printf "${MSG[${L}_user_size]}" "$USER3")" SIZE3
-FREE=$((FREE - SIZE3))
-info "$(say remaining)" "$FREE GB"
-
-if (( FREE < 0 )); then
-    error "$(say error_size)"
-    exit 1
+# --- $USER3 ---
+read -p "Хотите ли создать третьего пользователя ($USER3)? (y/n): " CREATE_USER3
+if [[ "$CREATE_USER3" == "y" ]]; then
+    SIZE3=$(ask_size "$USER3")
+    FREE=$((FREE - SIZE3))
+    info "$(say remaining)" "$FREE GB"
+else
+    SIZE3=0
 fi
 
 # --- Создание таблицы разделов ---
-info "$(say creating_partitions)"
 parted -s "$HDD" mklabel gpt
-parted -s "$HDD" mkpart primary ext4 1MiB "$((SIZE1))GiB"
-parted -s "$HDD" mkpart primary ext4 "$((SIZE1))GiB" "$((SIZE1+SIZE2))GiB"
-parted -s "$HDD" mkpart primary ext4 "$((SIZE1+SIZE2))GiB" 100%
 
-# --- Форматирование ---
-info "$(say formatting)"
-mkfs.ext4 -F "${HDD}1"
-mkfs.ext4 -F "${HDD}2"
-mkfs.ext4 -F "${HDD}3"
+START=1
+PART=1
 
-# --- Получение UUID ---
-UUID1=$(blkid -s UUID -o value "${HDD}1")
-UUID2=$(blkid -s UUID -o value "${HDD}2")
-UUID3=$(blkid -s UUID -o value "${HDD}3")
+# Раздел для $EXISTING_USER
+END=$((START + SIZE1))
+parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
+mkfs.ext4 "${HDD}${PART}"
+mkdir -p "/mnt/hdd_home/$EXISTING_USER"
+mount "${HDD}${PART}" "/mnt/hdd_home/$EXISTING_USER"
+START=$END
+PART=$((PART + 1))
 
-# --- Создание пользователей ---
-for U in "$USER2" "$USER3"; do
-    if ! id "$U" &>/dev/null; then
-        info "$(say creating_user)" "$U"
-        useradd -m "$U"
-        echo "$U:password" | chpasswd
-        ok "$(say creating_user)" "$U (password='password')"
-    else
-        info "$(say user_exists)"
-    fi
-done
+# Раздел для $USER2 (если выбран)
+if [[ "$CREATE_USER2" == "y" ]]; then
+    END=$((START + SIZE2))
+    parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
+    mkfs.ext4 "${HDD}${PART}"
+    mkdir -p "/mnt/hdd_home/$USER2"
+    mount "${HDD}${PART}" "/mnt/hdd_home/$USER2"
+    START=$END
+    PART=$((PART + 1))
+fi
 
-# --- Настройка /etc/fstab ---
-info "$(say hdd_start)"
+# Раздел для $USER3 (если выбран)
+if [[ "$CREATE_USER3" == "y" ]]; then
+    END=$((START + SIZE3))
+    parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
+    mkfs.ext4 "${HDD}${PART}"
+    mkdir -p "/mnt/hdd_home/$USER3"
+    mount "${HDD}${PART}" "/mnt/hdd_home/$USER3"
+    START=$END
+    PART=$((PART + 1))
+fi
+
+echo "Разметка и монтирование завершены."
+lsblk -f "$HDD"
+mount | grep "/mnt/hdd_home"
+
 
 add_fstab_entry() {
     local UUID="$1"

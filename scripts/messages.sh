@@ -54,6 +54,11 @@ declare -A MSG=(
     [ru_hello]="Привет, мир!"
     [ru_start]="Запуск"
     # hdd-setup-profiles.sh
+    [ru_hdd_detect]="Поиск доступных дисков"
+    [ru_skip_archive]="Пропускаем %s — содержит раздел архивов"
+    [ru_no_partitioning]="Нет доступных дисков для разметки!"
+    [ru_sel_partition]="Выберите диск для разметки:"
+    [ru_disk_selected]="Выбран диск: $HDD"
     [ru_hdd_start]="Запуск разметки HDD и создания пользователей..."
     [ru_prompt_disk]="Введите имя HDD (например, sdb): "
     [ru_error_no_disk]="Устройство не найдено!"
@@ -161,7 +166,12 @@ declare -A MSG=(
     # ========== English ==========
     [en_hello]="Hello, world!"
     [en_start]="Starting"
-    # hdd-setup-profiles.sh 
+    # hdd-setup-profiles.sh
+    [en_hdd_detect]="Searching for available drives"
+    [en_skip_archive]="Skipping %s — contains the archive section"
+    [en_no_partitioning]="No disks available for partitioning!"
+    [en_sel_partition]="Select a disk to partition:"
+    [en_disk_selected]="Disk selected: $HDD"
     [en_hdd_start]="Starting HDD setup and user creation..."
     [en_prompt_disk]="Enter HDD name (e.g., sdb): "
     [en_error_no_disk]="Device not found!"
