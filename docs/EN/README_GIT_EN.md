@@ -36,6 +36,11 @@ git commit -m "docs: description of changes"
 git commit -m "docs: added translation string to README_GIT"
 ```
 
+- Update documentation
+```bash
+git commit -m "docs: update README_GIT with commit message guidelines"
+```
+
 - Bug fixes:
 ```bash
 git commit -m "fix: typos in ..."

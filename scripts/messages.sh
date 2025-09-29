@@ -21,16 +21,23 @@
 # ----------------------------
 # #!/bin/bash
 # # 
+# # Вызов функции say: 
 # info "$(say backup_start)"
 # # ...
-# # С подставновкой одного значения
-# warn "$(printf "${MSG[${L}_user_size]}" "$EXISTING_USER")"
+# # С подстановкой одного значения:
+# warn "$(printf "${MSG[${L}_user]}" $EXISTING_USER)"
+# плейсхолдер:
+# # MSG[ru_user]="Текущий пользователь: %s"
+# # MSG[en_user]="Existing user: %s"
 # #
-# # Интерактивный ввод с подставновкой значения
-# read -rp "$(printf "${MSG[${L}_user_size]}" "$EXISTING_USER")" SIZE1
+# # Интерактивный ввод с подстановкой значения:
+# read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
 # # 
-# # Подставновка двух значений
-# info "${printf "$(say adding_cron)" "$CRON_TIME" "$CRON_USER"}"
+# # Подставновка двух значений:
+# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"
+# плейсхолдеры:
+# # MSG[ru_cron]="Параметры cron: время=%s, пользователь=%s"
+# # MSG[en_cron]="Cron params: time=%s, user=%s"
 # #
 # ok "$(say backup_done)"
 #
@@ -58,7 +65,7 @@ declare -A MSG=(
     [ru_skip_archive]="Пропускаем %s — содержит раздел архивов"
     [ru_no_partitioning]="Нет доступных дисков для разметки!"
     [ru_sel_partition]="Выберите диск для разметки:"
-    [ru_disk_selected]="Выбран диск: $HDD"
+    [ru_disk_selected]="Выбран диск: %s"
     [ru_hdd_start]="Запуск разметки HDD и создания пользователей..."
     [ru_prompt_disk]="Введите имя HDD (например, sdb): "
     [ru_error_no_disk]="Устройство не найдено!"
@@ -97,7 +104,9 @@ declare -A MSG=(
     [ru_back_main]=" 0) Вернуться в главное меню"
     [ru_enter_time]="Введите время (ЧЧ:ММ): "
     [ru_enter_user]="Введите имя пользователя: "
-    [ru_cron_installed]="Cron backup установлен."
+    [ru_cron_backup]=" 4) Инкрементное резервное копирование данных пользователя через cron (расписание)"
+    [ru_cron_backup_installed]="Резервное копирование cron установлено."
+    [ru_cron_job_installed]="Cron-задача установлена."
     [ru_empty_entered]="Введены пустые параметры!"
     [ru_press_continue]="Нажмите Enter для продолжения..."
     [ru_press_return]="Нажмите Enter, чтобы вернуться..."
@@ -114,16 +123,15 @@ declare -A MSG=(
     [ru_adding_cron]="Добавление cron-задачи: %s для %s"
     [ru_backup_system]="   1) Инкрементное резервное копирование системных пакетов, репозиториев и связок ключей"
     [ru_userdata]=" Данные пользователя:"
-    [ru_userdata_backup]=" 2) Инкрементное резервное копирование данных польхователя"
-    [ru_full_backup]=" 3) Полное резервное копирование пользовательских данных (--fresh)"
-    [ru_cron_backup]=" 4) Инкрементное резервное копирование пользовательских данных через cron (расписание)"
+    [ru_userdata_backup]=" 2) Инкрементное резервное копирование данных пользователя"
+    [ru_full_backup]=" 3) Полное резервное копирование данных пользователя (--fresh)"
     [ru_backup_options]=" ПАРАМЕТРЫ РЕЗЕРВНОГО КОПИРОВАНИЯ"
     [ru_system]=" Система (%s %s):"
     [ru_restore_packeages]=" 1) Инкрементальное пакетное восстановления ( manual / full / none)"
     [ru_restore_manual]="   2) Инкрементальное Восстановление пакетов установленных пользователем"
     [ru_restore_userdata]=" 3) Инкрементное Восстановление данных пользователя"
-    [ru_restore_options]="      ПАРАМЕТРЫ ВОССТАНОВЛЕНИЯRESTORE OPTIONS"
-    #setup-symlinks.sh
+    [ru_restore_options]="      ПАРАМЕТРЫ ВОССТАНОВЛЕНИ"
+    # setup-symlinks.sh
     [ru_musik]="Музыка"
     [ru_video]="Видео"
     [ru_images]="Изображения"
@@ -151,10 +159,6 @@ declare -A MSG=(
     [ru_dir_missing]="Каталог не найден. Смонтируйте диск!"
     [ru_clean_tmp]="Очистка временных файлов..."
     [ru_tmp_cleaned]="Временные файлы очищены."
-    [ru_sel_opt]="Выберите опцию: "
-    [ru_enter_time]="Введите время для cron-задачи: "
-    [ru_enter_user]="Введите имя пользователя: "
-    [ru_cron_installed]="Cron-задача установлена."
     [ru_extracting]="Извлечение архива..."
     [ru_extract_ok]="Архив успешно извлечён."
     [ru_extract_fail]="Ошибка при извлечении архива."
@@ -182,7 +186,7 @@ declare -A MSG=(
     [en_skip_archive]="Skipping %s — contains the archive section"
     [en_no_partitioning]="No disks available for partitioning!"
     [en_sel_partition]="Select a disk to partition:"
-    [en_disk_selected]="Disk selected: $HDD"
+    [en_disk_selected]="Disk selected: %s"
     [en_hdd_start]="Starting HDD setup and user creation..."
     [en_prompt_disk]="Enter HDD name (e.g., sdb): "
     [en_error_no_disk]="Device not found!"
@@ -222,11 +226,12 @@ declare -A MSG=(
     [en_back_main]=" 0) Back to main menu"
     [en_enter_time]="Enter time (HH:MM): "
     [en_enter_user]="Enter username: "
-    [en_cron_installed]="Cron backup installed."
+    [en_cron_backup]="   4) Incremental userdata backup via cron (scheduled)"
+    [en_cron_backup_installed]="Cron backup installed."
+    [en_cron_job_installed]="Cron job installed."
     [en_empty_entered]="Empty values entered."
-    [en_press_continue]="Press Enter to continue"
-    [en_press_return]="Press Enter to return to menu"
-    [en_invalid_choice]="Invalid choice, try again"
+    [en_press_continue]="Press Enter to continue..."
+    [en_press_return]="Press Enter to return..."
     [en_list_logs]="You will see a list of log files"
     [en_in_ranger]=" in the ranger console browser."
     [en_sel_file]=" - Select a file and press Enter to view the file."
@@ -242,7 +247,6 @@ declare -A MSG=(
     [en_userdata_backup]="   2) Incremental userdata backup"
     [en_userdata]=" Userdata:"
     [en_full_backup]="   3) Full userdata backup (--fresh)"
-    [en_cron_backup]="   4) Incremental userdata backup via cron (scheduled)"
     [en_system]=" System (%s %s):"
     [en_backup_options]="               BACKUP OPTIONS"
     [en_restore_packeages]="   1) Incremental Restore packages (manual / full / none)"
@@ -277,11 +281,6 @@ declare -A MSG=(
     [en_dir_missing]="Directory not found. Please mount the disk!"
     [en_clean_tmp]="Cleaning temporary files..."
     [en_tmp_cleaned]="Temporary files cleaned."
-    [en_sel_opt]="Select option: "
-    [en_enter_time]="Enter time for cron job: "
-    [en_enter_user]="Enter username: "
-    [en_cron_installed]="Cron job installed."
-    [en_invalid_choice]="Invalid choice, try again"
     [en_extracting]="Extracting archive..."
     [en_extract_ok]="Archive extracted successfully."
     [en_extract_fail]="Archive extraction failed."

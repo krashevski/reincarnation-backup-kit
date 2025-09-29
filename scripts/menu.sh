@@ -120,27 +120,29 @@ backup_menu() {
         echo "-----------------------------------------"
         echo "$(say backup_options)"
         echo "-----------------------------------------"
-        info "${printf "$(say system)" "$CRON_TIME" "$CRON_USER"}"
+        info "$(printf "${MSG[${L}_system]}" $DISTRO_ID $DISTRO_VER)"
         echo "$(say backup_system)"
         echo
         echo "$(say userdata)" 
         echo "$(say userdata_backup)"
         echo "$(say full_backup)"
-        echo "$(say cron_backup"
+        echo "$(say cron_backup)"
         echo
         echo "$(say back_main)"
         echo "-----------------------------------------"
         read -rp "$(say sel_opt)" choice
         case "$choice" in
-            1) "$SYS_BACKUP" ;;
-            2) "$USER_BACKUP" ;;
-            3) "$USER_BACKUP" --fresh ;;
+            1) bash "$SYS_BACKUP" ;;
+            2) bash "$USER_BACKUP" ;;
+            3) bash "$USER_BACKUP" --fresh ;;
             4)
             read -rp "$(say enter_time)" CRON_TIME
             read -rp "$(say enter_user)" CRON_USER
+            
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                info "${printf "$(say adding_cron)" "$CRON_TIME" "$CRON_USER"}"
-                "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
+
+                info "$(printf "${MSG[${L}_adding_cron]}" $CRON_TIME $CRON_USER)"
+                bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
                 ok "$(say cron_installed)"
             else
                 error "$(say empty_entered)"
@@ -159,9 +161,9 @@ restore_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "               RESTORE OPTIONS"
+        echo "$(say restore_options)"
         echo "-----------------------------------------"
-        info " System ("$DISTRO_ID" "$DISTRO_VER"):"
+        info "$(printf "${MSG[${L}_system]}" $DISTRO_ID $DISTRO_VER)"
         echo "$(say restore_packeages)"
         echo "$(say restore_manual)"
         echo
@@ -173,8 +175,8 @@ restore_menu() {
         read -rp "$(say sel_opt)" choice
         case "$choice" in
             1) RESTORE_PACKAGES=manual "$SYS_RESTORE" ;;
-            2) "$SYS_RESTORE" ;;
-            3) "$USER_RESTORE" ;;
+            2) bash "$SYS_RESTORE" ;;
+            3) bash "$USER_RESTORE" ;;
             0) return ;;
             *) warn "$(say invalid_choice)" ;;
         esac
@@ -188,7 +190,7 @@ cron_menu() {
     echo "-----------------------------------------"
     echo "        MANAGE CRON BACKUP JOBS"
     echo "-----------------------------------------"
-    echo " 1) Incremental userdata backup via cron (scheduled)"
+    echo "$(say cron_backup)"
     echo " 2) Clean backup logs"
     echo " 3) Remove cron task"
     echo
@@ -200,16 +202,16 @@ cron_menu() {
             read -rp "$(say enter_time)" CRON_TIME
             read -rp "$(say enter_user)" CRON_USER
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                info "Добавление cron-задачи: $CRON_TIME для $CRON_USER"
-                "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                ok "$(say cron_installed)"
+                info "$(printf "${MSG[${L}_adding_cron]}" $CRON_TIME $CRON_USER)"
+                bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
+                ok "$(say cron_job_installed)"
             else
                 error "$(say empty_entered)"
             fi
             read -rp "$(say press_continue)"
             ;;
-        2) "$CLEAN_LOGS" ;;
-        3) "$REMOVE_CRON" ;;
+        2) bash "$CLEAN_LOGS" ;;
+        3) bash "$REMOVE_CRON" ;;
         0) return ;;
         *) warn "$(say invalid_choice)" ;;
     esac
@@ -266,7 +268,7 @@ tools_menu() {
         3) "$HDD_SETUP" ;;
         4) "$SEIUP_SYMLINKS" ;;
         0) return ;;
-        *) warn "S(say invalid_choice)" ;;
+        *) warn "$(say invalid_choice)" ;;
     esac
     echo
     read -rp "$(say press_return)"
@@ -287,7 +289,7 @@ logs_menu() {
     read -rp "$(say run_return)" choice
 
     if [[ -z "$choice" ]]; then
-        ranger /mnt/backups/logs || warn "$(no_logs)"
+        ranger /mnt/backups/logs || warn "$(say no_logs)"
     else
         echo "$(say return_menu)"
         sleep 1
