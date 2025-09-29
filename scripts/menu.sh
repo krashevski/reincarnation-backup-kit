@@ -118,15 +118,15 @@ backup_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "               BACKUP OPTIONS"
+        echo "$(say backup_options)"
         echo "-----------------------------------------"
-        info " System ("$DISTRO_ID" "$DISTRO_VER"):"
-        echo "   1) Backup system packages, repos & keyrings"
+        info "${printf "$(say system)" "$CRON_TIME" "$CRON_USER"}"
+        echo "$(say backup_system)"
         echo
-        echo " Userdata:" 
-        echo "   2) Incremental userdata backup"
-        echo "   3) Full userdata backup (--fresh)"
-        echo "   4) Incremental userdata backup via cron (scheduled)"
+        echo "$(say userdata)" 
+        echo "$(say userdata_backup)"
+        echo "$(say full_backup)"
+        echo "$(say cron_backup"
         echo
         echo "$(say back_main)"
         echo "-----------------------------------------"
@@ -162,11 +162,11 @@ restore_menu() {
         echo "               RESTORE OPTIONS"
         echo "-----------------------------------------"
         info " System ("$DISTRO_ID" "$DISTRO_VER"):"
-        echo "   1) Restore packages (manual / full / none)"
-        echo "   2) Restore APT sources & GPG keyrings"
+        echo "$(say restore_packeages)"
+        echo "$(say restore_manual)"
         echo
-        echo " Userdata:"
-        echo "   3) Restore userdata backup"
+        echo "$(say userdata)"
+        echo "$(say restore_userdata)"
         echo
         echo "$(say back_main)"
         echo "-----------------------------------------"
