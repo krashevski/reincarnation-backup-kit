@@ -126,7 +126,7 @@ backup_menu() {
         echo "$(say userdata)" 
         echo "$(say userdata_backup)"
         echo "$(say full_backup)"
-        echo "$(say cron_backup)"
+        echo "$(say cron_backup_menu)"
         echo
         echo "$(say back_main)"
         echo "-----------------------------------------"
@@ -190,7 +190,7 @@ cron_menu() {
     echo "-----------------------------------------"
     echo "        MANAGE CRON BACKUP JOBS"
     echo "-----------------------------------------"
-    echo "$(say cron_backup)"
+    echo "$(say cron_menu)"
     echo " 2) Clean backup logs"
     echo " 3) Remove cron task"
     echo
