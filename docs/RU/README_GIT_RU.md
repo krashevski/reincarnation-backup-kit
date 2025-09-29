@@ -1,5 +1,8 @@
 # 📝 Мини-шпаргалка по Git
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 [🇬🇧 English](../EN/README_GIT_EN.md) | [🇷🇺 Русский](README_GIT_RU.md)
 
 Краткий набор команд для удобной работы с Git и GitHub.

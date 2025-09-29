@@ -1,5 +1,7 @@
 # 📝 Mini Git Cheat Sheet
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [🇬🇧 English](README_GIT_EN.md) | [🇷🇺 Русский](../RU/README_GIT_RU.md)
 
 A short set of commands for convenient work with Git and GitHub.
