@@ -24,7 +24,7 @@ git commit -m "feat: description of changes"
 
 - Tranlations
 ```bash
-git commit - m "feat(i18n): add translations for RU/EN messages in menu.sh"
+git commit -m "feat(i18n): add translations for RU/EN messages in menu.sh"
 ```
 
 - Documentation:
