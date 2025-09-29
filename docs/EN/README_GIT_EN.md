@@ -1,6 +1,6 @@
 # 📝 Mini Git Cheat Sheet
 
-🇬🇧 English](README_GIT_EN.md) | [🇷🇺 Русский](../RU/README_GIT_RU.md)
+[🇬🇧 English](README_GIT_EN.md) | [🇷🇺 Русский](../RU/README_GIT_RU.md)
 
 A short set of commands for convenient work with Git and GitHub.
 These commands are sufficient for everyday project work.
