@@ -1,5 +1,7 @@
 # 📝 Mini Git Cheat Sheet
 
+🇬🇧 English](README_GIT_EN.md) | [🇷🇺 Русский](../RU/README_GIT_RU.md)
+
 A short set of commands for convenient work with Git and GitHub.
 These commands are sufficient for everyday project work.
 
@@ -23,6 +25,10 @@ git commit -m "feat: description of changes"
 - Documentation:
 ```bash
 git commit -m "docs: description of changes"
+```
+
+```bash
+git commit -m "docs: added translation string to README_GIT"
 ```
 
 - Bug fixes:

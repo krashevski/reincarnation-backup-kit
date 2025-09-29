@@ -1,5 +1,7 @@
 # 📝 Мини-шпаргалка по Git
 
+[🇬🇧 English](../EN/README_GIT_EN.md) | [🇷🇺 Русский](README_GIT_RU.md)
+
 Краткий набор команд для удобной работы с Git и GitHub.
 Этих команд достаточно для повседневной работы над проектом.
 
@@ -17,34 +19,38 @@ git add .
 ### Сделать коммит с сообщением
 - Новая функциональность: 
 ```bash
-git commit -m "feat: описание изменений"
+git commit -m "прогресс: описание изменений"
 ```
 
 - Документация:
 ```bash
-git commit -m "docs: описание изменений"
+git commit -m "документация: описание изменений"
 ```
 
-- Исправление ошибок: 
 ```bash
-git commit -m "fix: опечатки в ..."
+git commit -m "документация: добавлена строка переводов в README_GIT"
 ```
 
-- Исправление конкретного кейса:
+- Правка ошибок: 
+```bash
+git commit -m "правка: опечатки в ..."
+```
+
+- Правка  в особенном случае:
 ```bash 
-git commit -m "fix: robust printf в msg() для обработки --fresh и подобных аргументов"
+git commit -m "правка: решено printf в msg() для обработки --fresh и подобных аргументов"
 ``` 
+
 - Правка для безопасности:
 ```bash
-git commit -m "fix(security): exclude archive disk from formatting" -m "Added a safety check to prevent accidental formatting of the archive disk.
-The selected backup disk is now excluded from the list of available disks for formatting.
-
-Limitation on the maximum number of users is still pending and will be added in a future update."
+git commit -m "правка (безопасность): исключён архивный диск из форматирования" -m "Добавлена ​​проверка безопасности для предотвращения случайного форматирования архивного диска.
+Выбранный резервный диск теперь исключён из списка доступных для форматирования дисков.
+Ограничение на максимальное количество пользователей пока не установлено и будет добавлено в будущем обновлении."
 ```
 
-- Исправление ссылок на изображения
+- Правка ссылок на изображения
 ```bash 
-git commit -m "fix: image links in README files"
+git commit -m "правка: в файлах README ссылки на изображения"
 ```
 
 ## 🚀 Отправка изменений на GitHub
