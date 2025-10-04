@@ -175,10 +175,6 @@ info "============================================================="
     echo "[$(date +%F_%T)] $(say dispatcher_finished)"
 } 2>&1 | tee -a "$RUN_LOG"
 
-info "$(say create_simlink)"
-ln -sfn "$BACKUP_DIR" "$REAL_HOME/backups"
-ok "$(say link_created)"
-
 info "============================================================="
 ok "$(say restore_finished)"
 info "$(say log_file)" $RUN_LOG
