@@ -234,7 +234,7 @@ media_menu() {
     echo "-----------------------------------------"
     read -rp "$(say sel_opt)" choice
     case "$choice" in     
-        1) "$NVIDIA_CUDA" ;;
+        1) sudo bash "$NVIDIA_CUDA" ;;
         2) "$SHOTCUT_GPU" ;;
         3) "$MEDIA_FLATPAK" ;;
         4) "$MEDIA_APT" ;;
