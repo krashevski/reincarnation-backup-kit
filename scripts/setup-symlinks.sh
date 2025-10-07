@@ -20,6 +20,10 @@
 # Log: ~/setup-symlinks.log
 # ==============================================================
 
+# Подключаем файл сообщений и переводов
+SCRIPT_DIR="$(dirname "$0")"
+source "$SCRIPT_DIR/messages.sh"
+
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/restore_workdir"
@@ -27,7 +31,7 @@ LOG_DIR="$BACKUP_DIR/logs"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-22.04.tar.gz"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 RUN_LOG="$LOG_DIR/setup-symlinks.log"
-SYMLINKS=("$(say musik)" "$(say images)" "(say videa)")
+SYMLINKS=("$(say musik)" "$(say images)" "$(say videa)")
 EXTRA_SYMLINKS=("shotcut:/mnt/shotcut" "backups:/mnt/backups")
 
 log() {
@@ -47,7 +51,7 @@ setup_link() {
 
     # если уже есть правильная ссылка
     if [ -L "$link" ] && [ "$(readlink -f "$link")" = "$target" ]; then
-        log "${printf "$(say link_exists)" "$CRON_TIME" "$CRON_USER"}"
+        log "$(printf "$(say link_exists)" "$CRON_TIME" "$CRON_USER")"
         return
     fi
 
@@ -75,7 +79,7 @@ setup_link() {
     # если ничего нет — просто создать ссылку
     if [ ! -e "$link" ]; then
         ln -s "$target" "$link"
-        log "${printf "$(say link_created)" "$link" "$target"}"
+        log "$(printf "$(say link_created)" "$link" "$target")"
     fi
 }
 
