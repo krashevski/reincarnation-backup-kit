@@ -65,6 +65,11 @@ The limitation on the maximum number of users is still pending and will be added
 git commit -m "fix: image links in README files"
 ```
 
+- Minor technical fixes without changing content
+```bash
+git commit -m "chore: normalize file state"
+```
+
 ## 🚀 Pushing changes to GitHub
 ### Push changes to the main branch
 ```bash
