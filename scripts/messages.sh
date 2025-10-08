@@ -26,18 +26,26 @@
 # # ...
 # # С подстановкой одного значения:
 # warn "$(printf "${MSG[${L}_user]}" $EXISTING_USER)"
-# плейсхолдер:
-# # MSG[ru_user]="Текущий пользователь: %s"
-# # MSG[en_user]="Existing user: %s"
+# # плейсхолдер:
+# MSG[ru_user]="Текущий пользователь: %s"
+# MSG[en_user]="Existing user: %s"
 # #
 # # Интерактивный ввод с подстановкой значения:
 # read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
 # # 
 # # Подставновка двух значений:
-# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"
-# плейсхолдеры:
-# # MSG[ru_cron]="Параметры cron: время=%s, пользователь=%s"
-# # MSG[en_cron]="Cron params: time=%s, user=%s"
+# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"\
+# # плейсхолдеры:
+# MSG[ru_cron]="Параметры cron: время=%s, пользователь=%s"
+# MSG[en_cron]="Cron params: time=%s, user=%s"
+# #
+# # Подставновка четырёх значений printf:
+# info "$(printf 'Раздел для %s создан: %s%s (%s GB)' "$USER3" "$HDD" "$PART" "$SIZE3")"
+# # для переводов:
+# info "$(printf "${MSG[${L}_partition_created]}" "$USER3" "$HDD" "$PART" "$SIZE3")"
+# # плейсхолдеры:
+# MSG[ru_partition_created]='Раздел для %s создан: %s%s (%s GB)'
+# MSG[en_partition_created]='Partition for %s created: %s%s (%s GB)'
 # #
 # ok "$(say backup_done)"
 #
@@ -65,11 +73,24 @@ declare -A MSG=(
     [ru_skip_archive]="Пропускаем %s — содержит раздел архивов"
     [ru_no_partitioning]="Нет доступных дисков для разметки!"
     [ru_sel_partition]="Выберите диск для разметки:"
-    [ru_disk_selected]="Выбран диск: %s"
+    [ru_disk_selected]="Выбран диск: %s" 
+    
+    [ru_check_mounts]="Проверка смонтированных разделов для %s..." 
+    [ru_unmounting_partition]="Размонтируем %s (%s)..."
+    [ru_unmounted_partition]="Раздел %s успешно размонтирован."
+    [ru_failed_unmount]="Не удалось размонтировать %s!"
+    [ru_disabling_swap]="Отключаем swap на %s..."
+    [ru_failed_swapoff]="Не удалось отключить swap на %s!"
+    [ru_all_partitions_unmounted]="Все разделы успешно размонтированы."
+    [ru_no_partitions_mounted]="Смонтированных разделов не найдено."
+    
+    [ru_freeing_disk]="Освобождение диска"
+ 
     [ru_hdd_start]="Запуск разметки HDD и создания пользователей..."
     [ru_prompt_disk]="Введите имя HDD (например, sdb): "
     [ru_error_no_disk]="Устройство не найдено!"
-    [ru_warn_delete]="⚠️ ВНИМАНИЕ: Все данные на диске будут удалены! Продолжить? (y/n): "
+    [ru_warn_delete]="⚠️ ВНИМАНИЕ: Все данные на диске будут удалены!"
+    [ru_confirm_action]="Вы уверены, что хотите продолжить? (y/n):"
     [ru_prompt_user2]="Введите имя второго пользователя: "
     [ru_prompt_user3]="Введите имя третьего пользователя: "
     [ru_disk_size]="Размер выбранного диска: "
@@ -86,6 +107,27 @@ declare -A MSG=(
     [ru_restore_hint]="Для восстановления пользовательских данных используйте rsync-restore-userdata.sh"
     [ru_mountpoint_exists]="Точка монтирования уже существует, будет создана: %s"
     [ru_uuid_exists]="UUID %s уже есть в /etc/fstab"
+    [ru_script_restart]="Этот скрипт требует прав администратора. Перезапуск через sudo..."
+    [ru_select_disk]="Введите номер для выбора диска: "
+    [ru_create_second_user]="Хотите ли создать второго пользователя (USER2)? (y/n): "
+    [ru_second_user_name]="Введите имя второго пользователя: "
+    [ru_be_second_user]="Второй пользователь будет: %s"
+    [ru_no_second_user]="Второй пользователь не создаётся."
+    [ru_create_third_user]="Хотите ли создать третьего пользователя (USER3)? (y/n): "
+    [ru_third_user_name]="Введите имя третьего пользователя: "
+    [ru_be_third_user]="Третий пользователь будет: %s"
+    [ru_no_third_user]="Третий пользователь не создаётся."
+    [ru_pause]="Пауза. Нажмите Enter для продолжения..."
+    [ru_only_user]="Вы, %s, являетесь единственным пользователем диска %s." 
+    [ru_existing_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
+    [ru_second_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
+    [ru_third_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
+    [ru_create_existing_partition]="Создаём раздел для пользователя %s"
+    [ru_create_second_partition]="Создаём раздел для пользователя %s"
+    [ru_create_third_partition]="Создаём раздел для пользователя %s"
+    [ru_created_existing_partition]="Раздел для %s создан: %s%s (%s GB)"
+    [ru_created_second_partition]="Раздел для %s создан: %s%s (%s GB)"
+    [ru_created_third_partition]="Раздел для %s создан: %s%s (%s GB)"
     # menu.sh
     [ru_main_menu]="Главное меню"
     [ru_backup]="Резервное копирование"
@@ -187,11 +229,24 @@ declare -A MSG=(
     [en_skip_archive]="Skipping %s — contains the archive section"
     [en_no_partitioning]="No disks available for partitioning!"
     [en_sel_partition]="Select a disk to partition:"
-    [en_disk_selected]="Disk selected: %s"
+    [en_disk_selected]="Disk selected: %s"  
+    
+    [en_check_mounts]="Checking mounted partitions for %s..."
+    [en_unmounting_partition]="Unmounting %s (%s)..."
+    [en_unmounted_partition]="Partition %s successfully unmounted."
+    [en_failed_unmount]="Failed to unmount %s!"
+    [en_disabling_swap]="Disabling swap on %s..."
+    [en_failed_swapoff]="Failed to disable swap on %s!"
+    [en_all_partitions_unmounted]="All partitions successfully unmounted."
+    [en_no_partitions_mounted]="No mounted partitions found."
+    
+    [en_freeing_disk]="Freeing the disk"
+     
     [en_hdd_start]="Starting HDD setup and user creation..."
     [en_prompt_disk]="Enter HDD name (e.g., sdb): "
     [en_error_no_disk]="Device not found!"
-    [en_warn_delete]="⚠️ WARNING: All data on the disk will be erased! Continue? (y/n): "
+    [en_warn_delete]="⚠️ WARNING: All data on the disk will be erased!"
+    [en_confirm_action]="Continue? (y/n): "
     [en_prompt_user2]="Enter name of second user: "
     [en_prompt_user3]="Enter name of third user: "
     [en_disk_size]="Selected disk size: "
@@ -208,6 +263,27 @@ declare -A MSG=(
     [en_restore_hint]="To restore user data, use rsync-restore-userdata.sh"
     [en_mountpoint_exists]="The mount point already exists, it will be created: %s"
     [en_uuid_exists]="UUID %s already exists in /etc/fstab"
+    [en_script_restart]="This script requires administrator rights. Restart via sudo..."
+    [en_select_disk]="Enter the number to select the disk: "
+    [en_create_second_user]="Do you want to create a second user (USER2)? (y/n): "
+    [en_second_user_name]="Enter the second user's name: "
+    [en_be_second_user]="The second user will be: %s"
+    [en_no_second_user]="The second user is not created."
+    [en_create_third_user]="Do you want to create a third user (USER3)? (y/n): "
+    [en_third_user_name]="Enter the third user name: "
+    [en_be_third_user]="The third user will be: %s"
+    [en_no_third_user]="The third user is not created."
+    [en_pause]="Pause. Press Enter to continue..." 
+    [en_only_user]="You, %s, are the only user of disk %s."
+    [en_existing_partition_size]="Enter the partition size for the user %s, GB: "
+    [en_second_partition_size]="Enter the partition size for user %s, GB: "
+    [en_third_partition_size]="Enter the partition size for user %s, GB: "
+    [en_create_existing_partition]="Creating a partition for user %s"
+    [en_create_second_partition]="Creating a partition for user %s"
+    [en_create_third_partition]="Creating a partition for user %s"
+    [en_created_existing_partition]="Partition for %s USER created: %s%s (%s GB)"
+    [en_created_second_partition]="Partition for %s USER created: %s%s (%s GB)"
+    [en_created_third_partition]="Partition for %s USER created: %s%s (%s GB)"
     # menu.sh
     [en_main_menu]="Main Menu"
     [en_backup]="Backup"
