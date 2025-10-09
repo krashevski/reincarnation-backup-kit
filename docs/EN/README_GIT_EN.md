@@ -29,6 +29,10 @@ git commit -m "feat: description of changes"
 git commit -m "feat(i18n): add translations for RU/EN messages in menu.sh"
 ```
 
+```bash
+git commit -m "i18n: Added translations for installation and recovery scripts"
+```
+
 - Documentation:
 ```bash
 git commit -m "docs: description of changes"
@@ -52,6 +56,7 @@ git commit -m "fix: typos in ..."
 ```bash
 git commit -m "fix: robust printf in msg() to handle --fresh and similar arguments"
 ```
+
 - Security fix:
 ```bash
 git commit -m "fix(security): exclude archive disk from formatting" -m "Added a safety check to prevent accidental formatting of the archive disk.
