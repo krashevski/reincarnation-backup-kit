@@ -81,17 +81,15 @@ info "$(printf "${MSG[${L}_disk_selected]}" "$HDD")"
 # Проверка монтирования разделов на выбранном диске
 # Проверка значения переменной
 if [ -z "$HDD" ]; then
-    error "Переменная HDD пуста!"
+    error "$(say var_empty)"
     exit 1
 fi
 
 info "$(printf "$(say check_mounts)" "$HDD")"
 
-read -rp "$(say pause)"
-
 ensure_disk_free() {
     local disk="$1"
-    info "Освобождаем диск $disk..."
+    info "$(printf "${MSG[${L}_freeing_disk]}" $disk)"
 
     # 1) Отключаем авто-монтирование GNOME (без фейлов, если нет gsettings)
     gsettings set org.gnome.desktop.media-handling automount false 2>/dev/null || true
@@ -113,14 +111,14 @@ ensure_disk_free() {
     local pids
     pids=$(fuser -km "$disk" 2>/dev/null || true)
     if [ -n "$pids" ]; then
-        info "Завершены процессы, удерживавшие диск: $pids"
+        info "$(printf "${MSG[${L}_term_holding_processes]}" $pids)"
     else
-        info "Процессов, удерживающих диск, не найдено."
+        info "$(say no_found_holding)"
     fi
 
     # 5) Синхронизируем и даём ядру время
     sync
-    udevadm settle
+    udevadm settle --timeout=10 || true
 
     # 6) Пытаемся перечитать таблицу разделов
     if ! blockdev --rereadpt "$disk" 2>/dev/null; then
@@ -129,7 +127,7 @@ ensure_disk_free() {
 
     # 7) Финальная проверка — если всё ещё есть процессы, считаем диск занятым
     if fuser -vm "$disk" 2>/dev/null | tail -n +2 | grep -q .; then
-        error "Диск $disk всё ещё занят, невозможно продолжить"
+        error "$(printf "${MSG[${L}_disk_busy]}" $disk)"
         exit 1
     fi
 }
@@ -183,7 +181,7 @@ SIZE1=$(echo "$SIZE1" | tr -cd '0-9')
 
 # Проверяем, что это число
 if ! [[ "$SIZE1" =~ ^[0-9]+$ ]]; then
-    error "Некорректный размер: $SIZE1"
+    error "$(printf "${MSG[${L}_invalid_size]}" $SIZE1)"
     exit 1
 fi
 
@@ -206,7 +204,7 @@ fi
 ensure_disk_free "$HDD"
 parted -s "$HDD" mklabel gpt
 partprobe "$HDD"
-udevadm settle
+udevadm settle --timeout=10 || true
 
 # --- Создание раздела ---
 START=1
@@ -214,10 +212,10 @@ END=$((START + SIZE1))
 PART=1
 
 info "$(printf "${MSG[${L}_create_existing_partition]}" $EXISTING_USER)"
-ensure_disk_free "$HDD"
+# ensure_disk_free "$HDD"
 parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
 partprobe "$HDD"
-udevadm settle
+udevadm settle --timeout=10 || true
 
 mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}"
 
@@ -232,10 +230,10 @@ if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     END=$((START + SIZE2))
     info "$(printf "${MSG[${L}_create_second_partition]}" $USER2)"
     
-    ensure_disk_free "$HDD"
+#   ensure_disk_free "$HDD"
     parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
     partprobe "$HDD"
-    udevadm settle
+    udevadm settle  --timeout=10 || true
     
     mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}"
     
@@ -250,10 +248,10 @@ if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     info "$(printf "${MSG[${L}_create_third_partition]}" $USER3)"
     ensure_disk_free "$HDD" && parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
     
-    ensure_disk_free "$HDD"
+#   ensure_disk_free "$HDD"
     parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
     partprobe "$HDD"
-    udevadm settle
+    udevadm settle  --timeout=10 || true
     
     mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}"
 
@@ -261,8 +259,6 @@ if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     START=$END
     PART=$((PART + 1))
 fi
-
-read -rp "$(say pause)"
 
 # Функция проверки точек монтирования добавляет число 
 add_fstab_entry() {
@@ -300,6 +296,17 @@ is_partition() {
     [ -b "$1" ]
 }
 
+# Является ли устройство USB
+is_usb_disk() {
+    local dev="$1"
+    local name
+    name=$(basename "$dev")
+    local tran
+    tran=$(lsblk -ndo TRAN "/dev/$name" 2>/dev/null)
+    [[ "$tran" == "usb" ]]
+}
+
+
 mount_partitions() {
     local part=1
     
@@ -326,12 +333,20 @@ mount_partitions() {
     fi
 }
 
-if [[ "$HDD" != /dev/sd? && "$HDD" != /dev/nvme?n* ]]; then
-    # Пропустить fstab для внешних дисков
-    info "USB-диск, не записываем в /etc/fstab"
+if is_usb_disk "$HDD"; then
+    info "$(say no_write_usb)"
 else
     mount_partitions
 fi
+
+# --- Финальные действия ---
+# if mountpoint -q /mnt/storage; then
+#    info "$(say part_mounted)"
+#    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+#    exec "$SCRIPT_DIR/setup-symlinks.sh"
+# else
+#    warn "$(say no_part_mounted)"
+# fi
 
 # --- Проверка ---
 df -h | grep -E "$EXISTING_USER|$USER2|$USER3" >&3
