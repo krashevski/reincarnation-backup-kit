@@ -34,7 +34,7 @@
 # read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
 # # 
 # # Подставновка двух значений:
-# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"\
+# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"
 # # плейсхолдеры:
 # MSG[ru_cron]="Параметры cron: время=%s, пользователь=%s"
 # MSG[en_cron]="Cron params: time=%s, user=%s"
@@ -74,7 +74,6 @@ declare -A MSG=(
     [ru_no_partitioning]="Нет доступных дисков для разметки!"
     [ru_sel_partition]="Выберите диск для разметки:"
     [ru_disk_selected]="Выбран диск: %s" 
-    
     [ru_check_mounts]="Проверка смонтированных разделов для %s..." 
     [ru_unmounting_partition]="Размонтируем %s (%s)..."
     [ru_unmounted_partition]="Раздел %s успешно размонтирован."
@@ -83,9 +82,6 @@ declare -A MSG=(
     [ru_failed_swapoff]="Не удалось отключить swap на %s!"
     [ru_all_partitions_unmounted]="Все разделы успешно размонтированы."
     [ru_no_partitions_mounted]="Смонтированных разделов не найдено."
-    
-    [ru_freeing_disk]="Освобождение диска"
- 
     [ru_hdd_start]="Запуск разметки HDD и создания пользователей..."
     [ru_prompt_disk]="Введите имя HDD (например, sdb): "
     [ru_error_no_disk]="Устройство не найдено!"
@@ -119,15 +115,24 @@ declare -A MSG=(
     [ru_no_third_user]="Третий пользователь не создаётся."
     [ru_pause]="Пауза. Нажмите Enter для продолжения..."
     [ru_only_user]="Вы, %s, являетесь единственным пользователем диска %s." 
-    [ru_existing_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
-    [ru_second_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
-    [ru_third_partition_size]="Ведите размер раздела для пользователя %s, GB: " 
+    [ru_existing_partition_size]="Введите размер раздела для пользователя %s, GB: " 
+    [ru_second_partition_size]="Введите размер раздела для пользователя %s, GB: " 
+    [ru_third_partition_size]="Введите размер раздела для пользователя %s, GB: " 
     [ru_create_existing_partition]="Создаём раздел для пользователя %s"
     [ru_create_second_partition]="Создаём раздел для пользователя %s"
     [ru_create_third_partition]="Создаём раздел для пользователя %s"
     [ru_created_existing_partition]="Раздел для %s создан: %s%s (%s GB)"
     [ru_created_second_partition]="Раздел для %s создан: %s%s (%s GB)"
     [ru_created_third_partition]="Раздел для %s создан: %s%s (%s GB)"
+    [ru_var_empty]="Переменная HDD пуста!"
+    [ru_no_found_holding]="Процессов, удерживающих диск, не найдено."
+    [ru_term_holding_processes]="Завершены процессы, удерживавшие диск: %s"
+    [ru_disk_busy]="Диск %s всё ещё занят, невозможно продолжить"
+    [ru_invalid_size]="Некорректный размер: %s"
+    [ru_no_write_usb]="USB-диск, не записываем в /etc/fstab"
+    [ru_freeing_disk]="Освобождаем диск %s..."
+    [ru_part_mounted]="Раздел /mnt/storage смонтирован — запускаем setup-symlinks.sh"
+    [ru_no_part_mounted]="Раздел /mnt/storage не смонтирован, пропускаем setup-symlinks.sh"
     # menu.sh
     [ru_main_menu]="Главное меню"
     [ru_backup]="Резервное копирование"
@@ -230,7 +235,6 @@ declare -A MSG=(
     [en_no_partitioning]="No disks available for partitioning!"
     [en_sel_partition]="Select a disk to partition:"
     [en_disk_selected]="Disk selected: %s"  
-    
     [en_check_mounts]="Checking mounted partitions for %s..."
     [en_unmounting_partition]="Unmounting %s (%s)..."
     [en_unmounted_partition]="Partition %s successfully unmounted."
@@ -238,10 +242,7 @@ declare -A MSG=(
     [en_disabling_swap]="Disabling swap on %s..."
     [en_failed_swapoff]="Failed to disable swap on %s!"
     [en_all_partitions_unmounted]="All partitions successfully unmounted."
-    [en_no_partitions_mounted]="No mounted partitions found."
-    
-    [en_freeing_disk]="Freeing the disk"
-     
+    [en_no_partitions_mounted]="No mounted partitions found."    
     [en_hdd_start]="Starting HDD setup and user creation..."
     [en_prompt_disk]="Enter HDD name (e.g., sdb): "
     [en_error_no_disk]="Device not found!"
@@ -284,6 +285,15 @@ declare -A MSG=(
     [en_created_existing_partition]="Partition for %s USER created: %s%s (%s GB)"
     [en_created_second_partition]="Partition for %s USER created: %s%s (%s GB)"
     [en_created_third_partition]="Partition for %s USER created: %s%s (%s GB)"
+    [en_var_empty]="HDD variable is empty!"
+    [en_no_found_holding]="No processes were found holding the disk."
+    [en_term_holding_processes]="Processes holding disk: %s terminated"   
+    [en_disk_busy]="Disk %s is still busy, cannot continue"
+    [en_invalid_size]="Invalid size: %s"
+    [en_no_write_usb]="USB drive, do not write to /etc/fstab"
+    [en_freeing_disk]="Freeing up disk %s..."
+    [en_part_mounted]="The /mnt/storage partition is mounted - run setup-symlinks.sh"
+    [en_no_part_mounted]="Partition /mnt/storage is not mounted, skipping setup-symlinks.sh"
     # menu.sh
     [en_main_menu]="Main Menu"
     [en_backup]="Backup"
