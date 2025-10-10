@@ -20,9 +20,15 @@
 # Log: ~/setup-symlinks.log
 # ==============================================================
 
-# Подключаем файл сообщений и переводов
-SCRIPT_DIR="$(dirname "$0")"
+# --- Подключаем файл с сообщениями (messages.sh) ---
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 source "$SCRIPT_DIR/messages.sh"
+
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
+fi
 
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"
@@ -31,7 +37,7 @@ LOG_DIR="$BACKUP_DIR/logs"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-22.04.tar.gz"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 RUN_LOG="$LOG_DIR/setup-symlinks.log"
-SYMLINKS=("$(say musik)" "$(say images)" "$(say videa)")
+SYMLINKS=("$(say musik)" "$(say images)" "(say video)")
 EXTRA_SYMLINKS=("shotcut:/mnt/shotcut" "backups:/mnt/backups")
 
 log() {
@@ -46,7 +52,7 @@ setup_link() {
     # создаём каталог назначения
     if [ ! -d "$target" ]; then
         mkdir -p "$target"
-        log "$(printf "${MSG[${L}_create_catalog}" "$target")"
+        log "$(printf "${SG[${L}_create_catalog}" "$target")"
     fi
 
     # если уже есть правильная ссылка
@@ -59,7 +65,7 @@ setup_link() {
     if [ -d "$link" ] && [ -z "$(ls -A "$link")" ]; then
         rm -r "$link"
         ln -s "$target" "$link"
-        log "${printf "$(say replaced_empty)" "$CRON_TIME" "$CRON_USER"}"
+        log "$(printf "$(say replaced_empty)" "$CRON_TIME" "$CRON_USER")"
         return
     fi
 

@@ -340,13 +340,13 @@ else
 fi
 
 # --- Финальные действия ---
-# if mountpoint -q /mnt/storage; then
-#    info "$(say part_mounted)"
-#    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-#    exec "$SCRIPT_DIR/setup-symlinks.sh"
-# else
-#    warn "$(say no_part_mounted)"
-# fi
+if mountpoint -q /mnt/storage; then
+    info "$(say part_mounted)"
+    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+    exec "$SCRIPT_DIR/setup-symlinks.sh"
+else
+    warn "$(say no_part_mounted)"
+fi
 
 # --- Проверка ---
 df -h | grep -E "$EXISTING_USER|$USER2|$USER3" >&3
