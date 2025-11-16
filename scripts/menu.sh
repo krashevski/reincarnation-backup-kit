@@ -188,11 +188,11 @@ restore_menu() {
 cron_menu() {
     clear
     echo "-----------------------------------------"
-    echo "        MANAGE CRON BACKUP JOBS"
+    echo "$(say manage_cron)"
     echo "-----------------------------------------"
-    echo "$(say cron_menu)"
-    echo " 2) Clean backup logs"
-    echo " 3) Remove cron task"
+    echo "$(say menu_cron)"
+    echo "$(say clean_backup_logs)"
+    echo "$(say remove_cron_task)"
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
@@ -223,12 +223,12 @@ cron_menu() {
 media_menu() {
     clear
     echo "-----------------------------------------"
-    echo "                Media"
+    echo "$(say menu_media)"
     echo "-----------------------------------------"
-    echo " 1) Installs NVIDIA and CUDA drivers."
-    echo " 2) Checks GPU availability for Shotcut."
-    echo " 3) Install media tools via Flatpak."
-    echo " 4) Install media tools via APT."
+    echo "$(say install_nvidia)"
+    echo "$(say checks_gpu)"
+    echo "$(say install_flatpak)"
+    echo "$(say install_apt)"
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
@@ -249,15 +249,15 @@ media_menu() {
 tools_menu() {
     clear
     echo "-----------------------------------------"
-    echo "                TOOLS"
+    echo "$(say menu_tools)"
     echo "-----------------------------------------"
-    echo " ARCHIVE:"
-    echo "   1) Check last archive"
+    echo "$(say menu_archive)"
+    echo "$(say last_archive)"
     echo
-    echo " SYSTEM:"
-    echo "   2) Show system mounts"
-    echo "   3) HDD setup profiles"
-    echo "   4) Setup symlinks"
+    echo "$(say menu_system)"
+    echo "$(say system_mounts)"
+    echo "$(say hdd_setup)"
+    echo "$(say setup_symlinks)"
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
@@ -278,7 +278,7 @@ tools_menu() {
 logs_menu() {
     clear
     echo "-----------------------------------------"
-    echo "                LOG FILES"
+    echo "$(say log_files)"
     echo "-----------------------------------------"
     echo "$(say list_logs)"
     echo "$(say in_ranger)"
@@ -301,11 +301,11 @@ settings_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "                SETTINGS"
+        echo "$(say menu_settings)"
         echo "-----------------------------------------"
-        echo " 1) Change language (RU/EN) [TODO]"
-        echo " 2) Set backup directories [TODO]"
-        echo " 3) Manage CUDA Toolkit"
+        echo "$(say change_language)"
+        echo "$(say backup_directories)"
+        echo "$(say manage_cuda)"
         echo
         echo "$(say back_main)"
         echo "-----------------------------------------"
