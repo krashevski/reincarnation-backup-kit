@@ -207,6 +207,13 @@ MSG[physical_disks]="===== Информация о физических диск
 MSG[mounts_header]="===== Список точек монтирования ====="
 MSG[symlinks_header]="===== Символические ссылки в %s ====="
 MSG[crontab_header]="===== Строка в crontab ====="
+# remove-cron-backup.sh
+MSG[removed_root]="Cron-задачи удалены из crontab root."
+MSG[removed_user]="Cron-задачи удалены из crontab пользователя %s."
+MSG[before]="Crontab ДО удаления:"
+MSG[after]="Crontab ПОСЛЕ удаления:"
+MSG[err_read]="Не удалось прочитать crontab пользователя %s (недостаточно прав?)"
+MSG[crontab_empty]="Задания cron не найдены."
 # common
 MSG[backup_start]="Запуск резервного копирования..."
 MSG[backup_pkgs]="Резервное копирование пакетов и репозиториев..."

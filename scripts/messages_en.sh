@@ -208,6 +208,13 @@ MSG[physical_disks]="===== Information about physical disks ====="
 MSG[mounts_header]="===== List of mount points ====="
 MSG[symlinks_header]="===== Symbolic links in %s ====="
 MSG[crontab_header]="===== Crontab entries ====="
+# remove-cron-backup.sh
+MSG[removed_root]="Cron jobs removed from root crontab."
+MSG[removed_user]="Cron jobs removed from user %s crontab."
+MSG[before]="Crontab BEFORE removal:"
+MSG[after]="Crontab AFTER removal:"
+MSG[err_read]="Failed to read crontab for user %s (permission?)"
+MSG[crontab_empty]="No cron jobs found."
 # common
 MSG[backup_start]="Starting backup..."
 MSG[backup_done]="Backup completed successfully!"
@@ -242,3 +249,4 @@ MSG[log_enabled]="Logging enabled. Detailed log: "
 MSG[logs_cleaned]="Backup logs cleaned."
 MSG[install_start]="Installing..."
 MSG[install_done]="Installation completed."
+

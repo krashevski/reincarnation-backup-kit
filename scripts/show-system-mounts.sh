@@ -13,6 +13,14 @@ if [[ -z "${INHIBIT_LOCK:-}" ]]; then
     exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
 fi
 
+# --- Colors ---
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
+
 # 1. Сначала объявляем массив
 declare -A MSG
 
@@ -109,11 +117,17 @@ info symlinks_header "$USER_HOME"
 find "$USER_HOME" -maxdepth 1 -type l -printf "%f -> %l\n"
 
 echo
-say crontab_header
-if sudo crontab -l 2>/dev/null; then
-  :
+say crontab_header   # MSG[crontab_header]="Crontab:"
+
+TARGET_USER="${SUDO_USER:-$USER}"  # реальный пользователь
+user_cron=$(crontab -l -u "$TARGET_USER" 2>/dev/null || true)
+
+if [[ -n "$user_cron" ]]; then
+    echo "$user_cron"
 else
-  echo "(empty)"
+    say crontab_empty  # MSG[crontab_empty]="Нет заданий в crontab"
 fi
 echo
+
+
 
