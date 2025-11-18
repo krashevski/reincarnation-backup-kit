@@ -7,33 +7,69 @@
 
 set -euo pipefail
 
-# ----------------------------
-# Language setup
-# ----------------------------
-LANGUAGE="${LANGUAGE:-ru}"  # default Russian
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
+fi
 
-declare -A MSG_RU=(
-  [physical_disks]="===== Информация о физических дисках ====="
-  [mounts_header]="===== Список точек монтирования ====="
-  [symlinks_header]="===== Символические ссылки в %s ====="
-  [crontab_header]="===== Строка в crontab ====="
-)
+# 1. Сначала объявляем массив
+declare -A MSG
 
-declare -A MSG_EN=(
-  [physical_disks]="===== Information about physical disks ====="
-  [mounts_header]="===== List of mount points ====="
-  [symlinks_header]="===== Symbolic links in %s ====="
-  [crontab_header]="===== Crontab entries ====="
-)
+# 2. Затем функции, НИКАКИХ source ДО ФУНКЦИЙ!
+# -------------------------------------------------------------
 
-msg() {
-  local key="$1"; shift
-  case "$LANGUAGE" in
-    ru) printf "${MSG_RU[$key]}\n" "$@" ;;
-    en) printf "${MSG_EN[$key]}\n" "$@" ;;
-    *)  printf "${MSG_EN[$key]}\n" "$@" ;; # fallback English
-  esac
+# загрузка сообщений
+load_messages() {
+    local lang="$1"
+    MSG=()   # очистка
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            ;;
+    esac
 }
+
+# безопасный say
+say() {
+    local key="$1"
+    if [[ -n "${MSG[$key]+set}" ]]; then
+        echo "${MSG[$key]}"
+    else
+        echo "[$key]"
+    fi
+}
+
+info() {
+    local key="$1"
+    shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b" "$(printf "$fmt" "$@")"
+    printf "\n"           # ОБЯЗАТЕЛЬНЫЙ перевод строки
+}
+
+
+# -------------------------------------------------------------
+# 3. И только теперь подключаем пути и загружаем сообщения
+# -------------------------------------------------------------
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# НЕ ПОДКЛЮЧАЙ messages.sh больше, он НЕ НУЖЕН!
+# source "$SCRIPT_DIR/messages.sh"   # ← УДАЛИТЬ
+
+# Если LANG_CODE экспортирован — используем его,
+# если нет — по умолчанию "ru"
+: "${LANG_CODE:=ru}"
+
+load_messages "$LANG_CODE"
 
 # --- Функция для информации о дисках ---
 show_disks_info() {
@@ -61,19 +97,19 @@ fi
 # ----------------------------
 
 echo
-msg physical_disks
+say physical_disks
 show_disks_info
 
 echo
-msg mounts_header
+say mounts_header
 lsblk -o NAME,PATH,LABEL,MOUNTPOINT,FSTYPE,UUID -e 7,11
 
 echo
-msg symlinks_header "$USER_HOME"
+info symlinks_header "$USER_HOME"
 find "$USER_HOME" -maxdepth 1 -type l -printf "%f -> %l\n"
 
 echo
-msg crontab_header
+say crontab_header
 if sudo crontab -l 2>/dev/null; then
   :
 else

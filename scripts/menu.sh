@@ -19,9 +19,74 @@
 
 set -euo pipefail
 
-# --- Подключаем файл с сообщениями (messages.sh) ---
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
+fi
+
+# --- Colors ---
+RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
+# 1. Сначала объявляем массив
+declare -A MSG
+
+# 2. Затем функции, НИКАКИХ source ДО ФУНКЦИЙ!
+# -------------------------------------------------------------
+
+# загрузка сообщений
+load_messages() {
+    local lang="$1"
+    MSG=()   # очистка
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            ;;
+    esac
+}
+
+# безопасный say
+say() {
+    local key="$1"
+    if [[ -n "${MSG[$key]+set}" ]]; then
+        echo "${MSG[$key]}"
+    else
+        echo "[$key]"
+    fi
+}
+
+info() {
+    local key="$1"
+    shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b" "$(printf "$fmt" "$@")"
+    printf "\n"           # ОБЯЗАТЕЛЬНЫЙ перевод строки
+}
+
+
+# -------------------------------------------------------------
+# 3. И только теперь подключаем пути и загружаем сообщения
+# -------------------------------------------------------------
+
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-source "$SCRIPT_DIR/messages.sh"
+
+# НЕ ПОДКЛЮЧАЙ messages.sh больше, он НЕ НУЖЕН!
+# source "$SCRIPT_DIR/messages.sh"   # ← УДАЛИТЬ
+
+# подгружаем язык ДО использования MSG и say
+LANG_CODE="ru"
+load_messages "$LANG_CODE"
 
 # --- Проверка root только для команд, где нужны права ---
 require_root() {
@@ -82,6 +147,23 @@ show_logs() {
     fi
 }
 
+# Переключатель языка
+change_language() {
+    clear
+    echo "Choose language / Выберите язык:"
+    echo "1) Русский"
+    echo "2) English"
+    read -p "> " choice
+
+    case "$choice" in
+        1) LANG_CODE="ru" ;;
+        2) LANG_CODE="en" ;;
+    esac
+
+    # перезагружаем переводы
+    load_messages "$LANG_CODE"
+}
+
 # --- Главное меню ---
 main_menu() {
     while true; do
@@ -91,7 +173,7 @@ main_menu() {
         echo "========================================="
         echo " 1) $(say backup)"
         echo " 2) $(say restore)"
-        echo " 3) Manage cron jobs"
+        echo " 3) $(say cron_jobs)"
         echo " 4) $(say media)"
         echo " 5) $(say tools)"
         echo " 6) $(say logs)"
@@ -120,7 +202,7 @@ backup_menu() {
         echo "-----------------------------------------"
         echo "$(say backup_options)"
         echo "-----------------------------------------"
-        info "$(printf "${MSG[${L}_system]}" $DISTRO_ID $DISTRO_VER)"
+        info "$(printf "${MSG[system]}" $DISTRO_ID $DISTRO_VER)"
         echo "$(say backup_system)"
         echo
         echo "$(say userdata)" 
@@ -141,7 +223,7 @@ backup_menu() {
             
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
 
-                info "$(printf "${MSG[${L}_adding_cron]}" $CRON_TIME $CRON_USER)"
+                info "$(printf "${MSG[adding_cron]}" $CRON_TIME $CRON_USER)"
                 bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
                 ok "$(say cron_installed)"
             else
@@ -163,7 +245,7 @@ restore_menu() {
         echo "-----------------------------------------"
         echo "$(say restore_options)"
         echo "-----------------------------------------"
-        info "$(printf "${MSG[${L}_system]}" $DISTRO_ID $DISTRO_VER)"
+        info "$(printf "${MSG[system]}" $DISTRO_ID $DISTRO_VER)"
         echo "$(say restore_packeages)"
         echo "$(say restore_manual)"
         echo
@@ -202,7 +284,7 @@ cron_menu() {
             read -rp "$(say enter_time)" CRON_TIME
             read -rp "$(say enter_user)" CRON_USER
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                info "$(printf "${MSG[${L}_adding_cron]}" $CRON_TIME $CRON_USER)"
+                info "$(printf "${MSG[adding_cron]}" $CRON_TIME $CRON_USER)"
                 bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
                 ok "$(say cron_job_installed)"
             else
@@ -312,7 +394,8 @@ settings_menu() {
         read -rp "$(say sel_opt)" choice
         case "$choice" in
             1)
-                echo "$(say lang_not)"
+                change_language # <-- здесь вызываем функцию переключения языка
+                export LANG_CODE
                 read -rp "$(say press_continue)"
                 ;;
             2)
