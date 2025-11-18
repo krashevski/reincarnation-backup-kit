@@ -202,7 +202,7 @@ backup_menu() {
         echo "-----------------------------------------"
         echo "$(say backup_options)"
         echo "-----------------------------------------"
-        info "$(printf "${MSG[system]}" $DISTRO_ID $DISTRO_VER)"
+        info "system" "$DISTRO_ID $DISTRO_VER"
         echo "$(say backup_system)"
         echo
         echo "$(say userdata)" 
@@ -245,7 +245,7 @@ restore_menu() {
         echo "-----------------------------------------"
         echo "$(say restore_options)"
         echo "-----------------------------------------"
-        info "$(printf "${MSG[system]}" $DISTRO_ID $DISTRO_VER)"
+        info "system" "$DISTRO_ID $DISTRO_VER"
         echo "$(say restore_packeages)"
         echo "$(say restore_manual)"
         echo
