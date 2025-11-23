@@ -25,10 +25,10 @@
 # info "$(say backup_start)"
 # # ...
 # # С подстановкой одного значения:
-# info "$(printf "${MSG[${L}_user]}" $EXISTING_USER)"
+# info err_read "$TARGET_USER" >&2
 # # плейсхолдер:
-# MSG[user]="Текущий пользователь: %s"
-# MSG[user]="Existing user: %s"
+# MSG[err_read]="Не удалось прочитать crontab пользователя %s (недостаточно прав?)"
+# MSG[err_read]="Unable to read user %s's crontab (insufficient permissions?)"
 # #
 # # Интерактивный ввод с подстановкой значения:
 # read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
@@ -188,7 +188,7 @@ MSG[hdd_setup]="   3) HDD setup profiles"
 MSG[setup_symlinks]="   4) Setup symlinks"
 MSG[manage_cuda]=" 3) Manage CUDA Toolkit"
 MSG[backup_directories]=" 2) Set backup directories [TODO]"
-MSG[change_language]=" 1) Change language (RU/EN) [TODO]"
+MSG[change_language]=" 1) Change language (RU/EN)"
 # setup-symlinks.sh
 MSG[musik]="Musik"
 MSG[video]="Videa"

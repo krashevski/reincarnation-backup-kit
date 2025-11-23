@@ -85,7 +85,7 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 # source "$SCRIPT_DIR/messages.sh"   # ← УДАЛИТЬ
 
 # подгружаем язык ДО использования MSG и say
-LANG_CODE="ru"
+LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
 # --- Проверка root только для команд, где нужны права ---
