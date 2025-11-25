@@ -2,18 +2,23 @@
 
 [![License: CC BY-SA 4.0](https://licensebuttons.net/l/by-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
+<<<<<<< HEAD
 [🇬🇧 English](../EN/README_GIT_BRANCHES_EN.md) | [🇷🇺 Русский](README_GIT_BRANCHES_RU.md)
+=======
+[🇬🇧 English](README_GIT_BRANCHES_EN.md) | [🇷🇺 Русский](../RU/README_GIT_BRANCHES_RU.md)
+>>>>>>> d19428f (документация: добавлен README_GIT_BRANCHES с инструкциями по безопасной работе с ветками в репозитарии)
 
 A quick guide to safely working with branches in the Reincarnation Backup Kit repository.
 
 ## Main Branches
 
-| Branch | Purpose |
-| --------------------------------------- | ----------------------------------------------------------------------- |
-| `main` | The main protected branch. Contains the stable version of the project. |
-| `local-working-version` | Branch for local work and experimentation. |
-| `feature/...` | Branches for new features or changes (e.g. `feature/i18n-updates`). |
-| `backup-before-*` | Backup branches before major changes. |
+| Branch                     | Purpose                                                               |
+| -------------------------- | --------------------------------------------------------------------- |
+| `main`                     | The main protected branch. Contains the stable version of the project. |
+| `local-working-version`    | Branch for local work and experimentation.                            |
+| `feature/...`              | Branches for new features or changes (e.g. `feature/i18n-updates`). |
+| `backup-before-*`          | Backup branches before major changes.                                 |
+
 
 ## 🆕 Create a new feature branch
 ### Switch to main and pull in the latest changes
@@ -34,7 +39,7 @@ To sync with GitHub:
 git push -u origin feature/i18n-updates
 ```
 
-## 🔀 Pull Request (merging changes into main)
+# 🔀 Pull Request (merging changes into main)
 1. On GitHub, open the repository → Pull requests tab → New pull request.
 2. Set:
 1. base: main
@@ -72,6 +77,7 @@ git branch -r
 - Create backup branches before breaking changes.
 
 ## Mini-workflow
+
 1. Switch to main and pull the latest changes
 ```bash
 git checkout main
@@ -103,22 +109,22 @@ git push -u origin feature/my-task
 ## 🌳 About the branching scheme
 
 Visually:
-main
-|
-| Pull / Merge
-|
-backup-before-i18n ← Backup branch before major changes
-|
-|
-feature/i18n-updates ← Branch for a new feature or change
-|
-| Work and commits
-|
-feature/fix-bug ← Another feature branch
-|
-| Merge Pull Request
-|
-main
+      main
+       |
+       | Pull / Merge
+       |
+backup-before-i18n   ← Резервная ветка перед крупными изменениями
+       |
+       |
+feature/i18n-updates  ← Ветка для новой функции или изменения
+       |
+       | Работа и коммиты
+       |
+feature/fix-bug       ← Другая feature-ветка
+       |
+       | Merge Pull Request
+       |
+      main
 
 Explanation of the scheme:
 1. main — the primary protected branch, contains the stable version of the project.
