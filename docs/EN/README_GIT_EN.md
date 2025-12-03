@@ -105,3 +105,8 @@ git add .
 git commit -m "..."
 git push origin main
 ```
+
+## See also
+
+- Working with Git and GitHub branches, see [README_GIT_BRANCHES_EN.md](README_GIT_BRANCHES_EN.md)
+- Cheat Sheet: Safe Rebase, see [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
