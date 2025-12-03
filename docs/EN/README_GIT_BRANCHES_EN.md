@@ -130,6 +130,7 @@ git push origin main
 ## 🌳 About the branching scheme
 
 Visually:
+```text
       main
        |
        | Pull / Merge
@@ -146,6 +147,7 @@ feature/fix-bug       ← Другая feature-ветка
        | Merge Pull Request
        |
       main
+```
 
 Explanation of the scheme:
 1. main — the primary protected branch, contains the stable version of the project.
