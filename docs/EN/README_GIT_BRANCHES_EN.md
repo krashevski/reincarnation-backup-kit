@@ -158,5 +158,5 @@ Explanation of the scheme:
 
 ## See also
 
-- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
-- Mini Git Cheat Sheet file [README_GIT_RU.md](README_GIT_RU.md)
+- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
+- Mini Git Cheat Sheet file [README_GIT_EN.md](README_GIT_EN.md)
