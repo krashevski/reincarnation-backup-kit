@@ -80,6 +80,8 @@ git checkout feature/update-readme
 2. Обновить ветку локально:
 ```bash
 git fetch origin
+git add .
+git commit -m "Временные изменения перед rebase"
 git rebase origin/feature/update-readme
 ```
 
