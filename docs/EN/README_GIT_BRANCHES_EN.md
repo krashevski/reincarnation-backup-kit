@@ -80,6 +80,8 @@ git checkout feature/update-readme
 2. Update the branch locally:
 ```bash
 git fetch origin
+git add .
+git commit -m "Temporary changes before rebase"
 git rebase origin/feature/update-readme
 ```
 
