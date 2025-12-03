@@ -103,13 +103,27 @@ git commit -m "Обновление README_GIT_REBASE: исправления и
 git push origin feature/update-readme
 ```
 
-7. Создать или обновить Pull Request (PR) из feature/update-readme в main.
-```bash
-git push origin feature/update-readme
-```
-
 > ⚠️ Команда git push сама не создаёт PR (Pull Request), но гарантирует, что на сервере есть актуальная версия ветки для PR.
 
+## 📝 Мини-последовательность обновление main из feature-ветки для README
+
+1. Перейти в main и обновить её с GitHub:
+```bash
+git checkout main
+git pull origin main
+```
+
+2. Слить изменения из feature-ветки:
+```bash
+git merge feature/update-readme
+```
+
+3. Разрешите возможные конфликты (если видны <<<<<<<, =======, >>>>>>> в открывшемся файле и оставить нужный текст, и сохраните файл).
+
+4. Запушьте обновлённый main на GitHub:
+```bash
+git push origin main
+```
 
 ## 🌳 О схеме ветвления
 

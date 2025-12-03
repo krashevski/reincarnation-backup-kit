@@ -103,32 +103,47 @@ git commit -m "Update README_GIT_REBASE: fixes and additions"
 git push origin feature/update-readme
 ```
 
-7. Create or update a Pull Request (PR) from feature/update-readme to main.
+> ⚠️ The git push command doesn't create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
+
+## 📝 Mini-sequence for updating main from a feature branch for README
+
+1. Go to main and update it from GitHub:
 ```bash
-git push origin feature/update-readme
+git checkout main
+git pull origin main
 ```
 
-> ⚠️ The git push command doesn't create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
+2. Merge changes from the feature branch:
+```bash
+git merge feature/update-readme
+```
+
+3. Resolve any conflicts (if you see <<<<<<<, =======, >>>>>>> in the file that opens, leave the desired text and save the file).
+
+4. Push the updated main to GitHub:
+```bash
+git push origin main
+```
 
 ## 🌳 About the branching scheme
 
 Visually:
-main
-|
-| Pull / Merge
-|
-backup-before-i18n ← Backup branch before major changes
-|
-|
-feature/i18n-updates ← Branch for a new feature or change
-|
-| Work and commits
-|
-feature/fix-bug ← Another feature branch
-|
-| Merge Pull Request
-|
-main
+      main
+       |
+       | Pull / Merge
+       |
+backup-before-i18n   ← Резервная ветка перед крупными изменениями
+       |
+       |
+feature/i18n-updates  ← Ветка для новой функции или изменения
+       |
+       | Работа и коммиты
+       |
+feature/fix-bug       ← Другая feature-ветка
+       |
+       | Merge Pull Request
+       |
+      main
 
 Explanation of the scheme:
 1. main — the primary protected branch, contains the stable version of the project.
