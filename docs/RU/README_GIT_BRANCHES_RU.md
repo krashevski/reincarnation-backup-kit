@@ -71,34 +71,45 @@ git branch -r
 - Используйте feature-ветки для новых задач и экспериментов.
 - Создавайте резервные ветки перед критическими изменениями.
 
-## Мини-последовательность работы
-1. Переключаемся на main и подтягиваем последние изменения
+## 📝 Мини-последовательность работы с README через ветку feature/update-readme
+1. Перейти в ветку документации:
 ```bash
-git checkout main
-git pull origin main
-```
-> [I] Cоздание ветки должно происходить от актуальной ветки main
-
-2. Создаём feature-ветку для работы над задачей
-```bash
-git checkout -b feature/my-task
+git checkout feature/update-readme
 ```
 
-3. Редактируем файлы проекта
-... редактируем, сохраняем изменения ...
-
-4. Сохраняем изменения в локальной ветке
+2. Обновить ветку локально:
 ```bash
-git add .
-git commit -m "описание изменений"
+git fetch origin
+git rebase origin/feature/update-readme
 ```
 
-5. Отправляем ветку на GitHub
+3. Внести изменения в файлы README:
+- docs/RU/README_GIT_REBASE_RU.md
+- docs/EN/README_GIT_REBASE_EN.md
+
+4. Добавить изменения в индекс:
 ```bash
-git push -u origin feature/my-task
+git add docs/RU/README_GIT_REBASE_RU.md
+git add docs/EN/README_GIT_REBASE_EN.md
 ```
 
-6. Создаём Pull Request на GitHub для слияния с main
+5. Создать коммит:
+```bash
+git commit -m "Обновление README_GIT_REBASE: исправления и дополнения"
+```
+
+6. Отправить изменения на GitHub:
+```bash
+git push origin feature/update-readme
+```
+
+7. Создать или обновить Pull Request (PR) из feature/update-readme в main.
+```bash
+git push origin feature/update-readme
+```
+
+> ⚠️ Команда git push сама не создаёт PR (Pull Request), но гарантирует, что на сервере есть актуальная версия ветки для PR.
+
 
 ## 🌳 О схеме ветвления
 
