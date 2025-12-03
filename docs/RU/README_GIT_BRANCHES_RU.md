@@ -158,5 +158,5 @@ feature/fix-bug       ← Другая feature-ветка
 
 ## См. также
 
-- Шпаргалка: безопасный rebase README см. файл [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
-- Мини-шпаргалка по Git см. файл [README_GIT_RU.md](README_GIT_RU.md)
+- Шпаргалка: безопасный rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
+- Мини-шпаргалка по Git [README_GIT_RU.md](README_GIT_RU.md)
