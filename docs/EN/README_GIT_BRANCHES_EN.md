@@ -155,3 +155,8 @@ Explanation of the scheme:
 3. feature/... — branches for working on a specific task or new feature.
 4. Merge Pull Request — after completing work on the feature branch, changes are merged into main via a pull request.
 5. After the merge, the feature branch can be deleted, but main remains protected.
+
+## See also
+
+- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
+- Mini Git Cheat Sheet file [README_GIT_RU.md](README_GIT_RU.md)

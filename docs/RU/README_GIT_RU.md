@@ -106,5 +106,6 @@ git push origin main
 ```
 
 ## См. также
+
 - Работа с ветками Git и GitHub см. файл [README_GIT_BRANCHES_RU.md](README_GIT_BRANCHES_RU.md)
 - Шпаргалка: безопасный rebase README см. файл [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)

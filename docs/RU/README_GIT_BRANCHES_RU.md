@@ -156,3 +156,7 @@ feature/fix-bug       ← Другая feature-ветка
 4. Merge Pull Request — после завершения работы feature-ветки изменения сливаются в main через Pull Request.
 5. После слияния feature-ветка может быть удалена, а main остаётся защищённой.
 
+## См. также
+
+- Шпаргалка: безопасный rebase README см. файл [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
+- Мини-шпаргалка по Git см. файл [README_GIT_RU.md](README_GIT_RU.md)
