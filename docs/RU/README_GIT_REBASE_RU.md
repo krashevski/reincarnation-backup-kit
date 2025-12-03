@@ -98,3 +98,8 @@ git push --force-with-lease origin feature/i18n-updates
 - Сохраняйте резервную копию локальных изменений (git stash), если не уверены.
 - Для текстовых файлов (README, docs) проще вручную объединять версии при конфликте.
 - Используйте одинаковый стиль коммитов и сообщений, чтобы легко ориентироваться.
+
+## См. также
+
+- Файл README для работы с ветками Git и GitHub [README_GIT_BRANCHES_RU.md](README_GIT_BRANCHES_RU.md)
+- Мини-шпаргалка по Git [README_GIT_RU.md](README_GIT_RU.md)

@@ -98,3 +98,9 @@ git push --force-with-lease origin feature/i18n-updates
 - Keep a backup of your local changes (git stash) if you're unsure.
 - For text files (README, docs), it's easier to manually merge versions if there's a conflict.
 - Use a consistent commit style and message for easy navigation.
+
+
+## See also
+
+- Working with Git and GitHub Branches README file [README_GIT_BRANCHES_EN.md](README_GIT_BRANCHES_EN.md)
+- Mini Git Cheat Sheet file [README_GIT_EN.md](README_GIT_EN.md)
