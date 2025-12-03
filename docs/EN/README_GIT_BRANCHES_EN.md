@@ -71,34 +71,44 @@ git branch -r
 - Use feature branches for new tasks and experiments.
 - Create backup branches before breaking changes.
 
-## Mini-workflow
-1. Switch to main and pull the latest changes
+## 📝 Mini-sequence for working with README via the feature/update-readme branch
+1. Go to the documentation branch:
 ```bash
-git checkout main
-git pull origin main
-```
-> [I] Branching should start from the current main branch
-
-2. Create a feature branch to work on the task
-```bash
-git checkout -b feature/my-task
+git checkout feature/update-readme
 ```
 
-3. Edit project files
-... edit, save changes...
-
-4. Save changes to the local branch
+2. Update the branch locally:
 ```bash
-git add .
-git commit -m "description of changes"
+git fetch origin
+git rebase origin/feature/update-readme
 ```
 
-5. Push the branch to GitHub
+3. Make changes to the README files:
+- docs/RU/README_GIT_REBASE_RU.md
+- docs/EN/README_GIT_REBASE_EN.md
+
+4. Add changes to the index:
 ```bash
-git push -u origin feature/my-task
+git add docs/RU/README_GIT_REBASE_RU.md
+git add docs/EN/README_GIT_REBASE_EN.md
 ```
 
-6. Create a Pull Request on GitHub to merge with main
+5. Create a commit:
+```bash
+git commit -m "Update README_GIT_REBASE: fixes and additions"
+```
+
+6. Push changes to GitHub:
+```bash
+git push origin feature/update-readme
+```
+
+7. Create or update a Pull Request (PR) from feature/update-readme to main.
+```bash
+git push origin feature/update-readme
+```
+
+> ⚠️ The git push command doesn't create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
 
 ## 🌳 About the branching scheme
 
