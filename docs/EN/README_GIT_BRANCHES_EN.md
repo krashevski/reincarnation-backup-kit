@@ -2,7 +2,7 @@
 
 [![License: CC BY-SA 4.0](https://licensebuttons.net/l/by-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-[🇬🇧 English](../EN/README_GIT_BRANCHES_EN.md) | [🇷🇺 Русский](README_GIT_BRANCHES_RU.md)
+[🇬🇧 English](README_GIT_BRANCHES_EN.md) | [🇷🇺 Русский](../RU/README_GIT_BRANCHES_RU.md)
 
 A quick guide to safely working with branches in the Reincarnation Backup Kit repository.
 
