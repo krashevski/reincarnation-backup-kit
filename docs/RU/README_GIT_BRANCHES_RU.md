@@ -130,6 +130,7 @@ git push origin main
 ## 🌳 О схеме ветвления
 
 Наглядно: 
+```text
       main
        |
        | Pull / Merge
@@ -146,6 +147,7 @@ feature/fix-bug       ← Другая feature-ветка
        | Merge Pull Request
        |
       main
+```
       
 Объяснение схемы:
 1. main — основная защищённая ветка, содержит стабильную версию проекта.
