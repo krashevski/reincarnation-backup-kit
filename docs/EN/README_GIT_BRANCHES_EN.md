@@ -72,7 +72,7 @@ git branch -r
 - Create backup branches before breaking changes.
 
 ## 📝 Mini-sequence for working with README via the feature/update-readme branch
-1. Go to the documentation branch:
+1. 1. Go to the documentation branch
 ```bash
 git checkout feature/update-readme
 ```
@@ -96,17 +96,17 @@ git add docs/RU/README_GIT_REBASE_RU.md
 git add docs/EN/README_GIT_REBASE_EN.md
 ```
 
-5. Create a commit:
+5. Create Commit:
 ```bash
 git commit -m "Update README_GIT_REBASE: fixes and additions"
 ```
 
-6. Push changes to GitHub:
+6. Push after rebase:
 ```bash
-git push origin feature/update-readme
+git push --force-with-lease origin feature/update-readme
 ```
 
-> ⚠️ The git push command doesn't create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
+> ⚠️ The git push command does not create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
 
 ## 📝 Mini-sequence for updating main from a feature branch for README
 
