@@ -77,30 +77,16 @@ git branch -r
 git checkout feature/update-readme
 ```
 
-2. Update the branch locally:
+2. Pull the latest changes from GitHub
 ```bash
 git fetch origin
-```
-
-a) Add changes:
-```bash
-git add .
-```
-
-b) Commit changes:
-```bash
-git commit -m "Temporary changes before rebase"
-```
-
-Run a rebase:
-```bash
 git rebase origin/feature/update-readme
 ```
 
-##№ See also
-- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
+### See also
+- Cheat Sheet: Safely Rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
 
-3. Amend local README files:
+3. Make changes to local README files:
 - docs/RU/README_GIT_REBASE_RU.md
 - docs/EN/README_GIT_REBASE_EN.md
 

@@ -77,23 +77,9 @@ git branch -r
 git checkout feature/update-readme
 ```
 
-2. Обновить ветку локально:
+2. Подтянуть последние изменения с GitHub
 ```bash
 git fetch origin
-```
-
-a) Добавить изменения:
-```bash
-git add .
-```
-
-b) Зафиксировать изменения:
-```bash
-git commit -m "Временные изменения перед rebase"
-```
-
-Выполнить rebase:
-```bash
 git rebase origin/feature/update-readme
 ```
 
