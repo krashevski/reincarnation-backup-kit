@@ -80,12 +80,27 @@ git checkout feature/update-readme
 2. Обновить ветку локально:
 ```bash
 git fetch origin
+```
+
+a) Добавить изменения:
+```bash
 git add .
+```
+
+b) Зафиксировать изменения:
+```bash
 git commit -m "Временные изменения перед rebase"
+```
+
+Выполнить rebase:
+```bash
 git rebase origin/feature/update-readme
 ```
 
-3. Внести изменения в файлы README:
+##№ Смотри также
+- Шпаргалка: безопасный rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
+
+3. Внести изменения в локальные файлы README:
 - docs/RU/README_GIT_REBASE_RU.md
 - docs/EN/README_GIT_REBASE_EN.md
 
@@ -109,7 +124,7 @@ git push origin feature/update-readme
 
 ## 📝 Мини-последовательность обновление main из feature-ветки для README
 
-1. Перейти в main и обновить её с GitHub:
+1. Перейти в main и обновить с GitHub:
 ```bash
 git checkout main
 git pull origin main
@@ -120,7 +135,7 @@ git pull origin main
 git merge feature/update-readme
 ```
 
-3. Разрешите возможные конфликты (если видны <<<<<<<, =======, >>>>>>> в открывшемся файле и оставить нужный текст, и сохраните файл).
+3. Разрешите возможные конфликты (если видны <<<<<<<, =======, >>>>>>> в открывшемся файле, оставьте нужный текст и сохраните файл).
 
 4. Запушьте обновлённый main на GitHub:
 ```bash
@@ -156,7 +171,7 @@ feature/fix-bug       ← Другая feature-ветка
 4. Merge Pull Request — после завершения работы feature-ветки изменения сливаются в main через Pull Request.
 5. После слияния feature-ветка может быть удалена, а main остаётся защищённой.
 
-## См. также
+## Смотри также
 
 - Шпаргалка: безопасный rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
 - Мини-шпаргалка по Git [README_GIT_RU.md](README_GIT_RU.md)

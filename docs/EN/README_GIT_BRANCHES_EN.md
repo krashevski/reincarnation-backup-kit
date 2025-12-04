@@ -80,12 +80,27 @@ git checkout feature/update-readme
 2. Update the branch locally:
 ```bash
 git fetch origin
+```
+
+a) Add changes:
+```bash
 git add .
+```
+
+b) Commit changes:
+```bash
 git commit -m "Temporary changes before rebase"
+```
+
+Run a rebase:
+```bash
 git rebase origin/feature/update-readme
 ```
 
-3. Make changes to the README files:
+##№ See also
+- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
+
+3. Amend local README files:
 - docs/RU/README_GIT_REBASE_RU.md
 - docs/EN/README_GIT_REBASE_EN.md
 
@@ -109,7 +124,7 @@ git push origin feature/update-readme
 
 ## 📝 Mini-sequence for updating main from a feature branch for README
 
-1. Go to main and update it from GitHub:
+1. Go to main and update from GitHub:
 ```bash
 git checkout main
 git pull origin main
@@ -120,12 +135,12 @@ git pull origin main
 git merge feature/update-readme
 ```
 
-3. Resolve any conflicts (if you see <<<<<<<, =======, >>>>>>> in the file that opens, leave the desired text and save the file).
+3. Resolve any conflicts (if you see <<<<<<<, =======, >>>>>>> in the file that opens, leave the relevant text and save the file).
 
 4. Push the updated main to GitHub:
 ```bash
 git push origin main
-```
+```.
 
 ## 🌳 About the branching scheme
 

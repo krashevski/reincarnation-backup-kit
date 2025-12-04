@@ -35,7 +35,7 @@
   4. Проверяет зависимости (`rsync`, `screen`, `tar`, `gzip`).
   5. Копирует архивный пакет `backup_kit` в `/media/backups` при необходимости.
   
-### См. также
+### Смотри также
 - Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
 - SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
 - Подключения второго диска в Linux см. файл [README_DISK_RU.md](README_DISK_RU.md)
