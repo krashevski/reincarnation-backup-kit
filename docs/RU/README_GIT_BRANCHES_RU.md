@@ -72,7 +72,7 @@ git branch -r
 - Создавайте резервные ветки перед критическими изменениями.
 
 ## 📝 Мини-последовательность работы с README через ветку feature/update-readme
-1. Перейти в ветку документации:
+1. 1. Перейти в ветку документации
 ```bash
 git checkout feature/update-readme
 ```
@@ -80,8 +80,19 @@ git checkout feature/update-readme
 2. Обновить ветку локально:
 ```bash
 git fetch origin
+```
+
+```bash
 git add .
+```
+
+```bash
 git commit -m "Временные изменения перед rebase"
+```
+
+2. Подтянуть последние изменения с GitHub
+```bash
+git fetch origin
 git rebase origin/feature/update-readme
 ```
 
@@ -100,9 +111,9 @@ git add docs/EN/README_GIT_REBASE_EN.md
 git commit -m "Обновление README_GIT_REBASE: исправления и дополнения"
 ```
 
-6. Отправить изменения на GitHub:
+6. Push после rebase:
 ```bash
-git push origin feature/update-readme
+git push --force-with-lease origin feature/update-readme
 ```
 
 > ⚠️ Команда git push сама не создаёт PR (Pull Request), но гарантирует, что на сервере есть актуальная версия ветки для PR.
