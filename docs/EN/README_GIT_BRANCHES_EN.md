@@ -111,6 +111,13 @@ git push --force-with-lease origin feature/update-readme
 
 ## 📝 Mini-sequence for updating main from a feature branch for README
 
+> [!] Don't move it to main; it's better to let the branch with the changes "rest":
+> * All changes will remain in your working branch (feature/update-readme or feature/i18n-updates).
+> * You can safely check that everything works correctly (i18n, documentation, scripts).
+> * If necessary, you can fix errors, conflicts, and test locally before merging it into main.
+> * After this, moving to main will be safe, and the history will remain clean.
+> [I] This is standard practice: first bring a feature to a stable state in a separate branch, then merge it into main.
+
 1. Go to main and update from GitHub:
 ```bash
 git checkout main
