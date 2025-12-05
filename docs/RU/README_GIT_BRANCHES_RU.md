@@ -71,42 +71,51 @@ git branch -r
 - Используйте feature-ветки для новых задач и экспериментов.
 - Создавайте резервные ветки перед критическими изменениями.
 
-## 📝 Мини-последовательность работы с README через ветку feature/update-readme
-1. 1. Перейти в ветку документации
+## 📝 Мини-последовательность для работы с README через ветку feature/update-readme
+
+1. 1. Перейдите в ветку документации
 ```bash
 git checkout feature/update-readme
 ```
 
+<<<<<<< HEAD
 2. Подтянуть последние изменения с GitHub
+=======
+2. Получите последние изменения с GitHub
+>>>>>>> feature/update-readme
 ```bash
 git fetch origin
 git rebase origin/feature/update-readme
 ```
 
+<<<<<<< HEAD
 ##№ Смотри также
 - Шпаргалка: безопасный rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
 
 3. Внести изменения в локальные файлы README:
+=======
+3. Внесите изменения в файлы README:
+>>>>>>> feature/update-readme
 - docs/RU/README_GIT_REBASE_RU.md
 - docs/EN/README_GIT_REBASE_EN.md
 
-4. Добавить изменения в индекс:
+4. Добавьте изменения в индекс:
 ```bash
 git add docs/RU/README_GIT_REBASE_RU.md
 git add docs/EN/README_GIT_REBASE_EN.md
 ```
 
-5. Создать коммит:
+5. Создайте коммит:
 ```bash
-git commit -m "Обновление README_GIT_REBASE: исправления и дополнения"
+git commit -m "Обновить README_GIT_REBASE: исправления и дополнения"
 ```
 
-6. Push после rebase:
+6. Отправка изменений после перебазирования:
 ```bash
 git push --force-with-lease origin feature/update-readme
 ```
 
-> ⚠️ Команда git push сама не создаёт PR (Pull Request), но гарантирует, что на сервере есть актуальная версия ветки для PR.
+> ⚠️ Команда git push сама по себе не создаёт запрос на извлечение (PR), но гарантирует наличие на сервере актуальной версии ветки для этого запроса.
 
 ## 📝 Мини-последовательность обновление main из feature-ветки для README
 

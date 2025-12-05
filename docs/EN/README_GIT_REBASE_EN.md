@@ -1,43 +1,41 @@
-# 🌿 Cheat Sheet: Safe Rebase README
+# 🧩 Cheat Sheet: How to finish git rebase when conflicts occur
 
 [![License: CC BY-SA 4.0](https://licensebuttons.net/l/by-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 [🇬🇧 English](README_GIT_REBASE_EN.md) | [🇷🇺 Русский](../RU/README_GIT_REBASE_RU.md)
 
-A short and safe sequence of steps for completing a rebase and publishing a README
+This document explains how to safely resolve merge conflicts during git rebase. It is designed for beginners and used inside the Reincarnation Backup Kit project.
 
-## Preparation
+## 1. 📌 Check which files are in conflict
 
-Before rebasing, make sure your local changes are saved:
+Git lists them automatically, but you can check manually:
 ```bash
 git status # check that the working directory is clean
-git add . # or git stash to temporarily save changes
 ```
 
-## Running rebase
-
+You will see files marked as:
 ```bash
-git fetch origin
-git rebase origin/main
+both modified: docs/RU/...  
+both modified: docs/EN/...
 ```
 
-> [I] Git will attempt to apply your commits on top of main:
-> [I] If there are no conflicts, the rebase will proceed automatically.
+## 2. 📌 Open the conflicting file and remove conflict markers
 
-## Conflicts during rebase
+Open the file:
+```bash
+nano docs/EN/README_...
+```
 
-If you see conflicting markers:
+Look for blocks like:
 ```bash
 <<<<<<< HEAD
-(your version)
+Your version of the text
 =======
-(version from main)
->>>>>>> commit_hash
+Text from the other branch
+>>>>>>> feature/update-readme
 ```
 
-> **HEAD** — your local version
-> **commit_hash** — version from the `main` branch
-
+🎯 Do this steps:
 Steps:
 1. Open the file in an editor (e.g., nano):
 ```bash
@@ -48,28 +46,36 @@ nano docs/EN/README_GIT_BRANCHES_EN.md
 3. Leave the final text you want.
 4. Save and exit (Ctrl+O → Enter → Ctrl+X in nano).
 
-## Mark files as resolved
+## 3. 📌 Mark the conflict as resolved
 
 ```bash
 git add docs/EN/README_GIT_BRANCHES_EN.md
 git add docs/RU/README_GIT_BRANCHES_RU.md
 ```
 
-## Continue the rebase
+## 4. 📌 Continue the rebase
 
 ```bash
 git rebase --continue
 ```
 
-- If there are more conflicts, repeat steps 3-5 for them.
+- If there are more conflicts, repeat steps 1-4 for them.
 - When there are no more conflicts, the rebase will complete.
 
+## 5. 📌 Useful commands
+
+❗ Abort rebase:
 If you want to cancel the rebase, use:
 ```bash
 git rebase --abort
 ```
 
-## Checking the status
+❗ Skip the problematic commit:
+```bash
+git rebase --skip
+```
+
+## 6. 📌 Checking the status
 
 ```bash
 git status
@@ -79,18 +85,13 @@ git log --oneline --graph --decorate -5
 - Make sure the branch is clean and all commits are applied.
 - All your README commits are applied.
 
-## Publishing on GitHub
+## 7. 📌 Final step: push your updated branch to publishing on GitHub
 
 ```bash
-git push origin feature/i18n-updates
+git push --force-with-lease origin feature/update-readme
 ```
 
-If history is rewritten (due to a rebase), it's safe to use:
-```bash
-git push --force-with-lease origin feature/i18n-updates
-```
-
-> [I] Always use --force-with-lease to avoid overwriting someone else's changes on the server.
+> --force-with-lease is if history is rewritten (due to a rebase), it's safe to use.
 
 ## Tips
 
@@ -98,7 +99,6 @@ git push --force-with-lease origin feature/i18n-updates
 - Keep a backup of your local changes (git stash) if you're unsure.
 - For text files (README, docs), it's easier to manually merge versions if there's a conflict.
 - Use a consistent commit style and message for easy navigation.
-
 
 ## See also
 

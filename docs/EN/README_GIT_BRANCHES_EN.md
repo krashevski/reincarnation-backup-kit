@@ -72,6 +72,7 @@ git branch -r
 - Create backup branches before breaking changes.
 
 ## 📝 Mini-sequence for working with README via the feature/update-readme branch
+
 1. 1. Go to the documentation branch
 ```bash
 git checkout feature/update-readme
