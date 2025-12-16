@@ -30,7 +30,7 @@ fi
 
 # Подключаем файл с сообщениями (messages.sh)
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-source "$SCRIPT_DIR/messages.sh"
+source "$SCRIPT_DIR/i18n/messages.sh"
 
 # --- Проверка root ---
 if [ "$EUID" -ne 0 ]; then
