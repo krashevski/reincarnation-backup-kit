@@ -1,0 +1,12 @@
+diff --git a/hdd-setup-profiles.sh b/hdd-setup-profiles.sh
+new file mode 100755
+index 0000000..6666666
+--- /dev/null
++++ b/hdd-setup-profiles.sh
+@@
++#!/bin/bash
++# =============================================================
++# hdd-setup-profiles.sh — setup HDD partitions and users
++...
+
+(Здесь вставляется весь готовый текст скрипта с user1/user2/user3, так чтобы его можно было сразу сохранить как новый файл.)
