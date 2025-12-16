@@ -25,10 +25,10 @@ load_messages() {
     MSG=()   # очистка
     case "$lang" in
         ru)
-            source "$SCRIPT_DIR/messages_ru.sh"
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
             ;;
         en)
-            source "$SCRIPT_DIR/messages_en.sh"
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
             ;;
         *)
             echo "Unknown language: $lang" >&2

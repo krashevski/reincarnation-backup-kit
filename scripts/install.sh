@@ -101,6 +101,7 @@ RUN_USER="${SUDO_USER:-$USER}"
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
+I18N_DIR="$TARGET_DIR/i18n"
 
 # --- Проверка BACKUP_DIR ---
 if [ -d "$BACKUP_DIR" ]; then
@@ -142,7 +143,12 @@ SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-use
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
 SCRIPTS_OS=()
 SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
-HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh" "setup-symlinks.sh" "messages.sh")
+HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh" "setup-symlinks.sh")
+SCRIPTS_I18N=(
+  "i18n/messages.sh"
+  "i18n/messages_ru.sh"
+  "i18n/messages_en.sh"
+)
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -161,7 +167,17 @@ else
     exit 1
 fi
 
+install_i18n() {
+  echo "Installing i18n message files..."
+
+  for file in "${SCRIPTS_I18N[@]}"; do
+     install -Dm644 "$file" "$TARGET_DIR/$file"
+  done
+}
+
+
 SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}")
+
 
 # --- Копирование скриптов ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -174,6 +190,9 @@ for script in "${SCRIPTS[@]}"; do
         warn "$script not found in $SCRIPT_DIR, skipped"
     fi
 done
+
+# --- Установка i18n ----
+install_i18n
 
 # --- PATH ---
 PATH_ADDED=false

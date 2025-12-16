@@ -44,10 +44,10 @@ load_messages() {
     MSG=()   # очистка
     case "$lang" in
         ru)
-            source "$SCRIPT_DIR/messages_ru.sh"
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
             ;;
         en)
-            source "$SCRIPT_DIR/messages_en.sh"
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
             ;;
         *)
             echo "Unknown language: $lang" >&2
@@ -85,7 +85,7 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 # source "$SCRIPT_DIR/messages.sh"   # ← УДАЛИТЬ
 
 # подгружаем язык ДО использования MSG и say
-LANG_CODE="ru"
+LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
 # --- Проверка root только для команд, где нужны права ---

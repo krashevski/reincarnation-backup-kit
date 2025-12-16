@@ -1,0 +1,252 @@
+#!/bin/bash
+# =============================================================
+# Reincarnation Backup Kit — MIT License
+# Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# =============================================================
+# messages_en.sh
+# Reincarnation Backup Kit — Messages Library
+# Unified messages for all scripts in english
+# MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
+# ==============================================================
+# В каждом скрипте подключать:
+# ----------------------------
+# #!/bin/bash
+# # 
+# # Вызов функции say: 
+# info "$(say backup_start)"
+# # ...
+# # С подстановкой одного значения:
+# info err_read "$TARGET_USER" >&2
+# # плейсхолдер:
+# MSG[err_read]="Не удалось прочитать crontab пользователя %s (недостаточно прав?)"
+# MSG[err_read]="Unable to read user %s's crontab (insufficient permissions?)"
+# #
+# # Интерактивный ввод с подстановкой значения:
+# read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
+# # 
+# # Подставновка двух значений:
+# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"
+# # плейсхолдеры:
+# MSG[cron]="Параметры cron: время=%s, пользователь=%s"
+# MSG[cron]="Cron params: time=%s, user=%s"
+# #
+# # Подставновка четырёх значений printf:
+# info "$(printf 'Раздел для %s создан: %s%s (%s GB)' "$USER3" "$HDD" "$PART" "$SIZE3")"
+# # для переводов:
+# info "$(printf "${MSG[${L}_partition_created]}" "$USER3" "$HDD" "$PART" "$SIZE3")"
+# # плейсхолдеры:
+# MSG[partition_created]='Раздел для %s создан: %s%s (%s GB)'
+# MSG[partition_created]='Partition for %s created: %s%s (%s GB)'
+# #
+# ok "$(say backup_done)"
+#
+# # Подключаем файл с сообщениями (messages.sh)
+# SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+# source "$SCRIPT_DIR/messages.sh"#
+# =============================================================
+
+MSG[hello]="Hello, world!"
+MSG[start]="Starting"
+# hdd-setup-profiles.sh
+MSG[hdd_detect]="Searching for available drives"
+MSG[skip_archive]="Skipping %s — contains the archive section"
+MSG[no_partitioning]="No disks available for partitioning!"
+MSG[sel_partition]="Select a disk to partition:"
+MSG[disk_selected]="Disk selected: %s"  
+MSG[check_mounts]="Checking mounted partitions for %s..."
+MSG[unmounting_partition]="Unmounting %s (%s)..."
+MSG[unmounted_partition]="Partition %s successfully unmounted."
+MSG[failed_unmount]="Failed to unmount %s!"
+MSG[disabling_swap]="Disabling swap on %s..."
+MSG[failed_swapoff]="Failed to disable swap on %s!"
+MSG[all_partitions_unmounted]="All partitions successfully unmounted."
+MSG[no_partitions_mounted]="No mounted partitions found."    
+MSG[hdd_start]="Starting HDD setup and user creation..."
+MSG[prompt_disk]="Enter HDD name (e.g., sdb): "
+MSG[error_no_disk]="Device not found!"
+MSG[warn_delete]="⚠️ WARNING: All data on the disk will be erased!"
+MSG[confirm_action]="Continue? (y/n): "
+MSG[prompt_user2]="Enter name of second user: "
+MSG[prompt_user3]="Enter name of third user: "
+MSG[disk_size]="Selected disk size: "
+MSG[user_size]="How many GB to allocate for %s: "
+MSG[remaining]="Remaining: "
+MSG[error_size]="Sum of specified sizes exceeds disk size!"
+MSG[creating_partitions]="Creating partition table..."
+MSG[formatting]="Formatting partitions..."
+MSG[creating_user]="Creating user "
+MSG[user_exists]="User already exists."
+MSG[fstab_exists]="fstab entry already exists, skipping."
+MSG[fstab_added]="fstab: added entry for "
+MSG[done_disks_users]="Operation completed. Disks mounted, users configured."
+MSG[restore_hint]="To restore user data, use rsync-restore-userdata.sh"
+MSG[mountpoint_exists]="The mount point already exists, it will be created: %s"
+MSG[uuid_exists]="UUID %s already exists in /etc/fstab"
+MSG[script_restart]="This script requires administrator rights. Restart via sudo..."
+MSG[select_disk]="Enter the number to select the disk: "
+MSG[create_second_user]="Do you want to create a second user (USER2)? (y/n): "
+MSG[second_user_name]="Enter the second user's name: "
+MSG[be_second_user]="The second user will be: %s"
+MSG[no_second_user]="The second user is not created."
+MSG[create_third_user]="Do you want to create a third user (USER3)? (y/n): "
+MSG[third_user_name]="Enter the third user name: "
+MSG[be_third_user]="The third user will be: %s"
+MSG[no_third_user]="The third user is not created."
+MSG[pause]="Pause. Press Enter to continue..." 
+MSG[only_user]="You, %s, are the only user of disk %s."
+MSG[existing_partition_size]="Enter the partition size for the user %s, GB: "
+MSG[second_partition_size]="Enter the partition size for user %s, GB: "
+MSG[third_partition_size]="Enter the partition size for user %s, GB: "
+MSG[create_existing_partition]="Creating a partition for user %s"
+MSG[create_second_partition]="Creating a partition for user %s"
+MSG[create_third_partition]="Creating a partition for user %s"
+MSG[created_existing_partition]="Partition for %s USER created: %s%s (%s GB)"
+MSG[created_second_partition]="Partition for %s USER created: %s%s (%s GB)"
+MSG[created_third_partition]="Partition for %s USER created: %s%s (%s GB)"
+MSG[var_empty]="HDD variable is empty!"
+MSG[no_found_holding]="No processes were found holding the disk."
+MSG[term_holding_processes]="Processes holding disk: %s terminated"   
+MSG[disk_busy]="Disk %s is still busy, cannot continue"
+MSG[invalid_size]="Invalid size: %s"
+MSG[no_write_usb]="USB drive, do not write to /etc/fstab"
+MSG[freeing_disk]="Freeing up disk %s..."
+MSG[part_mounted]="The /mnt/storage partition is mounted - run setup-symlinks.sh"
+MSG[no_part_mounted]="Partition /mnt/storage is not mounted, skipping setup-symlinks.sh"
+# menu.sh
+MSG[main_menu]="Main Menu"
+MSG[backup]="Backup"
+MSG[restore]="Restore"
+MSG[cron_jobs]="Manage cron jobs"
+MSG[media]="Media"
+MSG[tools]="Tools"
+MSG[logs]="View Logs"
+MSG[settings]="Settings"
+MSG[exit]="Exit"
+MSG[selected]="Selected:"
+MSG[incorrect_choice]="Incorrect choice, please try again"
+MSG[no_logs]="No logs found."
+MSG[install_ranger]="Ranger not found, installing..."
+MSG[failed_ranger]="Failed to install ranger, falling back to ls"
+MSG[sel_opt]=" Select an option: "
+MSG[invalid_choice]="Invalid choice, try again."
+MSG[back_main]=" 0) Back to main menu"
+MSG[enter_time]="Enter time (HH:MM): "
+MSG[enter_user]="Enter username: "
+MSG[menu_cron]=" 1) Incremental backup of user data via cron (schedule)"
+MSG[cron_backup]="   4) Incremental userdata backup via cron (scheduled)"
+MSG[cron_backup_installed]="Cron backup installed."
+MSG[cron_job_installed]="Cron job installed."
+MSG[empty_entered]="Empty values entered."
+MSG[press_continue]="Press Enter to continue..."
+MSG[press_return]="Press Enter to return..."
+MSG[list_logs]="You will see a list of log files"
+MSG[in_ranger]=" in the ranger console browser."
+MSG[sel_file]=" - Select a file and press Enter to view the file in nano editor."
+MSG[exit_file]=" - Press CTRL+X to Exit the nano."
+MSG[exit_ranger]=" - Press q to exit ranger."
+MSG[run_return]=" Press Enter to run ranger... or type q to return: "
+MSG[return_menu]="Return to menu..."
+MSG[lang_not]="Language selection is not yet implemented"
+MSG[backupdir_not]="Backup directory configuration is not yet implemented"
+MSG[checkcuda_not]="Script check-cuda-tools.sh not found or not executable."
+MSG[adding_cron]="Adding cron job: %s for %s"
+MSG[backup_system]="   1) Incremental Backup system packages, repos & keyrings"
+MSG[userdata_backup]="   2) Incremental userdata backup"
+MSG[userdata]=" Userdata:"
+MSG[full_backup]="   3) Full userdata backup (--fresh)"
+MSG[system]=" System (%s %s):"
+MSG[backup_options]="               BACKUP OPTIONS"
+MSG[restore_packeages]="   1) Incremental Restore packages (manual / full / none)"
+MSG[restore_manual]="   2) Incremental Restore manual"
+MSG[restore_userdata]="   3) Incremental Restore userdata"
+MSG[restore_options]="               RESTORE OPTIONS"
+MSG[manage_cron]="        MANAGE CRON BACKUP JOBS"
+MSG[menu_media]="                MEDIA"
+MSG[menu_tools]="                TOOLS"
+MSG[log_files]="                LOG FILES"
+MSG[menu_settings]="                SETTINGS"
+MSG[menu_archive]=" ARCHIVE:"
+MSG[menu_system]=" SYSTEM:"
+MSG[clean_backup_logs]=" 2) Clean backup logs"
+MSG[remove_cron_task]=" 3) Remove cron task"
+MSG[install_nvidia]=" 1) Installs NVIDIA and CUDA drivers"
+MSG[checks_gpu]=" 2) Checks GPU availability for Shotcut"
+MSG[install_flatpak]=" 3) Install media tools via Flatpak"
+MSG[install_apt]=" 4) Install media tools via APT"
+MSG[last_archive]="   1) Check last archive"
+MSG[system_mounts]="   2) Show system mounts"
+MSG[hdd_setup]="   3) HDD setup profiles"
+MSG[setup_symlinks]="   4) Setup symlinks"
+MSG[manage_cuda]=" 3) Manage CUDA Toolkit"
+MSG[backup_directories]=" 2) Set backup directories [TODO]"
+MSG[change_language]=" 1) Change language (RU/EN)"
+# setup-symlinks.sh
+MSG[musik]="Musik"
+MSG[video]="Videa"
+MSG[images]="Images"
+MSG[create_catalog]="Created catalog: %s"
+MSG[link_exists]="Link already exists: %s -> %s"
+MSG[replaced_empty]="Replaced the empty directory with a link: %s -> %s"
+MSG[not_empty]="The %s directory is not empty. Replace with a link? [y/N] "
+MSG[user_replace]="The %s directory was not empty, the user agreed to replace → %s"
+MSG[user_refused]="The %s directory was not empty, the user refused the replacement"
+MSG[link_created]="Link created: %s -> %s"
+MSG[skipp_link_path]="%s already exists as a regular file or folder. Skipping."
+MSG[symlink_created]="Symlink created: %s → %s"
+MSG[script_termination]="=== Script termination ==="
+# show-system-mounts.sh
+MSG[physical_disks]="===== Information about physical disks ====="
+MSG[mounts_header]="===== List of mount points ====="
+MSG[symlinks_header]="===== Symbolic links in %s ====="
+MSG[crontab_header]="===== Crontab entries ====="
+# remove-cron-backup.sh
+MSG[removed_root]="Cron jobs removed from root crontab."
+MSG[removed_user]="Cron jobs removed from user %s crontab."
+MSG[before]="Crontab BEFORE removal:"
+MSG[after]="Crontab AFTER removal:"
+MSG[err_read]="Failed to read crontab for user %s (permission?)"
+MSG[crontab_empty]="No cron jobs found."
+# common
+MSG[backup_start]="Starting backup..."
+MSG[backup_done]="Backup completed successfully!"
+MSG[backup_pkgs]="Backing up packages and repositories..."
+MSG[pkgs_done]="System packages saved."
+MSG[create_archive]="Creating archive"
+MSG[archive_exists]="Archive already exists. Renaming to .old"
+MSG[archive_done]="Archive created"
+MSG[archive_fail]="Archive creation failed"
+MSG[done]="Completed successfully!"
+MSG[run_sudo]="The script must be run with root rights (sudo)"
+MSG[change_owner]="Changing owner of directory to"
+MSG[no_dir]="Directory does not exist, check mount point."
+MSG[dir_missing]="Directory not found. Please mount the disk!"
+MSG[clean_tmp]="Cleaning temporary files..."
+MSG[tmp_cleaned]="Temporary files cleaned."
+MSG[extracting]="Extracting archive..."
+MSG[extract_ok]="Archive extracted successfully."
+MSG[extract_fail]="Archive extraction failed."
+MSG[archive_restored]="Archive restored."
+MSG[restore_start]="Starting restore..."
+MSG[restore_done]="Restore completed successfully!"
+MSG[restore_fail]="Restore failed."
+MSG[cuda_not_found]="CUDA not found."
+MSG[cuda_ok]="CUDA installed and available."
+MSG[gpu_not_found]="GPU not found."
+MSG[gpu_ok]="GPU available."
+MSG[media_install_start]="Installing media tools..."
+MSG[media_install_done]="Media tools installed."
+MSG[cron_removed]="Cron job removed."
+MSG[log_enabled]="Logging enabled. Detailed log: "
+MSG[logs_cleaned]="Backup logs cleaned."
+MSG[install_start]="Installing..."
+MSG[install_done]="Installation completed."
+
