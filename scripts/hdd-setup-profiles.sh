@@ -15,7 +15,7 @@
 :<<'DOC'
 =============================================================
 hdd-setup-profiles.sh — разметка HDD и создание пользователей
-Part of Backup Kit — HDD setup and user creation with logging
+Part of Backup Kit — HDD setup and users creation
 MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 =============================================================
 DOC
@@ -23,32 +23,144 @@ DOC
 set -euo pipefail
 
 # --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
+if command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Reincarnation Backup Kit: restore in progress" \
+            "$0" "$@"
+    fi
 fi
 
-# Подключаем файл с сообщениями (messages.sh)
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-source "$SCRIPT_DIR/i18n/messages.sh"
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
+
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
+
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
+
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
+
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+# -------------------------------------------------------------
+# 5. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b" "$(printf "$fmt" "$@")"
+    printf "\n"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[WARN] %b\n" "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 7. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[ERROR] %b\n" "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 8. Функция echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 9. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 10. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "$(say run_sudo)"
+        return 1
+    fi
+}
 
 # --- Проверка root ---
 if [ "$EUID" -ne 0 ]; then
-    info "$(say script_restart)"
+    info script_restart
     exec sudo bash "$0" "$@"
 fi
 
-info "$(say hdd_start)"
+info hdd_start
 
 # === Логирование ===
 LOG_FILE="/mnt/backups/logs/hdd_setup_profiles.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 exec 3>&1 4>&2
 trap 'exec 1>&3 2>&4' EXIT
-info "$(printf "$(say log_enabled)" "$LOG_FILE")"
+info log_enabled "$LOG_FILE"
 
 # --- Поиск доступных дисков ---
-info "$(say hdd_detect)"
+info hdd_detect
 
 ALL_DISKS=($(lsblk -ndo NAME,TYPE | awk '$2=="disk"{print $1}'))
 AVAILABLE_DISKS=()
@@ -58,38 +170,40 @@ for d in "${ALL_DISKS[@]}"; do
     safe_dev=$(printf '%s' "$dev" | sed 's/[.[\*^$()+?{|]/\\&/g')
     # проверяем, есть ли у диска смонтированные разделы как архивы
     if mount | grep -qE "^$dev.* (/(mnt/)?backups?|/(mnt/)?backup)(\\s|$)"; then
-        warn "$(printf "${MSG[${L}_skip_archive]}" "$dev")"
+        warn skip_archive "$dev"
         continue
     fi
     AVAILABLE_DISKS+=("$d")
 done
 
 if [ ${#AVAILABLE_DISKS[@]} -eq 0 ]; then
-    error "$(say no_partitioning)"
+    error no_partitioning
     exit 1
 fi
 
 # --- Выбор диска пользователем ---
-echo "$(say sel_partition)"
+echo_msg say sel_partition
 PS3="$(say select_disk)"
+
 select DISK in "${AVAILABLE_DISKS[@]}"; do
-    [ -n "$DISK" ] && break
+    [[ -n "$DISK" ]] && break
 done
+
 HDD="/dev/$DISK"
-info "$(printf "${MSG[${L}_disk_selected]}" "$HDD")"
+info disk_selected "$HDD"
 
 # Проверка монтирования разделов на выбранном диске
 # Проверка значения переменной
 if [ -z "$HDD" ]; then
-    error "$(say var_empty)"
+    error var_empty
     exit 1
 fi
 
-info "$(printf "$(say check_mounts)" "$HDD")"
+info check_mounts "$HDD"
 
 ensure_disk_free() {
     local disk="$1"
-    info "$(printf "${MSG[${L}_freeing_disk]}" $disk)"
+    info freeing_disk "$disk"
 
     # 1) Отключаем авто-монтирование GNOME (без фейлов, если нет gsettings)
     gsettings set org.gnome.desktop.media-handling automount false 2>/dev/null || true
@@ -111,9 +225,9 @@ ensure_disk_free() {
     local pids
     pids=$(fuser -km "$disk" 2>/dev/null || true)
     if [ -n "$pids" ]; then
-        info "$(printf "${MSG[${L}_term_holding_processes]}" $pids)"
+        info term_holding_processes "$pids"
     else
-        info "$(say no_found_holding)"
+        info no_found_holding
     fi
 
     # 5) Синхронизируем и даём ядру время
@@ -127,7 +241,7 @@ ensure_disk_free() {
 
     # 7) Финальная проверка — если всё ещё есть процессы, считаем диск занятым
     if fuser -vm "$disk" 2>/dev/null | tail -n +2 | grep -q .; then
-        error "$(printf "${MSG[${L}_disk_busy]}" $disk)"
+        error disk_busy "$disk"
         exit 1
     fi
 }
@@ -135,69 +249,89 @@ ensure_disk_free() {
 # --- Размер диска ---
 DISK_SIZE=$(lsblk -b -dn -o SIZE "$HDD")
 DISK_SIZE_GB=$((DISK_SIZE / 1024 / 1024 / 1024))
-info "$(say disk_size)" "$DISK_SIZE_GB GB"
+info disk_size "$DISK_SIZE_GB GB"
 
 # Покажем предупреждение прямо в терминале (и оно же попадёт в лог, если нужно)
 printf '%s\n' "$(say warn_delete)" >/dev/tty
 
 # Прочитаем ответ с управляющего терминала, чтобы read видел ввод
-read -r -p "$(say confirm_action) " CONFIRM </dev/tty
+read -r -p "$(echo_msg confirm_action )" CONFIRM </dev/tty
 
 # --- $EXISTING_USER ---
-EXISTING_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 {print $1,$3}' | sort -k2 -n | head -n1 | cut -d" " -f1)
+# --- Выбор существующего пользователя для multi-user системы ---
+if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
+    EXISTING_USER="$SUDO_USER"
+elif logname &>/dev/null; then
+    EXISTING_USER="$(logname)"
+else
+    EXISTING_USER="$(
+        getent passwd |
+        awk -F: '$3 >= 1000 && $3 < 60000 && $7 !~ /(false|nologin)$/ {print $1}' |
+        head -n1
+    )"
+fi
 
-echo "$(printf "${MSG[${L}_only_user]}" $EXISTING_USER $DISK)"
+# Получаем домашнюю директорию
+USER_HOME="$(getent passwd "$EXISTING_USER" | cut -d: -f6)"
+
+# Проверка существования домашней директории
+if [[ ! -d "$USER_HOME" ]]; then
+    echo "ERROR: Home directory not found for user $EXISTING_USER"
+    exit 1
+fi
+
+echo_msg only_user "$EXISTING_USER" "$DISK"
 
 # --- $USER2 ---
-read -rp "$(say create_second_user)" CREATE_USER2
+read -rp "$(echo_msg create_second_user)" CREATE_USER2
 
 if [[ "$CREATE_USER2" == "y" ]]; then
-    read -rp "$(say second_user_name)" USER2
-    echo "$(printf "${MSG[${L}_be_second_user]}" $USER2)"
+    read -rp "$(echo_msg second_user_name)" USER2
+    echo_msg be_second_user "$USER2"
 else
     USER2=""   # ← инициализация пустым значением
-    echo "$(say no_second_user)"
+    echo_msg no_second_user
 fi
 
 # --- $USER3 ---
-read -rp "$(say create_third_user)" CREATE_USER3
+read -rp "$(echo_msg create_third_user)" CREATE_USER3
 
 if [[ "$CREATE_USER3" == "y" ]]; then
-    read -rp "$(say third_user_name)" USER3
-    echo "$(printf "${MSG[${L}_be_third_user]}" $USER3)"
+    read -rp "$(echo_msg third_user_name)" USER3
+    echo_msg be_third_user "$USER3"
 else
     USER3=""   # ← инициализация пустым значением
-    echo "$(say no_third_user)"
+    echo_msg no_third_user
 fi
 
 # Задание размеров разделов для созданных пользователей
-info "$(say disk_size)" "$DISK_SIZE_GB GB"
+info disk_size "$DISK_SIZE_GB GB"
 
 # Ввод размера для существующего пользователя
-read -r -p "$(printf "${MSG[${L}_existing_partition_size]}" "$EXISTING_USER")" SIZE1
+read -r -p "$(echo_msg existing_partition_size "$EXISTING_USER")" SIZE1
 
 # Очищаем от всего, кроме цифр
 SIZE1=$(echo "$SIZE1" | tr -cd '0-9')
 
 # Проверяем, что это число
 if ! [[ "$SIZE1" =~ ^[0-9]+$ ]]; then
-    error "$(printf "${MSG[${L}_invalid_size]}" $SIZE1)"
+    error "$(say invalid_size)" $SIZE1
     exit 1
 fi
 
 FREE=$((DISK_SIZE_GB - SIZE1))
 
-info "$(printf "$(say remaining)") "$FREE" GB"
+info remaining "$FREE GB"
 
 if [[ $CREATE_USER2 == [Yy] && -n "$USER2" ]]; then
-    read -rp "$(printf "${MSG[${L}_second_partition_size]}" $USER2)" SIZE2
+    read -r -p "$(say second_partition_size "USER2")" SIZE2
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2))
-    info "$(printf "$(say remaining)") "$FREE" GB"
+    info remaining "$FREE GB"
 fi
 if [[ "$CREATE_USER3" == [Yy] && -n "$USER3" ]]; then
-    read -rp "$(printf "${MSG[${L}_third_partition_size]}" $USER3)" SIZE3
+    read -r -p "$(say third_partition_size "USER3")" SIZE3
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2 - SIZE3))
-    info "$(printf "$(say remaining)") "$FREE" GB"
+    info remaining "$FREE GB"
 fi
 
 # --- Создание таблицы разделов ---
@@ -211,7 +345,8 @@ START=1
 END=$((START + SIZE1))
 PART=1
 
-info "$(printf "${MSG[${L}_create_existing_partition]}" $EXISTING_USER)"
+info create_existing_partition "$EXISTING_USER"
+
 # ensure_disk_free "$HDD"
 parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
 partprobe "$HDD"
@@ -219,7 +354,7 @@ udevadm settle --timeout=10 || true
 
 mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}"
 
-info "$(printf "${MSG[${L}_created_existing_partition]}" "$EXISTING_USER" "$HDD" "$PART" "$SIZE1")"
+info created_existing_partition "$EXISTING_USER" "$HDD" "$PART" "$SIZE1"
 
 # Подготовка к следующему разделу
 START=$END
@@ -228,7 +363,7 @@ PART=$((PART + 1))
 # --- Создание раздела для USER2 (если задан) ---
 if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     END=$((START + SIZE2))
-    info "$(printf "${MSG[${L}_create_second_partition]}" $USER2)"
+    info create_second_partition "$USER2"
     
 #   ensure_disk_free "$HDD"
     parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
@@ -237,7 +372,7 @@ if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     
     mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}"
     
-    info "$(printf "${MSG[${L}_created_second_partition]}" "$USER2" "$HDD" "$PART" "$SIZE2")"
+    info reated_second_partition "$USER2" "$HDD" "$PART" "$SIZE2"
     START=$END
     PART=$((PART + 1))
 fi
@@ -245,7 +380,7 @@ fi
 # --- Создание раздела для USER3 (если задан) ---
 if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     END=$((START + SIZE3))
-    info "$(printf "${MSG[${L}_create_third_partition]}" $USER3)"
+    info create_third_partition "$USER3"
     ensure_disk_free "$HDD" && parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
     
 #   ensure_disk_free "$HDD"
@@ -255,7 +390,7 @@ if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     
     mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}"
 
-    info "$(printf "${MSG[${L}_created_third_partition]}" "$USER3" "$HDD" "$PART" "$SIZE3")"
+    info created_third_partition "$USER3" "$HDD" "$PART" "$SIZE3"
     START=$END
     PART=$((PART + 1))
 fi
@@ -276,7 +411,7 @@ add_fstab_entry() {
             MOUNTPOINT="${base}${n}"
             n=$((n+1))
         done
-        info "$(printf "${MSG[${L}_mountpoint_exists]}" "$MOUNTPOINT")"
+        info mountpoint_exists "$MOUNTPOINT"
     fi
 
     # создаём каталог
@@ -284,10 +419,10 @@ add_fstab_entry() {
 
     # проверка: нет ли уже записи с этим UUID или этим MOUNTPOINT
     if grep -q "UUID=$UUID" /etc/fstab || grep -q "[[:space:]]$MOUNTPOINT[[:space:]]" /etc/fstab; then
-        warn "$(say fstab_exists)"
+        warn fstab_exists
     else
         echo "UUID=$UUID  $MOUNTPOINT  $FSTYPE  $OPTIONS  $PASS" | sudo tee -a /etc/fstab
-        ok "$(say fstab_added)" "$MOUNTPOINT"
+        echo_msg fstab_added "$MOUNTPOINT"
     fi
 }
 
@@ -334,25 +469,29 @@ mount_partitions() {
 }
 
 if is_usb_disk "$HDD"; then
-    info "$(say no_write_usb)"
+    info no_write_usb
 else
     mount_partitions
 fi
 
-# --- Финальные действия ---
 if mountpoint -q /mnt/storage; then
-    info "$(say part_mounted)"
+    info part_mounted
+
+    # multi-user support
+    export EXISTING_USER
+    export USER_HOME
+
     SCRIPT_DIR="$(dirname "$(realpath "$0")")"
     exec "$SCRIPT_DIR/setup-symlinks.sh"
 else
-    warn "$(say no_part_mounted)"
+    warn say no_part_mounted
 fi
 
 # --- Проверка ---
 df -h | grep -E "$EXISTING_USER|$USER2|$USER3" >&3
 
-ok "$(say done_disks_users)"
-info "$(say restore_hint)"
+echo_msg done_disks_users
+info restore_hint
 
 exit 0
 
