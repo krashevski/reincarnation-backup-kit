@@ -17,45 +17,10 @@
 # Unified messages for all scripts in english
 # MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 # ==============================================================
-# В каждом скрипте подключать:
-# ----------------------------
-# #!/bin/bash
-# # 
-# # Вызов функции say: 
-# info "$(say backup_start)"
-# # ...
-# # С подстановкой одного значения:
-# info err_read "$TARGET_USER" >&2
-# # плейсхолдер:
-# MSG[err_read]="Не удалось прочитать crontab пользователя %s (недостаточно прав?)"
-# MSG[err_read]="Unable to read user %s's crontab (insufficient permissions?)"
-# #
-# # Интерактивный ввод с подстановкой значения:
-# read -rp "$(printf "${MSG[${L}_user]}" $EXISTING_USER)" SIZE1
-# # 
-# # Подставновка двух значений:
-# info "$(printf "${MSG[${L}_cron]}" $CRON_TIME $CRON_USER)"
-# # плейсхолдеры:
-# MSG[cron]="Параметры cron: время=%s, пользователь=%s"
-# MSG[cron]="Cron params: time=%s, user=%s"
-# #
-# # Подставновка четырёх значений printf:
-# info "$(printf 'Раздел для %s создан: %s%s (%s GB)' "$USER3" "$HDD" "$PART" "$SIZE3")"
-# # для переводов:
-# info "$(printf "${MSG[${L}_partition_created]}" "$USER3" "$HDD" "$PART" "$SIZE3")"
-# # плейсхолдеры:
-# MSG[partition_created]='Раздел для %s создан: %s%s (%s GB)'
-# MSG[partition_created]='Partition for %s created: %s%s (%s GB)'
-# #
-# ok "$(say backup_done)"
-#
-# # Подключаем файл с сообщениями (messages.sh)
-# SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-# source "$SCRIPT_DIR/messages.sh"#
-# =============================================================
 
 MSG[hello]="Hello, world!"
 MSG[start]="Starting"
+
 # hdd-setup-profiles.sh
 MSG[hdd_detect]="Searching for available drives"
 MSG[skip_archive]="Skipping %s — contains the archive section"
@@ -79,7 +44,7 @@ MSG[prompt_user2]="Enter name of second user: "
 MSG[prompt_user3]="Enter name of third user: "
 MSG[disk_size]="Selected disk size: "
 MSG[user_size]="How many GB to allocate for %s: "
-MSG[remaining]="Remaining: "
+MSG[remaining]="%s left"
 MSG[error_size]="Sum of specified sizes exceeds disk size!"
 MSG[creating_partitions]="Creating partition table..."
 MSG[formatting]="Formatting partitions..."
@@ -121,6 +86,7 @@ MSG[no_write_usb]="USB drive, do not write to /etc/fstab"
 MSG[freeing_disk]="Freeing up disk %s..."
 MSG[part_mounted]="The /mnt/storage partition is mounted - run setup-symlinks.sh"
 MSG[no_part_mounted]="Partition /mnt/storage is not mounted, skipping setup-symlinks.sh"
+
 # menu.sh
 MSG[main_menu]="Main Menu"
 MSG[backup]="Backup"
@@ -189,25 +155,21 @@ MSG[setup_symlinks]="   4) Setup symlinks"
 MSG[manage_cuda]=" 3) Manage CUDA Toolkit"
 MSG[backup_directories]=" 2) Set backup directories [TODO]"
 MSG[change_language]=" 1) Change language (RU/EN)"
+
 # setup-symlinks.sh
-MSG[musik]="Musik"
-MSG[video]="Videa"
-MSG[images]="Images"
-MSG[create_catalog]="Created catalog: %s"
-MSG[link_exists]="Link already exists: %s -> %s"
-MSG[replaced_empty]="Replaced the empty directory with a link: %s -> %s"
-MSG[not_empty]="The %s directory is not empty. Replace with a link? [y/N] "
-MSG[user_replace]="The %s directory was not empty, the user agreed to replace → %s"
-MSG[user_refused]="The %s directory was not empty, the user refused the replacement"
-MSG[link_created]="Link created: %s -> %s"
-MSG[skipp_link_path]="%s already exists as a regular file or folder. Skipping."
-MSG[symlink_created]="Symlink created: %s → %s"
-MSG[script_termination]="=== Script termination ==="
+MSG[start_symlinks]="Starting to configure symbolic links"
+MSG[link_ok]="The link is already correct"
+MSG[link_created]="Link created: %s → %s"
+MSG[link_replaced]="Link updated: %s → %s"
+MSG[link_skipped]="Link skipped: %s"
+MSG[done_symlinks]="Symbolic link configuration complete"
+
 # show-system-mounts.sh
 MSG[physical_disks]="===== Information about physical disks ====="
 MSG[mounts_header]="===== List of mount points ====="
 MSG[symlinks_header]="===== Symbolic links in %s ====="
 MSG[crontab_header]="===== Crontab entries ====="
+
 # remove-cron-backup.sh
 MSG[removed_root]="Cron jobs removed from root crontab."
 MSG[removed_user]="Cron jobs removed from user %s crontab."
@@ -215,6 +177,7 @@ MSG[before]="Crontab BEFORE removal:"
 MSG[after]="Crontab AFTER removal:"
 MSG[err_read]="Failed to read crontab for user %s (permission?)"
 MSG[crontab_empty]="No cron jobs found."
+
 # common
 MSG[backup_start]="Starting backup..."
 MSG[backup_done]="Backup completed successfully!"
