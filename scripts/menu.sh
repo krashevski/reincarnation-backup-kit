@@ -19,10 +19,15 @@
 
 set -euo pipefail
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
+# --- systemd-inhibit ---
+if command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Reincarnation Backup Kit: restore in progress" \
+            "$0" "$@"
+    fi
 fi
 
 # --- Colors ---
@@ -32,16 +37,24 @@ info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
-# 1. Сначала объявляем массив
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
 declare -A MSG
 
-# 2. Затем функции, НИКАКИХ source ДО ФУНКЦИЙ!
 # -------------------------------------------------------------
-
-# загрузка сообщений
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
 load_messages() {
     local lang="$1"
-    MSG=()   # очистка
+    # очищаем предыдущие ключи
+    MSG=()
+
     case "$lang" in
         ru)
             source "$SCRIPT_DIR/i18n/messages_ru.sh"
@@ -51,40 +64,79 @@ load_messages() {
             ;;
         *)
             echo "Unknown language: $lang" >&2
+            return 1
             ;;
     esac
 }
 
-# безопасный say
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
 say() {
-    local key="$1"
-    if [[ -n "${MSG[$key]+set}" ]]; then
-        echo "${MSG[$key]}"
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
+
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
     else
-        echo "[$key]"
+        printf '%s\n' "$msg"
     fi
 }
 
+# -------------------------------------------------------------
+# 5. Функция info для логирования
+# -------------------------------------------------------------
 info() {
-    local key="$1"
-    shift
+    local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
     printf "%b" "$(printf "$fmt" "$@")"
-    printf "\n"           # ОБЯЗАТЕЛЬНЫЙ перевод строки
+    printf "\n"
 }
 
 
 # -------------------------------------------------------------
-# 3. И только теперь подключаем пути и загружаем сообщения
+# 6. Функция warn для логирования
 # -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[WARN] %b\n" "$(printf "$fmt" "$@")" >&2
+}
 
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+# -------------------------------------------------------------
+# 7. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[ERROR] %b\n" "$(printf "$fmt" "$@")" >&2
+}
 
-# НЕ ПОДКЛЮЧАЙ messages.sh больше, он НЕ НУЖЕН!
-# source "$SCRIPT_DIR/messages.sh"   # ← УДАЛИТЬ
 
-# подгружаем язык ДО использования MSG и say
+# -------------------------------------------------------------
+# 8. Функция echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 9. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 10. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
@@ -169,7 +221,7 @@ main_menu() {
     while true; do
         clear
         echo "========================================="
-        echo "   Reincarnation Backup Kit — $(say main_menu)"
+        echo "   Reincarnation Backup Kit — echo_msg main_menu"
         echo "========================================="
         echo " 1) $(say backup)"
         echo " 2) $(say restore)"
@@ -180,7 +232,7 @@ main_menu() {
         echo " 7) $(say settings)"
         echo " 0) $(say exit)"
         echo "-----------------------------------------"
-        read -rp "$(say sel_opt)" choice
+        read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
             1) backup_menu ;;
             2) restore_menu ;;
@@ -189,8 +241,8 @@ main_menu() {
             5) tools_menu ;;
             6) logs_menu ;;
             7) settings_menu ;;
-            0) ok "$(say exit)"; exit 0 ;;
-            *) warn "$(say invalid_choice)" ;;
+            0) echo_msg exit; exit 0 ;;
+            *) warn invalid_choice ;;
         esac
     done
 }
@@ -200,41 +252,41 @@ backup_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "$(say backup_options)"
+        echo_msg backup_options
         echo "-----------------------------------------"
-        info "system" "$DISTRO_ID $DISTRO_VER"
-        echo "$(say backup_system)"
+        info system "$DISTRO_ID $DISTRO_VER"
+        echo_msg backup_system
         echo
-        echo "$(say userdata)" 
-        echo "$(say userdata_backup)"
-        echo "$(say full_backup)"
-        echo "$(say cron_backup_menu)"
+        echo_msg userdata 
+        echo_msg userdata_backup
+        echo_msg full_backup
+        echo_msg cron_backup_menu
         echo
-        echo "$(say back_main)"
+        echo_msg back_main
         echo "-----------------------------------------"
-        read -rp "$(say sel_opt)" choice
+        read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
             1) bash "$SYS_BACKUP" ;;
             2) bash "$USER_BACKUP" ;;
             3) bash "$USER_BACKUP" --fresh ;;
             4)
-            read -rp "$(say enter_time)" CRON_TIME
-            read -rp "$(say enter_user)" CRON_USER
+            read -rp "$(echo_msg enter_time)" CRON_TIME
+            read -rp "$(echo_msg enter_user)" CRON_USER
             
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
 
-                info "$(printf "${MSG[adding_cron]}" $CRON_TIME $CRON_USER)"
+                info adding_cron "$CRON_TIME" "$CRON_USER"
                 bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                ok "$(say cron_installed)"
+                echo_msg cron_installed
             else
-                error "$(say empty_entered)"
+                error empty_entered
             fi
-            read -rp "$(say press_continue)"
+            read -rp "$(echo_msg press_continue)"
             ;;
             0) return ;;
-            *) warn "$(say invalid_choice)" ;;
+            *) warn invalid_choice ;;
         esac
-        read -rp "$(say press_return)"
+        read -rp "$(echo_msg press_return)"
     done
 }
 
@@ -243,26 +295,26 @@ restore_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "$(say restore_options)"
+        echo_msg restore_options
         echo "-----------------------------------------"
-        info "system" "$DISTRO_ID $DISTRO_VER"
-        echo "$(say restore_packeages)"
-        echo "$(say restore_manual)"
+        info system "$DISTRO_ID $DISTRO_VER"
+        echo_msg restore_packeages
+        echo_msg restore_manual
         echo
-        echo "$(say userdata)"
-        echo "$(say restore_userdata)"
+        echo_msg userdata
+        echo_msg restore_userdata
         echo
-        echo "$(say back_main)"
+        echo_msg back_main
         echo "-----------------------------------------"
-        read -rp "$(say sel_opt)" choice
+        read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
             1) RESTORE_PACKAGES=manual "$SYS_RESTORE" ;;
             2) bash "$SYS_RESTORE" ;;
             3) bash "$USER_RESTORE" ;;
             0) return ;;
-            *) warn "$(say invalid_choice)" ;;
+            *) warn invalid_choice ;;
         esac
-        read -rp "$(say press_return)"
+        read -rp "$(echo_msg press_return)"
     done
 }
 
@@ -278,27 +330,27 @@ cron_menu() {
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
-    read -rp "$(say sel_opt)" choice
+    read -rp "$(echo_msg sel_opt)" choice
     case "$choice" in
         1)
-            read -rp "$(say enter_time)" CRON_TIME
-            read -rp "$(say enter_user)" CRON_USER
+            read -rp "$(echo_msg enter_time)" CRON_TIME
+            read -rp "$(echo_msg enter_user)" CRON_USER
             if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                info "$(printf "${MSG[adding_cron]}" $CRON_TIME $CRON_USER)"
+                info adding_cron "$CRON_TIME" "$CRON_USER"
                 bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                ok "$(say cron_job_installed)"
+                echo_msg cron_job_installed
             else
-                error "$(say empty_entered)"
+                error empty_entered
             fi
-            read -rp "$(say press_continue)"
+            read -rp "$(echo_msg press_continue)"
             ;;
         2) bash "$CLEAN_LOGS" ;;
         3) bash "$REMOVE_CRON" ;;
         0) return ;;
-        *) warn "$(say invalid_choice)" ;;
+        *) warn invalid_choice ;;
     esac
     echo
-    read -rp "$(say press_return)"
+    read -rp "$(echo_msg press_return)"
 }
 
 # --- Подменю Media ---
@@ -321,10 +373,10 @@ media_menu() {
         3) "$MEDIA_FLATPAK" ;;
         4) "$MEDIA_APT" ;;
         0) return ;;
-        *) warn "$(say invalid_choice)" ;;
+        *) warn invalid_choice ;;
     esac
     echo
-    read -rp "$(say press_return)"
+    read -rp "$(echo_msg press_return)"
 }
 
 # --- Подменю Tools ---
@@ -350,10 +402,10 @@ tools_menu() {
         3) "$HDD_SETUP" ;;
         4) "$SEIUP_SYMLINKS" ;;
         0) return ;;
-        *) warn "$(say invalid_choice)" ;;
+        *) warn invalid_choice ;;
     esac
     echo
-    read -rp "$(say press_return)"
+    read -rp "$(echo_msg press_return)"
 }
 
 # --- Подменю Logs ---
@@ -368,12 +420,12 @@ logs_menu() {
     echo "$(say exit_file)"
     echo "$(say exit_ranger)"
     echo "-----------------------------------------"
-    read -rp "$(say run_return)" choice
+    read -rp "$(echo_msg run_return)" choice
 
     if [[ -z "$choice" ]]; then
-        ranger /mnt/backups/logs || warn "$(say no_logs)"
+        ranger /mnt/backups/logs || warn no_logs
     else
-        echo "$(say return_menu)"
+        echo_msg return_menu
         sleep 1
     fi
 }
@@ -396,23 +448,23 @@ settings_menu() {
             1)
                 change_language # <-- здесь вызываем функцию переключения языка
                 export LANG_CODE
-                read -rp "$(say press_continue)"
+                read -rp "$(echo_msg press_continue)"
                 ;;
             2)
-                echo "$(say backupdir_not)"
-                read -rp "$(say press_continue)"
+                echo_msg backupdir_not
+                read -rp "$(echo_msg press_continue)"
                 ;;
             3)
                 # Проверяем наличие скрипта
                 if [[ -x "$CUDA_SCRIPT" ]]; then
                     "$CUDA_SCRIPT"
                 else
-                    warn "$(say checkcuda_not)"
+                    warn checkcuda_not
                 fi
-                read -rp "$(say press_return)"
+                read -rp "$(echo_msg press_return)"
                 ;;
             0) return ;;
-            *) warn "$(say invalid_choice)" ;;
+            *) warn invalid_choice ;;
         esac
     done
 }
