@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
@@ -11,49 +13,85 @@
 # The above copyright notice and this permission notice shall
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
-# ==============================================================
-# setup-symlinks.sh — configures custom symbolic links
+# =============================================================
+# setup-symlinks.sh — Idempotent (Ansible-style)
 # Reincarnation Backup Kit — Messages Library
+# Unified messages for all scripts in english
 # MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
-# --------------------------------------------------------------
-# Creates directories on /mnt/storage and gracefully recreates symbolic links
-# Log: ~/setup-symlinks.log
 # ==============================================================
 
-# --- Подключаем файл с сообщениями (messages.sh) ---
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-source "$SCRIPT_DIR/i18n/messages.sh"
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
-fi
+# -------------------------------------------------------------
+# 2. Messages
+# -------------------------------------------------------------
+declare -A MSG
 
-# --- Настройки ---
+load_messages() {
+    local lang="$1"
+    MSG=()
+    case "$lang" in
+        ru) source "$SCRIPT_DIR/i18n/messages_ru.sh" ;;
+        en) source "$SCRIPT_DIR/i18n/messages_en.sh" ;;
+        *) echo "Unknown language: $lang" >&2; exit 1 ;;
+    esac
+}
+
+say() {
+    local key="$1"; shift
+    local msg="${MSG[$key]:-$key}"
+    printf "$msg" "$@"
+}
+
+info() {
+    printf "%s\n" "$(say "$@")"
+}
+
+warn() {
+    printf "[WARN] %s\n" "$(say "$@")" >&2
+}
+
+error() {
+    printf "[ERROR] %s\n" "$(say "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 3. Language
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# -------------------------------------------------------------
+# 4. Paths
+# -------------------------------------------------------------
+BASE_DIR="/mnt/storage"
 EXTRA_SYMLINKS=("shotcut:/mnt/shotcut" "backups:/mnt/backups")
 
-# --- Определение языка пользователя ---
-# Можно ориентироваться на LANG, LC_MESSAGES или свою переменную L
-LANG_CODE="${L:-${LANG%%_*}}"   # ru, en, fr и т.п.
+if [[ -n "${USER_HOME:-}" ]]; then
+    TARGET_HOME="$USER_HOME"
+elif [[ -n "${SUDO_USER:-}" ]]; then
+    TARGET_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+else
+    TARGET_HOME="$HOME"
+fi
 
-# --- Базовые директории на диске ---
-BASE_DIR="/mnt/storage"
-BACKUP_DIR="/mnt/backups"
-WORKDIR="$BACKUP_DIR/workdir"
-LOG_DIR="$BACKUP_DIR/logs"
-mkdir -p "$WORKDIR" "$LOG_DIR"
-RUN_LOG="$LOG_DIR/setup-symlinks.log"
+[[ -z "$TARGET_HOME" || "$TARGET_HOME" == "/" ]] && {
+    error invalid_home "$TARGET_HOME"
+    exit 1
+}
 
-# --- Универсальные (английские) имена папок ---
+# -------------------------------------------------------------
+# 5. Data (NO say here!)
+# -------------------------------------------------------------
 declare -A TARGET_DIRS=(
     [music]="Music"
     [pictures]="Pictures"
     [videos]="Videos"
 )
 
-# --- Локализованные имена симлинков ---
-# Здесь ключи — язык, значения — массивы локализованных имён
 declare -A LINK_NAMES_ru=(
     [music]="Музыка"
     [pictures]="Изображения"
@@ -66,7 +104,6 @@ declare -A LINK_NAMES_en=(
     [videos]="Videos"
 )
 
-# --- Функция получения локализованного имени ---
 get_link_name() {
     local key="$1"
     case "$LANG_CODE" in
@@ -75,87 +112,84 @@ get_link_name() {
     esac
 }
 
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$RUN_LOG"
+# -------------------------------------------------------------
+# 6. Idempotent FS helpers
+# -------------------------------------------------------------
+
+ensure_dir() {
+    local dir="$1"
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir"
+        info dir_created "$dir"
+    fi
 }
 
-
-
-setup_link() {
-    local name="$1"
+ensure_symlink() {
+    local link="$1"
     local target="$2"
-    local link="$HOME/$name"
 
-    # создаём каталог назначения
-    if [ ! -d "$target" ]; then
-        mkdir -p "$target"
-        log "$(printf "${SG[${L}_create_catalog}" "$target")"
-    fi
-
-    # если уже есть правильная ссылка
-    if [ -L "$link" ] && [ "$(readlink -f "$link")" = "$target" ]; then
-        log "$(printf "$(say link_exists)" "$CRON_TIME" "$CRON_USER")"
+    # already correct
+    if [[ -L "$link" && "$(readlink -f "$link")" == "$target" ]]; then
+        info link_ok "$link" "$target"
         return
     fi
 
-    # если каталог пустой
-    if [ -d "$link" ] && [ -z "$(ls -A "$link")" ]; then
+    # empty dir → replace silently
+    if [[ -d "$link" && -z "$(ls -A "$link")" ]]; then
         rm -r "$link"
         ln -s "$target" "$link"
-        log "$(printf "$(say replaced_empty)" "$CRON_TIME" "$CRON_USER")"
+        info link_replaced "$link" "$target"
         return
     fi
 
-    # если каталог не пустой — спросить
-    if [ -d "$link" ] && [ -n "$(ls -A "$link")" ]; then
-        read -p "$(printf "$(say not_empty)" "$link")" ans
+    # non-empty dir → ask
+    if [[ -d "$link" ]]; then
+        read -rp "$(say confirm_replace "$link") [y/N]: " ans
         if [[ "$ans" =~ ^[Yy]$ ]]; then
             rm -r "$link"
             ln -s "$target" "$link"
-            log "${printf "$(say user_replace)" "$link" "$target"}"
+            info link_replaced "$link" "$target"
         else
-            log "$(printf "${MSG[${L}_user_refused}" "$link")"
+            warn link_skipped "$link"
         fi
         return
     fi
 
-    # если ничего нет — просто создать ссылку
-    if [ ! -e "$link" ]; then
-        ln -s "$target" "$link"
-        log "$(printf "$(say link_created)" "$link" "$target")"
+    # exists but not link (file, etc)
+    if [[ -e "$link" ]]; then
+        warn link_conflict "$link"
+        return
     fi
+
+    # create
+    ln -s "$target" "$link"
+    info link_created "$link" "$target"
 }
 
-# --- Основные ссылки ---
-# --- Создание симлинков ---
+# -------------------------------------------------------------
+# 7. Main logic (pure declarative)
+# -------------------------------------------------------------
+
+info start_symlinks
+
 for key in "${!TARGET_DIRS[@]}"; do
     target="$BASE_DIR/${TARGET_DIRS[$key]}"
     link_name="$(get_link_name "$key")"
-    link_path="$HOME/$link_name"
+    link_path="$TARGET_HOME/$link_name"
 
-    # Создаём папку-назначение на диске, если её нет
-    mkdir -p "$target"
-
-    # Удаляем старую ссылку/папку, если мешает
-    if [[ -e "$link_path" && ! -L "$link_path" ]]; then
-        warn "$(printf "${MSG[${L}_skipp_link_path]}" $link_path)"
-        continue
-    fi
-
-    if [[ -L "$link_path" ]]; then
-        rm -f "$link_path"
-    fi
-
-    ln -s "$target" "$link_path"
-    info "$(printf "${MSG[${L}_symlink_created]}" $link_path $target)"
+    ensure_dir "$target"
+    ensure_symlink "$link_path" "$target"
 done
 
-# --- Дополнительные ссылки ---
 for pair in "${EXTRA_SYMLINKS[@]}"; do
     name="${pair%%:*}"
     target="${pair##*:}"
-    setup_link "$name" "$target"
+    link_path="$TARGET_HOME/$name"
+
+    ensure_dir "$target"
+    ensure_symlink "$link_path" "$target"
 done
 
-log "$(say script_termination)"
+info done_symlinks
+
 

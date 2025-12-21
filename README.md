@@ -4,12 +4,15 @@
 ![Made with Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)
 ![Ubuntu 24.04 Tested](https://img.shields.io/badge/Ubuntu-24.04-brightgreen.svg)
 ![Debian 12 Supported](https://img.shields.io/badge/Debian-12-orange.svg)
-![GitHub Repo Size](https://img.shields.io/github/repo-size/username/backup-kit)
-![GitHub stars](https://img.shields.io/github/stars/username/backup-kit?style=social)
+![GitHub Repo Size](https://img.shields.io/github/repo-size/vladislav/backup-kit)
+![GitHub stars](https://img.shields.io/github/stars/vladislav/backup-kit?style=social)
 
 [🇬🇧 English](docs/EN/README_EN.md) | [🇷🇺 Русский](docs/RU/README_RU.md)
 
 **Reincarnation Backup Kit** is a set of Bash scripts for backup and restore when reinstalling **Ubuntu** on an SSD, as well as for creating a multimedia environment (Shotcut, GIMP+G'MIC, Krita, Audacity).
+
+Designed for Linux systems using systemd
+Tested on modern GNU/Linux distributions
 
 ---
 
@@ -21,7 +24,19 @@ I do it without stress — everything is safe, and recovery is simple.
 
 The main goal: **save your nerves during system reinstallations**.
 
+Idempotent shell toolkit for:
+- disk detection and partition profiling
+- safe symbolic link management
+- system mount inspection
+- cron-friendly operation
+- multilingual output (i18n)
+
 ## ✨ Features
+
+- Ansible-style idempotency
+- Safe for repeated runs
+- Multi-user aware
+- systemd / cron compatible
 
 ### 🗄️ Backup and Restore
 Consists of two independent parts:
@@ -108,7 +123,7 @@ Other options are accessible without privileges.
 ```bash
 git clone https://github.com/username/backup-kit.git
 cd backup-kit
-./install.sh
+sudo ./install.sh
 ./backup-system.sh
 ./restore-system.sh
 ./backup-userdata.sh
@@ -136,9 +151,8 @@ Support: ChatGPT and project documentation
 <img src="images/Backup_Kit_Install.png" width="45%"/> 
 <img src="images/Backup_Kit_Text_Menu.png" width="45%"/> </p> 
 <p align="center"> 
-<img src="images/Backup_Kit_System_backup.png" width="45%"/>
-<img src="images/Backup_Kit_Backup_userdata.png" width="45%"/> </p>
-<p align="center"> 
 <img src="images/Backup_Kit_System_Mounts.png" width="45%"/>
 <img src="images/Backup_Kit_Shotcut_presets_ChatGPTChart.png" width="45%"/> </p> 
-
+<p align="center"> 
+<img src="images/Reincarnation_Backup_Kit_Ubuntu.png" alt="Reincarnation Backup Kit" width="600"/>
+</p>
