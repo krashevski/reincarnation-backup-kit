@@ -165,9 +165,21 @@ info hdd_detect
 ALL_DISKS=($(lsblk -ndo NAME,TYPE | awk '$2=="disk"{print $1}'))
 AVAILABLE_DISKS=()
 
+# Определяем диск с корневой системой
+ROOT_DEV=$(df / | tail -1 | awk '{print $1}')   # например /dev/sda1
+ROOT_DISK=$(basename "$ROOT_DEV")               # sda1
+ROOT_DISK_NAME="${ROOT_DISK%%[0-9]*}"          # sda
+
 for d in "${ALL_DISKS[@]}"; do
     dev="/dev/$d"
     safe_dev=$(printf '%s' "$dev" | sed 's/[.[\*^$()+?{|]/\\&/g')
+    
+    # Пропускаем диск с ОС
+    if [[ "$d" == "$ROOT_DISK_NAME" ]]; then
+        warn skip_os_disk "$dev"
+        continue
+    fi
+    
     # проверяем, есть ли у диска смонтированные разделы как архивы
     if mount | grep -qE "^$dev.* (/(mnt/)?backups?|/(mnt/)?backup)(\\s|$)"; then
         warn skip_archive "$dev"
@@ -182,8 +194,15 @@ if [ ${#AVAILABLE_DISKS[@]} -eq 0 ]; then
 fi
 
 # --- Выбор диска пользователем ---
-echo_msg say sel_partition
-PS3="$(say select_disk)"
+echo_msg sel_partition
+
+# Подготовка приглашения для select
+select_prompt() {
+    local key="$1"
+    PS3="$(say "$key")"
+}
+
+select_prompt select_disk
 
 select DISK in "${AVAILABLE_DISKS[@]}"; do
     [[ -n "$DISK" ]] && break
@@ -329,12 +348,12 @@ FREE=$((DISK_SIZE_GB - SIZE1))
 info remaining "$FREE GB"
 
 if [[ $CREATE_USER2 == [Yy] && -n "$USER2" ]]; then
-    read -r -p "$(say second_partition_size "USER2")" SIZE2
+    read -r -p "$(say second_partition_size "$USER2")" SIZE2
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2))
     info remaining "$FREE GB"
 fi
 if [[ "$CREATE_USER3" == [Yy] && -n "$USER3" ]]; then
-    read -r -p "$(say third_partition_size "USER3")" SIZE3
+    read -r -p "$(say third_partition_size "$USER3")" SIZE3
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2 - SIZE3))
     info remaining "$FREE GB"
 fi
@@ -359,7 +378,12 @@ udevadm settle --timeout=10 || true
 
 mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}"
 
-info created_existing_partition "$EXISTING_USER" "$HDD" "$PART" "$SIZE1"
+if mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
+    info done_fs "${HDD}${PART}" "${EXISTING_USER}"   # Вывод: "Готово: FS /dev/$PART для USER"
+else
+    error fs_failed "${HDD}${PART}" "${EXISTING_USER}"  # Вывод: "[ERROR] Не удалось создать FS"
+    exit 1
+fi
 
 # Подготовка к следующему разделу
 START=$END
@@ -377,7 +401,12 @@ if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     
     mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}"
     
-    info reated_second_partition "$USER2" "$HDD" "$PART" "$SIZE2"
+    if mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
+        info done_fs "${HDD}${PART}" "${USER2}"   # Вывод: "Готово: FS /dev/$PART для USER"
+    else
+        error fs_failed "${HDD}${PART}" "${USER2}"  # Вывод: "[ERROR] Не удалось создать FS"
+    exit 1
+    fi
     START=$END
     PART=$((PART + 1))
 fi
@@ -395,7 +424,12 @@ if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     
     mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}"
 
-    info created_third_partition "$USER3" "$HDD" "$PART" "$SIZE3"
+    if mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
+        info done_fs "${HDD}${PART}" "${USER3}"   # Вывод: "Готово: FS /dev/$PART для USER"
+    else
+        error fs_failed "${HDD}${PART}" "${USER3}"  # Вывод: "[ERROR] Не удалось создать FS"
+    exit 1
+    fi
     START=$END
     PART=$((PART + 1))
 fi
