@@ -255,8 +255,13 @@ info disk_size "$DISK_SIZE_GB GB"
 printf '%s\n' "$(say warn_delete)" >/dev/tty
 
 # Прочитаем ответ с управляющего терминала, чтобы read видел ввод
-read -r -p "$(echo_msg confirm_action )" CONFIRM </dev/tty
+# Используем /dev/tty напрямую, чтобы read работал даже под sudo/systemd
+read -r -p "$(say confirm_action)" answer </dev/tty
 
+if [[ ! "$answer" =~ ^[Yy]$ ]]; then
+    echo "Aborted by user" >/dev/tty
+    exit 0
+fi
 # --- $EXISTING_USER ---
 # --- Выбор существующего пользователя для multi-user системы ---
 if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
