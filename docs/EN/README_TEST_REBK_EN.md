@@ -96,11 +96,11 @@ See:
 
 ## 🧪 What's especially important to check
 
-> ✔ multi-user (SUDO_USER, $HOME)
-> ✔ i18n (RU / EN)
-> ✔ no paths like /link_music
-> ✔ correct logs in /mnt/backups/logs
-> ✔ safe to restart
+* multi-user (SUDO_USER, $HOME)
+* i18n (RU / EN)
+* no paths like /link_music
+* correct logs in /mnt/backups/logs
+* safe to restart
 
 > ⚠️ Important: Running scripts directly from a cloned repository
 may result in incorrect behavior.
