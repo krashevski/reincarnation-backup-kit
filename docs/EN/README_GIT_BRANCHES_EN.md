@@ -176,3 +176,9 @@ Explanation of the scheme:
 3. feature/... — branches for working on a specific task or new feature.
 4. Merge Pull Request — after completing work on the feature branch, changes are merged into main via a Pull Request.
 5. After merging
+
+## See also
+
+- Deleting from GitHub Branches [README_GIT_BRANCHES_DELETE_EN.md](README_GIT_BRANCHES_DELETE_EN.md)
+- Cheat Sheet: Safe Rebase [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
+- Mini Git Cheat Sheet [README_GIT_EN.md](README_GIT_EN.md)
