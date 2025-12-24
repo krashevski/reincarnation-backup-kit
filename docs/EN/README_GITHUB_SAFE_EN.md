@@ -55,16 +55,31 @@ chmod 600 ~/.git-credentials
 
 > [i] In this case, the token will be stored locally, protected by user permissions.
 
-## 3. Secure backup git-recovery-codes
+## 3. Securely Backup git-recovery-codes
 
 1. Download Recovery Codes from GitHub (to restore two-factor authentication).
-2. Burn to secure media, such as a DVD:
+2. Encrypt (AES-256) the git-recovery-codes.txt file:
+```bash
+ls -l git-recovery-codes.txt
+chmod 600 git-recovery-codes.txt
+gpg --symmetric --cipher-algo AES256 git-recovery-codes.txt
+```
+
+What will happen:
+- You will be asked to enter a passphrase
+- A file will be created:
+```bash
+git-recovery-codes.txt.gpg
+```
+The original file will remain (we'll delete it later).
+
+3. Burn to a secure drive, such as a DVD:
 ```bash
 # Example of burning an ISO to a DVD
 wodim -v dev=/dev/sr0 -data git-recovery-codes.txt
 ```
 
-3. Make sure the DVD is stored securely and access is restricted.
+4. Make sure the DVD is stored securely and access is restricted.
 
 ## 4. Check GnuPG directories
 
@@ -193,7 +208,7 @@ tar -czf ~/backup-repository.tar.gz repository/
 ls -lh ~/backup-repository.tar.gz
 ```
 
-## 8️⃣ Tips
+## 10. Tips
 
 * Use a separate GitHub account for testing.
 * Don't push sensitive data.
@@ -201,7 +216,7 @@ ls -lh ~/backup-repository.tar.gz
 * Enable two-factor authentication.
 * Scan directories and logs before deleting.
 
-## 🔑 Operating System Password
+## 11. 🔑 Operating System Password
 
 * Use a strong user password for your Linux account.
 * The password must be unique, sufficiently long, more than 10 characters, and randomly complex.
@@ -213,4 +228,5 @@ ls -lh ~/backup-repository.tar.gz
   - Do not copy `sudo` commands from unknown sources.
   - For testing, you can first run the script without `sudo` to check the output and behavior.
   - Use `sudo -l` to find out which commands your account can execute with root privileges.
-* If your password is compromised, it makes sense to back up the system or user profile only for the cleaned system.
+  
+> [!] If your password is compromised, it makes sense to back up the system or user profile only for the cleaned system.
