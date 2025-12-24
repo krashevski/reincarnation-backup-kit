@@ -16,6 +16,7 @@ A quick guide to safely working with branches in the Reincarnation Backup Kit re
 | `backup-before-*` | Backup branches before major changes. |
 
 ## 🆕 Create a new feature branch
+
 ### Switch to main and pull in the latest changes
 ```bash
 git checkout main
@@ -35,6 +36,7 @@ git push -u origin feature/i18n-updates
 ```
 
 ## 🔀 Pull Request (merging changes into main)
+
 1. On GitHub, open the repository → Pull requests tab → New pull request.
 2. Set:
 1. base: main
@@ -44,6 +46,7 @@ git push -u origin feature/i18n-updates
 5. After merging, the feature branch can be deleted to keep the history clean.
 
 ## 💾 Create a backup branch before major changes
+
 ```bash
 git checkout main
 git branch backup-before-i18n
@@ -53,6 +56,7 @@ git push origin backup-before-i18n
 > [I] This allows you to always save the current state before making major changes.
 
 ## 🔍 Checking Branch Status
+
 ### All local branches
 ```bash
 git branch -vv
@@ -64,81 +68,85 @@ git fetch origin
 git branch -r
 ```
 
-## Recommendations
+## Best Practices
 
-- Never push directly to main if branch protection is enabled.
-- Make sure all local changes are committed before merging.
+- Never push origin main if branch protection is enabled.
+- Before merging, make sure to commit all local changes.
 - Use feature branches for new tasks and experiments.
-- Create backup branches before breaking changes.
+- Create backup branches before making breaking changes.
 
-## 📝 Mini-sequence for working with README via the feature/update-readme branch
+## 📝 Updating README via rebase in the feature/update-readme branch
 
-1. 1. Go to the documentation branch
+### 1. Switch to the documentation branch
+
 ```bash
 git checkout feature/update-readme
-```
 
-2. Pull the latest changes from GitHub
+### 2. Pull the latest changes from GitHub
 ```bash
 git fetch origin
 git rebase origin/feature/update-readme
 ```
 
 ### See also
-- Cheat Sheet: Safely Rebase README [README_GIT_REBASE_RU.md](README_GIT_REBASE_RU.md)
+- Cheat Sheet: Safely Rebase README [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
 
-3. Make changes to local README files:
-- docs/RU/README_GIT_REBASE_RU.md
-- docs/EN/README_GIT_REBASE_EN.md
+### 3. Rule for checking changes in README:
+```bash
+git status
+git diff
+```
 
-4. Add changes to the index:
+Check that there are no:
+* `<<<<<<<`
+* `=======`
+* `>>>>>>>`
+
+### 4. Add Changes to README files:
+```bash
+nano docs/RU/README_GIT_REBASE_RU.md
+nano docs/EN/README_GIT_REBASE_EN.md
+```
+
+### 5. Add changes to the index:
 ```bash
 git add docs/RU/README_GIT_REBASE_RU.md
 git add docs/EN/README_GIT_REBASE_EN.md
 ```
 
-5. Create Commit:
+### 6. Create a commit:
 ```bash
-git commit -m "Update README_GIT_REBASE: fixes and additions"
+git commit -m "docs: corrections and additions README_GIT_REBASE"
 ```
 
-6. Push after rebase:
+### 7. Submit changes:
 ```bash
 git push --force-with-lease origin feature/update-readme
 ```
 
-> ⚠️ The git push command does not create a PR (Pull Request) itself, but it ensures that the server has an up-to-date version of the branch for the PR.
+## 📝 Mini-sequence: Update main from a feature branch for README
 
-## 📝 Mini-sequence for updating main from a feature branch for README
-
-> [!] Don't move it to main; it's better to let the branch with the changes "rest":
+> [!] Don't move to main; it's better to let the branch with the changes "rest":
 > * All changes will remain in your working branch (feature/update-readme or feature/i18n-updates).
-> * You can safely check that everything works correctly (i18n, documentation, scripts).
-> * If necessary, you can fix errors, conflicts, and test locally before merging it into main.
-> * After this, moving to main will be safe, and the history will remain clean.
-> [I] This is standard practice: first bring a feature to a stable state in a separate branch, then merge it into main.
+> * You can safely check in your working branch that everything is working correctly (i18n, documentation, scripts).
+> * You can fix errors, conflicts, and test locally before merging with main.
+> * After testing and verification, moving to main will be safe, and the history will remain clean.
 
-<<<<<<< HEAD
-1. Go to main and update from GitHub:
-=======
-1. Go to main and update it from GitHub:
->>>>>>> feature/update-readme
+1. Switch to the main branch and update to the latest changes:
 ```bash
 git checkout main
 git pull origin main
 ```
 
-2. Merge changes from the feature branch:
+2. Merge the changes from the feature branch:
 ```bash
 git merge feature/update-readme
 ```
 
-3. Resolve any conflicts (if you see <<<<<<<, =======, >>>>>>> in the file that opens, leave the relevant text and save the file).
-
-4. Push the updated main to GitHub:
+3. Push the updated main branch to GitHub:
 ```bash
 git push origin main
-```.
+```
 
 ## 🌳 About the branching scheme
 
@@ -148,12 +156,12 @@ Visually:
        |
        | Pull / Merge
        |
-backup-before-i18n   ← Резервная ветка перед крупными изменениями
+backup-before-i18n   ← Backup branch before major changes
        |
        |
-feature/i18n-updates  ← Ветка для новой функции или изменения
+feature/i18n-updates  ← Branch for a new feature or change
        |
-       | Работа и коммиты
+       | Work and commits
        |
 feature/fix-bug       ← Другая feature-ветка
        |
@@ -163,13 +171,8 @@ feature/fix-bug       ← Другая feature-ветка
 ```
 
 Explanation of the scheme:
-1. main — the primary protected branch, contains the stable version of the project.
-2. backup-before-* — created before major changes, to allow for quick reversion.
+1. main — the main protected branch, contains the stable version of the project.
+2. backup-before-* — created before major changes, to allow for quick rollbacks.
 3. feature/... — branches for working on a specific task or new feature.
-4. Merge Pull Request — after completing work on the feature branch, changes are merged into main via a pull request.
-5. After the merge, the feature branch can be deleted, but main remains protected.
-
-## See also
-
-- Cheat Sheet: Safe Rebase README file [README_GIT_REBASE_EN.md](README_GIT_REBASE_EN.md)
-- Mini Git Cheat Sheet file [README_GIT_EN.md](README_GIT_EN.md)
+4. Merge Pull Request — after completing work on the feature branch, changes are merged into main via a Pull Request.
+5. After merging
