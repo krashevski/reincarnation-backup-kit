@@ -1,6 +1,6 @@
 # 🔒 Working Safely with GitHub
 
-[🇬🇧 English](../EN/README_GITHUB_SAFE_EN.md) | [🇷🇺 Русский](README_GITHUB_SAFE_RU.md)
+[🇬🇧 English](README_GITHUB_SAFE_EN.md) | [🇷🇺 Русский](../RU/README_GITHUB_SAFE_RU.md)
 
 Goal: To provide a safe method for working with local repositories and remote services, minimizing the risk of token leaks, accidental force pushes, and other errors.
 
@@ -206,10 +206,10 @@ ls -lh ~/backup-repository.tar.gz
 * The password must be unique, sufficiently long, more than 10 characters, and randomly complex.
 * Never use the root password for everyday work with Git or scripts.
 * If you need to run scripts with `sudo`, make sure the command is safe:
-- Trust only trusted sources.
-- Read the script and check which commands are executed with root privileges.
-- This is especially important for the following commands: `rm`, `dd`, `mkfs`, `ln -sf`.
-- Do not copy `sudo` commands from unknown sources.
-- For testing, you can first run the script without `sudo` to check the output and behavior.
-- Use `sudo -l` to find out which commands your account can execute with root privileges.
+  - Trust only trusted sources.
+  - Read the script and check which commands are executed with root privileges.
+    - This is especially important for the following commands: `rm`, `dd`, `mkfs`, `ln -sf`.
+  - Do not copy `sudo` commands from unknown sources.
+  - For testing, you can first run the script without `sudo` to check the output and behavior.
+  - Use `sudo -l` to find out which commands your account can execute with root privileges.
 * If your password is compromised, it makes sense to back up the system or user profile only for the cleaned system.
