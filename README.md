@@ -4,8 +4,8 @@
 ![Made with Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)
 ![Ubuntu 24.04 Tested](https://img.shields.io/badge/Ubuntu-24.04-brightgreen.svg)
 ![Debian 12 Supported](https://img.shields.io/badge/Debian-12-orange.svg)
-![GitHub Repo Size](https://img.shields.io/github/repo-size/vladislav/backup-kit)
-![GitHub stars](https://img.shields.io/github/stars/vladislav/backup-kit?style=social)
+[![GitHub Repo Size](https://img.shields.io/github/repo-size/krashevski/reincarnation-backup-kit)](https://github.com/krashevski/reincarnation-backup-kit)
+[![GitHub stars](https://img.shields.io/github/stars/krashevski/reincarnation-backup-kit)](https://github.com/krashevski/reincarnation-backup-kit)
 
 [🇬🇧 English](docs/EN/README_EN.md) | [🇷🇺 Русский](docs/RU/README_RU.md)
 
