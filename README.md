@@ -1,4 +1,4 @@
-# Reincarnation Backup Kit — Ubuntu System Backup & Restore Scripts
+# Reincarnation Backup Kit — Ubuntu system backup & restore scripts
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Made with Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)
@@ -59,19 +59,19 @@ Consists of two steps:
 
 ## 📂 Brief instructions
 
-### 1. System Backup Scripts
+### 1. System backup scripts
 | Script | Description |
 |--------|---------|
 | `backup-system.sh` | Creates a backup of system files and settings. |
 | `restore-system.sh` | Restores system files from a backup. |
 
-### 2. User Data Scripts
+### 2. User data scripts
 | Script | Description |
 |--------|---------|
 | `backup-userdata.sh` | Daily/manual backup of user data. |
 | `restore-userdata.sh` | Safely restores user data. |
 
-### 3. Utilities and Wrappers
+### 3. Utilities and wrappers
 | Script | Description |
 |--------|----------|
 | `install.sh` | Installs Backup Kit and creates directories and permissions. |
@@ -83,7 +83,7 @@ Consists of two steps:
 | `menu.sh` | Text menu for Reincarnation Backup Kit. |
 | `messages.sh` | Unified messages for all scripts. |
 
-### 4. Media and GPU Tools
+### 4. Media and GPU tools
 | Script | Description |
 |--------|---------|
 | `install-nvidia-cuda.sh` | Installs NVIDIA and CUDA drivers. |
@@ -99,7 +99,7 @@ Consists of two steps:
 | `clean-backup-logs.sh` | Clears old logs. |
 | `remove-cron-backup.sh` | Removes the backup cron job. |
 
-## Reincarnation Backup Kit Text Menu
+## Reincarnation Backup Kit text menu
 
 After installation, you can use a simple text menu:
 ```bash
@@ -118,7 +118,7 @@ The menu allows you to:
 > ⚠️ Some operations require root (sudo) privileges.
 Other options are accessible without privileges.
 
-## 🚀 Quick Start / Быстрый старт
+## 🚀 Quick start / Быстрый старт
 
 ```bash
 git clone https://github.com/username/backup-kit.git
