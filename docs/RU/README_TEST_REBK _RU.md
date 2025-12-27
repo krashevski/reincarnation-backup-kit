@@ -58,7 +58,7 @@ chmod +x install.sh menu.sh scripts/*.sh
 - корректные сообщения
 - отсутствие ошибок MSG, L, say
 
-## 6️⃣ Проверить show-system-mounts.sh
+### Проверить show-system-mounts.sh
 
 ```bash
 scripts/show-system-mounts.sh
@@ -70,7 +70,7 @@ scripts/show-system-mounts.sh
 - симлинки в $HOME
 - crontab (или empty)
 
-## 7️⃣ Проверить idempotency (ключевой момент)
+### Проверить idempotency
 
 Запусти два раза подряд:
 ```bash
