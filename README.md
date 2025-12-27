@@ -38,11 +38,7 @@ Idempotent shell toolkit for:
 - Multi-user aware
 - systemd / cron compatible
 
-<<<<<<< HEAD
-### 🗄️ Backup and Restore
-=======
 ### 🗄️ Backup and restore
->>>>>>> main
 Consists of two independent parts:
 1. **System Backup** — system configuration, package lists, repositories.
 2. **User Backup** — home directories (/home/...), documents, and personal data.
