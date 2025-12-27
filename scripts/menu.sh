@@ -221,7 +221,7 @@ main_menu() {
     while true; do
         clear
         echo "========================================="
-        echo "   Reincarnation Backup Kit — $(say main_menu)"
+        echo "   Reincarnation Backup Kit — echo_msg main_menu"
         echo "========================================="
         echo " 1) $(say backup)"
         echo " 2) $(say restore)"
