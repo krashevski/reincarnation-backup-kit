@@ -43,14 +43,14 @@ Idempotent shell toolkit for:
 - Multi-user aware
 - systemd / cron compatible
 
-### 🗄️ Backup and Restore
+### 🗄️ Backup and restore
 Consists of two independent parts:
 1. **System Backup** — system configuration, package lists, repositories.
 2. **User Backup** — home directories (/home/...), documents, and personal data.
 
 > ⚠️ Important: Both parts complement each other. You can use only the system backup, only the user backup, or both at once.
 
-### 🎬 Creating a Multimedia Environment
+### 🎬 Creating a multimedia environment
 Consists of two steps:
 1. **Format** the selected HDD and create users.
 2. **NVIDIA GPU and CUDA testing**, software installation:
