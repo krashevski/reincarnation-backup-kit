@@ -20,52 +20,122 @@ set -euo pipefail
 # MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 # ==============================================================
 
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
+
 # -------------------------------------------------------------
 # 1. Определяем директорию скрипта
 # -------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # -------------------------------------------------------------
-# 2. Messages
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
 # -------------------------------------------------------------
 declare -A MSG
 
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
 load_messages() {
     local lang="$1"
+    # очищаем предыдущие ключи
     MSG=()
+
     case "$lang" in
-        ru) source "$SCRIPT_DIR/i18n/messages_ru.sh" ;;
-        en) source "$SCRIPT_DIR/i18n/messages_en.sh" ;;
-        *) echo "Unknown language: $lang" >&2; exit 1 ;;
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
     esac
 }
 
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
 say() {
     local key="$1"; shift
-    local msg="${MSG[$key]:-$key}"
-    printf "$msg" "$@"
-}
+    local msg="${MSG[${key}]:-$key}"
 
-info() {
-    printf "%s\n" "$(say "$@")"
-}
-
-warn() {
-    printf "[WARN] %s\n" "$(say "$@")" >&2
-}
-
-error() {
-    printf "[ERROR] %s\n" "$(say "$@")" >&2
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
 }
 
 # -------------------------------------------------------------
-# 3. Language
+# 5. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b" "$(printf "$fmt" "$@")"
+    printf "\n"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[WARN] %b\n" "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 7. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "[ERROR] %b\n" "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 8. Функция echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 9. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 10. Устанавливаем язык по умолчанию и загружаем переводы
 # -------------------------------------------------------------
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
 # -------------------------------------------------------------
-# 4. Paths
+# 11. Paths
 # -------------------------------------------------------------
 BASE_DIR="/mnt/storage"
 EXTRA_SYMLINKS=("shotcut:/mnt/shotcut" "backups:/mnt/backups")
@@ -84,7 +154,7 @@ fi
 }
 
 # -------------------------------------------------------------
-# 5. Data (NO say here!)
+# 12. Data (NO say here!)
 # -------------------------------------------------------------
 declare -A TARGET_DIRS=(
     [music]="Music"
@@ -113,7 +183,7 @@ get_link_name() {
 }
 
 # -------------------------------------------------------------
-# 6. Idempotent FS helpers
+# 13. Idempotent FS helpers
 # -------------------------------------------------------------
 
 ensure_dir() {
@@ -167,7 +237,7 @@ ensure_symlink() {
 }
 
 # -------------------------------------------------------------
-# 7. Main logic (pure declarative)
+# 14. Main logic (pure declarative)
 # -------------------------------------------------------------
 
 info start_symlinks
