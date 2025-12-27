@@ -17,11 +17,11 @@
 Состоит из двух шагов:
 1. **Форматирование** выбранного жёсткого диска и создание пользователей.
 2. **Тестирование видеокарты NVIDIA и CUDA**, установка программного обеспечения:
-- [Shotcut](https://shotcut.org/) (видеоредактор)
-- [GIMP+G'MIC](https://gmic.eu/) (графика)
-- [Krita](https://krita.org/en/) (рисование)
-- [Audacity](https://www.audacityteam.org/) (звук)
-- создание шаблонов для Shotcut
+   - [Shotcut](https://shotcut.org/) (видеоредактор)
+   - [GIMP+G'MIC](https://gmic.eu/) (графика)
+   - [Krita](https://krita.org/en/) (рисование)
+   - [Audacity](https://www.audacityteam.org/) (звук)
+   - создание шаблонов для Shotcut
 
 > ⚠️ Важно: Вы можете использовать настройку мультимедийной среды независимо, без резервной копии.
 
