@@ -216,7 +216,7 @@ mkdir -p "$WORKDIR" "$LOG_DIR"
 ok "Created: $WORKDIR, $LOG_DIR"
 
 # --- Проверка зависимостей ---
-REQUIRED_PKGS=("rsync" "tar" "gzip" "pv")
+REQUIRED_PKGS=("rsync" "tar" "gzip")
 for pkg in "${REQUIRED_PKGS[@]}"; do
     if ! command -v "$pkg" &> /dev/null; then
         error "'$pkg' ${MSG[deps_missing]}"
