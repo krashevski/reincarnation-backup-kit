@@ -35,7 +35,7 @@
 - Создаст готовые пресеты Shotcut для сохранения
 - Протестирует GPU и ffmpeg для Shotcut
 
-## Fвтоматическая настройка NVIDIA, проброс GPU в Flatpak `check-shotcut-gpu.sh`
+## Автоматическая настройка NVIDIA, проброс GPU в Flatpak `check-shotcut-gpu.sh`
 
 Скрипт автоматически настраивает NVIDIA, пробрасывает GPU в Flatpak, тестирует NVENC для настрйки GPU при Shotcut.
 
