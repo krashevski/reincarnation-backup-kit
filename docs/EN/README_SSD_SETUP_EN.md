@@ -39,6 +39,7 @@ Post-installation check:
 | Mount point | Destination |
 |---------------------------------------------|----------------------------------|
 | `/mnt/storage` (on the third hard drive) | Source files (video, photos, music). |
+| `/home/user2` (on the third hard drive) | for user2 if is. |
 | `/mnt/backups` (on the second hard drive) | Archive of old projects, backups. |
 
 > [!] An external USB hard drive is not suitable for backing up user data due to its slow performance.
