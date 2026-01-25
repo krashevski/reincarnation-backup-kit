@@ -21,6 +21,43 @@
 MSG[hello]="Привет, мир!"
 MSG[start]="Запуск"
 
+# restore-userdata.sh
+MSG[start]="Запуск безопасного восстановления Backup Kit..."
+MSG[error_no_script]="Не найден restore-скрипт: %s"
+MSG[error_no_backup]="Ошибка: каталог резервных копий не найден: %s"
+MSG[ok_finished]="Все операции восстановления завершены успешно."
+MSG[error_finished]="Восстановление завершилось с ошибками."
+MSG[info_safe]="Запускается безопасное восстановление (без удаления лишних файлов)..."
+MSG[recovery_warnings]="Восстановление завершилось с предупреждениями, проверьте лог"
+
+# backup-restore-userdata.sh
+MSG[error_root]="Скрипт нужно запускать с правами root (sudo)"
+MSG[x_warning]="Запуск в графической X-сессии. Рекомендуется локальная консоль для точного прогресса."
+MSG[usage]="Использование: sudo %s [backup|restore]"
+MSG[example_backup]="Пример: sudo %s backup — для резервного копирования"
+MSG[example_restore]="Пример: sudo %s restore — для восстановления"
+MSG[warn_time]="Операция может занять длительное время."
+MSG[not_mounted]="/mnt/backups не смонтирован! Подключите диск и повторите."
+MSG[not_mounted_storage]="/mnt/storage не смонтирован! Подключите диск и повторите."
+MSG[no_users]="Не найдено пользователей в /home"
+MSG[user_list]="Доступные пользователи:"
+MSG[select_user]="Введите номер(а) пользователя для %s (через пробел): "
+MSG[invalid_choice]="Неверный выбор: %s"
+MSG[rs_backup]="Rsync бэкап: %s -> %s"
+MSG[rs_restore]="Rsync восстановление: %s -> %s"
+MSG[no_backup_found]="Rsync бэкап не найден для %s"
+MSG[no_new_files]="Нет новых файлов для архивации в %s"
+MSG[archive_created]="Архив создан: %s"
+MSG[extracting_archive]="Распаковка последнего архива %s"
+MSG[user_not_found]="Пользователь %s не найден, пропуск восстановления."
+MSG[dir_missing]="Каталог %s не существует, пропускаем."
+MSG[fresh_remove]="--fresh: удаляю старый архив %s"
+MSG[backup_done_user]="Бэкап завершён для %s"
+MSG[restore_done_user]="Восстановление завершено для %s"
+MSG[all_done]="Все операции %s завершены успешно."
+MSG[some_failed]="Некоторые операции %s не были выполнены. См. лог: %s"
+MSG[run_sudo]="Скрипт нужно запускать с правами root (sudo)"
+
 # hdd-setup-profiles.sh
 MSG[hdd_detect]="Поиск доступных дисков"
 MSG[skip_os_disk]="Пропускаем диск с установленной системой: %s"
@@ -157,12 +194,13 @@ MSG[change_language]=" 1) Сменить язык (RU/EN)"
 
 # setup-symlinks.sh
 MSG[start_symlinks]="Начинаю настройку символических ссылок"
-MSG[link_ok]="Ссылка уже корректна"
 MSG[link_created]="Создана ссылка: %s → %s"
 MSG[link_replaced]="Ссылка обновлена: %s → %s"
 MSG[link_skipped]="Ссылка пропущена: %s"
 MSG[done_symlinks]="Настройка символических ссылок завершена"
 MSG[link_ok]="Ссылка корректна: %s → %s"
+MSG[confirm_replace]="Хотите ли обновить ссылку %s"
+MSG[link_conflict]=""
 
 # show-system-mounts.sh
 MSG[physical_disks]="===== Информация о физических дисках ====="

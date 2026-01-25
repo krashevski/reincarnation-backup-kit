@@ -19,23 +19,19 @@
 
 set -euo pipefail
 
-# --- systemd-inhibit ---
-if command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Reincarnation Backup Kit: restore in progress" \
-            "$0" "$@"
-    fi
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
 fi
 
-# --- Colors ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 # -------------------------------------------------------------
 # 1. Определяем директорию скрипта
@@ -83,41 +79,64 @@ say() {
     fi
 }
 
+
 # -------------------------------------------------------------
-# 5. Функция info для логирования
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
 # -------------------------------------------------------------
 info() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "%b" "$(printf "$fmt" "$@")"
-    printf "\n"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 
 # -------------------------------------------------------------
-# 6. Функция warn для логирования
+# 7. Функция warn для логирования
 # -------------------------------------------------------------
 warn() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "[WARN] %b\n" "$(printf "$fmt" "$@")" >&2
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 # -------------------------------------------------------------
-# 7. Функция error для логирования
+# 8. Функция error для логирования
 # -------------------------------------------------------------
 error() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "[ERROR] %b\n" "$(printf "$fmt" "$@")" >&2
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 
 # -------------------------------------------------------------
-# 8. Функция echo_msg для логирования
+# 9. Функция echo_echo_msg для логирования
 # -------------------------------------------------------------
 echo_msg() {
     local key="$1"; shift
@@ -127,7 +146,7 @@ echo_msg() {
 }
 
 # -------------------------------------------------------------
-# 9. Функция die для логирования
+# 10. Функция die для логирования
 # -------------------------------------------------------------
 die() {
     error "$@"
@@ -135,7 +154,7 @@ die() {
 }
 
 # -------------------------------------------------------------
-# 10. Устанавливаем язык по умолчанию и загружаем переводы
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
 # -------------------------------------------------------------
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
@@ -143,7 +162,7 @@ load_messages "$LANG_CODE"
 # --- Проверка root только для команд, где нужны права ---
 require_root() {
     if [[ $EUID -ne 0 ]]; then
-        error "$(say run_sudo)"
+        error run_sudo
         return 1
     fi
 }
@@ -151,6 +170,17 @@ require_root() {
 REAL_HOME="${HOME:-/home/$USER}"
 if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
     REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
 fi
 
 # --- Пути к скриптам ---
@@ -182,16 +212,16 @@ show_logs() {
     LOG_DIR="/mnt/backups/logs"
 
     if [ ! -d "$LOG_DIR" ]; then
-        warn "$(say no_logs)"
+        warn no_logs
         return
     fi
 
     if command -v ranger >/dev/null 2>&1; then
         ranger "$LOG_DIR"
     else
-        info "$(say install_ranger)"
+        info install_ranger
         require_root && sudo apt update && sudo apt install -y ranger || {
-            warn "$(say failed_ranger)"
+            warn failed_ranger
             ls -lh "$LOG_DIR"
             return
         }
@@ -221,7 +251,7 @@ main_menu() {
     while true; do
         clear
         echo "========================================="
-        echo "   Reincarnation Backup Kit — echo_msg main_menu"
+        echo "   Reincarnation Backup Kit — $(echo_msg main_menu)"
         echo "========================================="
         echo " 1) $(say backup)"
         echo " 2) $(say restore)"
@@ -359,18 +389,18 @@ media_menu() {
     echo "-----------------------------------------"
     echo "$(say menu_media)"
     echo "-----------------------------------------"
+    echo "$(say install_flatpak)"
     echo "$(say install_nvidia)"
     echo "$(say checks_gpu)"
-    echo "$(say install_flatpak)"
     echo "$(say install_apt)"
     echo
     echo "$(say back_main)"
     echo "-----------------------------------------"
     read -rp "$(say sel_opt)" choice
     case "$choice" in     
-        1) sudo bash "$NVIDIA_CUDA" ;;
-        2) "$SHOTCUT_GPU" ;;
-        3) "$MEDIA_FLATPAK" ;;
+        1) "$MEDIA_FLATPAK" ;;
+        2) sudo bash "$NVIDIA_CUDA" ;;
+        3) "$SHOTCUT_GPU" ;;
         4) "$MEDIA_APT" ;;
         0) return ;;
         *) warn invalid_choice ;;

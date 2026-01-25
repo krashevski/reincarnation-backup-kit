@@ -7,7 +7,7 @@
 Important: not from the current working copy.
 ```bash
 cd ~
-git clone https://github.com/<username>/backup-kit.git rebk-test
+git clone https://github.com/krashevski/reincarnation-backup-kit rebk-test
 cd rebk-test
 ```
 
@@ -33,7 +33,6 @@ Note:
 * scripts/i18n/
 * menu.sh
 * install.sh
-* missing TEST_FORCE.md ✅
 
 ## 4️⃣ Check execution permissions
 
@@ -53,59 +52,7 @@ chmod +x install.sh menu.sh scripts/*.sh
 ```
 
 Check:
-- Russian / English language
-- no link_xxx
+- languages
 - correct messages
-- no MSG, L, or say errors
 
-## 6️⃣ Check show-system-mounts.sh
 
-```bash
-scripts/show-system-mounts.sh
-```
-
-Should:
-- show drives
-- mounts
-- symlinks in $HOME
-- crontab (or empty)
-
-## 7️⃣ Check idempotency (key)
-
-Run twice in a row:
-```bash
-scripts/setup-symlinks.sh
-scripts/setup-symlinks.sh
-```
-
-Expected:
-- the link is correct
-- nothing breaks
-- no ln: access denied
-
-## 8️⃣ Check root-only parts (deliberately)
-
-```bash
-sudo scripts/hdd-setup-profiles.sh
-```
-
-See:
-- warnings are clear
-- no "silent" errors
-- the menu doesn't break
-
-## 🧪 What's especially important to check
-
-* multi-user (SUDO_USER, $HOME)
-* i18n (RU / EN)
-* no paths like /link_music
-* correct logs in /mnt/backups/logs
-* safe to restart
-
-> ⚠️ Important: Running scripts directly from a cloned repository
-may result in incorrect behavior.
-Use install.sh before performing full testing.
-
-## 🟢 If Everything went smoothly.
-
-The next logical step.

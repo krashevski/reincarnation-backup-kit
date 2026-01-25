@@ -1,5 +1,17 @@
 #!/bin/bash
 # =============================================================
+# Reincarnation Backup Kit — MIT License
+# Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# =============================================================
 # show-system-mounts.sh — список точек монтирования и симлинков
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
@@ -7,16 +19,19 @@
 
 set -euo pipefail
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
 fi
+
 
 # -------------------------------------------------------------
 # 1. Определяем директорию скрипта
@@ -64,41 +79,64 @@ say() {
     fi
 }
 
+
 # -------------------------------------------------------------
-# 5. Функция info для логирования
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
 # -------------------------------------------------------------
 info() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "%b" "$(printf "$fmt" "$@")"
-    printf "\n"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 
 # -------------------------------------------------------------
-# 6. Функция warn для логирования
+# 7. Функция warn для логирования
 # -------------------------------------------------------------
 warn() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "[WARN] %b\n" "$(printf "$fmt" "$@")" >&2
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 # -------------------------------------------------------------
-# 7. Функция error для логирования
+# 8. Функция error для логирования
 # -------------------------------------------------------------
 error() {
     local key="$1"; shift
     local fmt
     fmt="$(say "$key")"
-    printf "[ERROR] %b\n" "$(printf "$fmt" "$@")" >&2
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
 }
 
 
 # -------------------------------------------------------------
-# 8. Функция echo_msg для логирования
+# 9. Функция echo_echo_msg для логирования
 # -------------------------------------------------------------
 echo_msg() {
     local key="$1"; shift
@@ -108,7 +146,7 @@ echo_msg() {
 }
 
 # -------------------------------------------------------------
-# 9. Функция die для логирования
+# 10. Функция die для логирования
 # -------------------------------------------------------------
 die() {
     error "$@"
@@ -116,10 +154,34 @@ die() {
 }
 
 # -------------------------------------------------------------
-# 10. Устанавливаем язык по умолчанию и загружаем переводы
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
 # -------------------------------------------------------------
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
 
 # --- Функция для информации о дисках ---
 show_disks_info() {

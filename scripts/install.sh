@@ -215,15 +215,60 @@ fi
 mkdir -p "$WORKDIR" "$LOG_DIR"
 ok "Created: $WORKDIR, $LOG_DIR"
 
-# --- Проверка зависимостей ---
-REQUIRED_PKGS=("rsync" "tar" "gzip")
-for pkg in "${REQUIRED_PKGS[@]}"; do
-    if ! command -v "$pkg" &> /dev/null; then
-        error "'$pkg' ${MSG[deps_missing]}"
-        exit 1
+check_and_install_deps() {
+    local REQUIRED_PKGS=("$@")
+    local MISSING_PKGS=()
+
+    # --- проверка наличия команд ---
+    for pkg in "${REQUIRED_PKGS[@]}"; do
+        if ! command -v "$pkg" >/dev/null 2>&1; then
+            MISSING_PKGS+=("$pkg")
+        fi
+    done
+
+    # --- если всё есть ---
+    if [ "${#MISSING_PKGS[@]}" -eq 0 ]; then
+        ok "${MSG[deps_ok]}"
+        return 0
     fi
-done
-ok "${MSG[deps_ok]}"
+
+    echo "⚠️ Отсутствуют зависимости: ${MISSING_PKGS[*]}"
+    echo "🔧 Попытка автоматической установки..."
+
+    # --- определение пакетного менеджера ---
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update
+        sudo apt-get install -y "${MISSING_PKGS[@]}"
+
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y "${MISSING_PKGS[@]}"
+
+    elif command -v yum >/dev/null 2>&1; then
+        sudo yum install -y "${MISSING_PKGS[@]}"
+
+    elif command -v pacman >/dev/null 2>&1; then
+        sudo pacman -Sy --noconfirm "${MISSING_PKGS[@]}"
+
+    elif command -v zypper >/dev/null 2>&1; then
+        sudo zypper install -y "${MISSING_PKGS[@]}"
+
+    else
+        error "Неизвестный пакетный менеджер. Установите вручную: ${MISSING_PKGS[*]}"
+        return 1
+    fi
+
+    # --- повторная проверка ---
+    for pkg in "${REQUIRED_PKGS[@]}"; do
+        if ! command -v "$pkg" >/dev/null 2>&1; then
+            error "'$pkg' ${MSG[deps_missing]}"
+            return 1
+        fi
+    done
+
+    ok "${MSG[deps_ok]}"
+}
+
+check_and_install_deps rsync tar gzip pv
 
 # --- Копирование backup_kit ---
 SRC_DIR="$HOME/scripts/backup_kit"

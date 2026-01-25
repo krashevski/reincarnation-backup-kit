@@ -21,6 +21,44 @@
 MSG[hello]="Hello, world!"
 MSG[start]="Starting"
 
+# restore-userdata.sh
+MSG[start]="Starting safe Backup Kit restore..."
+MSG[error_no_script]="Restore script not found: %s"
+MSG[error_no_backup]="Error: backup directory not found: %s"
+MSG[ok_finished]="All restore operations completed successfully."
+MSG[error_finished]="Restore finished with errors."
+MSG[info_safe]="Starting safe restore (without deleting extra files)..."
+MSG[recovery_warnings]="Recovery completed with warnings, please check the log"
+
+
+# backup-restore-userdata.sh
+MSG[error_root]="Script must be run as root (sudo)"
+MSG[x_warning]="Running in graphical X-session. Local console recommended for accurate progress."
+MSG[usage]="Usage: sudo %s [backup|restore]"
+MSG[example_backup]="Example: sudo %s backup — for backup"
+MSG[example_restore]="Example: sudo %s restore — for restore"
+MSG[warn_time]="Operation may take a long time."
+MSG[not_mounted]="/mnt/backups not mounted! Connect the disk and retry."
+MSG[not_mounted_storage]="/mnt/storage not mounted! Connect the disk and retry."
+MSG[no_users]="No users found in /home"
+MSG[user_list]="Available users:"
+MSG[select_user]="Enter user numbers for %s (space-separated): "
+MSG[invalid_choice]="Invalid selection: %s"
+MSG[rs_backup]="Rsync backup: %s -> %s"
+MSG[rs_restore]="Rsync restore: %s -> %s"
+MSG[no_backup_found]="No rsync backup found for %s"
+MSG[no_new_files]="No new files to archive in %s"
+MSG[archive_created]="Archive created: %s"
+MSG[extracting_archive]="Extracting latest archive %s"
+MSG[user_not_found]="User %s not found, skipping restore."
+MSG[dir_missing]="Directory %s does not exist, skipping."
+MSG[fresh_remove]="--fresh: removing old backup %s"
+MSG[backup_done_user]="Backup completed for %s"
+MSG[restore_done_user]="Restore completed for %s"
+MSG[all_done]="All %s operations completed successfully."
+MSG[some_failed]="Some %s operations failed. See log: %s"
+MSG[run_sudo]="The script must be run with root rights (sudo)"
+
 # hdd-setup-profiles.sh
 MSG[hdd_detect]="Searching for available drives"
 MSG[skip_os_disk]="Skipping OS disk: %s"
@@ -159,11 +197,13 @@ MSG[change_language]=" 1) Change language (RU/EN)"
 
 # setup-symlinks.sh
 MSG[start_symlinks]="Starting to configure symbolic links"
-MSG[link_ok]="The link is already correct"
 MSG[link_created]="Link created: %s → %s"
 MSG[link_replaced]="Link updated: %s → %s"
 MSG[link_skipped]="Link skipped: %s"
 MSG[done_symlinks]="Symbolic link configuration complete"
+MSG[link_ok]="Link is correct: %s → %s"
+MSG[confirm_replace]="Wont replace link $s"
+MSG[link_conflict]=""
 
 # show-system-mounts.sh
 MSG[physical_disks]="===== Information about physical disks ====="
