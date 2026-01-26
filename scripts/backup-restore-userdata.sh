@@ -254,7 +254,7 @@ run_rsync_backup() {
     local DST="$USERDATA_DIR/$2"
     mkdir -p "$DST"
     info rs_backup "$SRC" "$DST"
-    rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update $(rsync_exclude) \
+    rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update "${RSYNC_EXCLUDES[@]}" \
         "$SRC/" "$DST/"
 }
 

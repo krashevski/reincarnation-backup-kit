@@ -22,51 +22,191 @@ DOC
 
 set -euo pipefail
 
-# === Двуязычные сообщения ===
-declare -A MSG=(
-  [ru_start]="Старт установки мультимедиа приложений через APT/Snap"
-  [en_start]="Starting multimedia applications installation via APT/Snap"
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
 
-  [ru_clean_repos]="Очистка сторонних репозиториев..."
-  [en_clean_repos]="Cleaning 3rd-party repositories..."
 
-  [ru_repos_done]="Репозитории очищены. Обновляем список пакетов..."
-  [en_repos_done]="Repositories cleaned. Updating package lists..."
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  [ru_install_packages]="Устанавливаем необходимые пакеты..."
-  [en_install_packages]="Installing required packages..."
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
 
-  [ru_done]="Установка завершена!"
-  [en_done]="Installation completed!"
-)
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
 
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}" "${2:-}"; }
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
 
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; YELLOW="\033[1;33m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
 
-info "$(say start)"
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
+
+info start
 
 # --- Очистка сторонних репозиториев ---
-info "$(say clean_repos)"
+info clean_repos
 for file in /etc/apt/sources.list.d/*; do
     if [[ -f "$file" && "$(basename "$file")" != "ubuntu.sources" ]]; then
-        info "Удаляю $file"
+        info deleting "$file"
         sudo rm -f "$file"
     fi
 done
-info "$(say repos_done)"
+info repos_done
+
+# Обработка блокировки apt перед запуском
+if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
+    exit 10
+fi
 
 # --- Обновление и установка пакетов ---
-info "$(say install_packages)"
+info install_packages
 sudo apt update
 sudo apt install -y vlc digikam darktable keepassxc mc ranger cpu-x
 sudo snap install telegram-desktop
 
-ok "$(say done)"
-
+ok done

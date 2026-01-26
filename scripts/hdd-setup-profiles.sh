@@ -175,6 +175,17 @@ if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
     REAL_HOME="/home/$SUDO_USER"
 fi
 
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
+
 info hdd_start
 
 # === Логирование ===

@@ -22,74 +22,168 @@ DOC
 
 set -euo pipefail
 
-# === Цвета ===
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-YELLOW="\033[1;33m"
-BLUE="\033[0;34m"
-NC="\033[0m"
-
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARNING]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# === Определение языка ===
-determine_language() {
-    if [[ -n "${SUDO_USER:-}" ]]; then
-        local user_lang
-        user_lang=$(sudo -u "$SUDO_USER" bash -c 'echo "${LANG:-}"')
-        [[ "$user_lang" == ru* ]] && echo "ru" || echo "en"
-        return
-    fi
-    [[ "${LANG:-}" == ru* ]] && echo "ru" || echo "en"
-}
-LANG_MODE=$(determine_language)
-
-# === Сообщения ===
-declare -A MSG
-if [[ $LANG_MODE == "ru" ]]; then
-    MSG[installer]="=== Установщик Backup Kit ==="
-    MSG[distro_found]="Обнаружен дистрибутив"
-    MSG[dir_created]="Каталог создан или уже существует"
-    MSG[workdir_clean]="Очищаем временный рабочий каталог"
-    MSG[workdir_cleaned]="Рабочий каталог очищен"
-    MSG[backup_owner_fix]="Меняю владельца каталога"
-    MSG[backup_not_exist]="Каталог /mnt/backups не существует, проверьте монтирование"
-    MSG[path_added_bashrc]="В ~/.bashrc добавлен экспорт PATH. Чтобы PATH обновился, выполните: source ~/.bashrc"
-    MSG[path_added_profile]="В ~/.profile добавлен экспорт PATH. Перелогиньтесь или выполните: source ~/.profile"
-    MSG[deps_missing]="Пакет не установлен. Установите его"
-    MSG[deps_ok]="Все зависимости установлены"
-    MSG[copy_skip]="backup_kit уже существует, копирование пропущено"
-    MSG[copy_done]="Пакет backup_kit скопирован"
-    MSG[copy_missing]="Исходный каталог не найден, копирование пропущено"
-    MSG[done]="Backup Kit установлен"
-    MSG[path_update]="Обновите окружение (source ~/.bashrc или source ~/.profile) или перелогиньтесь"
-    MSG[can_run]="Вы можете запускать скрипты в"
-    MSG[scripts_list]="Скрипты, доступные для запуска пользователем:"
-    MSG[text_menu]="\nЗапускаем текстовое меню Reincarnation Backup Kit..."
-    MSG[menu_not]="\n[WARN] Скрипт menu.sh не найден или не исполняемый. Показываем стандартный вывод:"
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
 else
-    MSG[installer]="=== Backup Kit Installer ==="
-    MSG[distro_found]="Detected distribution"
-    MSG[dir_created]="Directory created or already exists"
-    MSG[workdir_clean]="Cleaning temporary workdir"
-    MSG[workdir_cleaned]="Workdir cleaned"
-    MSG[backup_owner_fix]="Changing owner of directory"
-    MSG[backup_not_exist]="Directory /mnt/backups does not exist, please check mount"
-    MSG[path_added_bashrc]="Export PATH added to ~/.bashrc. To update PATH, run: source ~/.bashrc"
-    MSG[path_added_profile]="Export PATH added to ~/.profile. Relogin or run: source ~/.profile"
-    MSG[deps_missing]="Package not installed. Please install it"
-    MSG[deps_ok]="All dependencies are installed"
-    MSG[copy_skip]="backup_kit already exists, skipping copy"
-    MSG[copy_done]="backup_kit package copied"
-    MSG[copy_missing]="Source directory not found, skipping copy"
-    MSG[done]="Backup Kit installed"
-    MSG[path_update]="Update environment (source ~/.bashrc or source ~/.profile) or relogin"
-    MSG[can_run]="You can run scripts in"
-    MSG[scripts_list]="Scripts available for user execution:"
-    MSG[text_menu]="\nLaunching the Reincarnation Backup Kit text menu..."
-    MSG[menu_not]="\n[WARN] Script menu.sh not found or not executable. Showing standard output:"
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
+
+
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
+
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
+
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
+
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
+
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
 fi
 
 # === Пути и переменные ===

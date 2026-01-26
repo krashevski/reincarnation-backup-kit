@@ -26,46 +26,158 @@ DOC
 
 set -euo pipefail
 
-# --- Colors ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
 
-# === Сообщения ===
-LANG_CODE="en"
-[[ "${LANG:-}" == ru* ]] && LANG_CODE="ru"
 
-declare -A MSG_RU MSG_EN
-MSG_RU=(
-   [low_free_space]="На %b мало места:"
-   [not_script_found]="Скрипт очистки логов не найден:"
-   [not_space_after]="Недостаточно места после очистки"
-   [dir_skip]="Пользовательский каталог %s не найден, пропускается."
-   [rs_backup]="Резервное копирование Rsync:"
-   [archiving_changed]="Архивирование изменённых файлов из"
-   [no_new_files]="Нет новых файлов для архивирования в"
-   [backup_done]="Резервное копирование завершено для"
-)
-MSG_EN=(
-   [low_free_space]="Low free space at %b:"
-   [not_script_found]="Clean-backup-logs.sh not found:"
-   [not_space_after]="Not enough space after cleaning"
-   [dir_skip]="User directory %s not found, skipping."
-   [rs_backup]="Rsync backup:"
-   [archiving_changed]="Archiving changed files from"
-   [no_new_files]="No new files to archive in"
-   [backup_done]="Backup completed for"  
-)
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-msg() {
-  local key="$1"; shift
-  case "$LANG_CODE" in
-    ru) printf "${MSG_RU[$key]}\n" "$@" ;;
-    en) printf "${MSG_EN[$key]}\n" "$@" ;;
-  esac
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
+
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
+
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
 }
+
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
+
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
 
 # --- Paths ---
 CURRENT_USER="${SUDO_USER:-$USER}"

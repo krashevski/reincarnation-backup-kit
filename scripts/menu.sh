@@ -195,7 +195,7 @@ REMOVE_CRON="$BIN_DIR/remove-cron-backup.sh"
 MEDIA_FLATPAK="$BIN_DIR/install-mediatools-flatpak.sh"
 SHOTCUT_GPU="$BIN_DIR/check-shotcut-gpu.sh"
 NVIDIA_CUDA="$BIN_DIR/install-nvidia-cuda.sh"
-MEDIA_APT="$BIN_DIR/install-mediatools-apt.sh"
+MEDIA_APT="$BIN_DIR/install-mediatools-apt.sh" 
 LAST_ARCHIVE="$BIN_DIR/check-last-archive.sh"
 SYSTEM_MOUNTS="$BIN_DIR/show-system-mounts.sh"
 HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
@@ -307,7 +307,7 @@ backup_menu() {
 
                 info adding_cron "$CRON_TIME" "$CRON_USER"
                 bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                echo_msg cron_installed
+                ok cron_installed
             else
                 error empty_entered
             fi
@@ -401,7 +401,26 @@ media_menu() {
         1) "$MEDIA_FLATPAK" ;;
         2) sudo bash "$NVIDIA_CUDA" ;;
         3) "$SHOTCUT_GPU" ;;
-        4) "$MEDIA_APT" ;;
+        4)
+           set +e
+           "$MEDIA_APT"
+           status=$?
+           set -e
+
+           case "$status" in
+              0)
+                 info apt_installed
+              ;;
+              10)
+                 warn apt_busy
+                 info returned_main_menu
+              ;;
+              *)
+                 error installation_error "$status"
+                 info returned_menu
+              ;;
+          esac
+        ;;
         0) return ;;
         *) warn invalid_choice ;;
     esac
@@ -502,3 +521,4 @@ settings_menu() {
 # --- Запуск ---
 main_menu
 
+exit 0

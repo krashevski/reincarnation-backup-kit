@@ -23,77 +23,168 @@ DOC
 
 set -euo pipefail
 
-# === Двуязычные сообщения ===
-declare -A MSG=(
-  [ru_start]="Старт установки мультимедиа среды"
-  [en_start]="Starting multimedia environment installation"
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
 
-  [ru_nvidia_detected]="NVIDIA GPU обнаружена."
-  [en_nvidia_detected]="NVIDIA GPU detected."
 
-  [ru_nvidia_driver_install]="Драйвер NVIDIA не установлен, устанавливаем..."
-  [en_nvidia_driver_install]="NVIDIA driver not installed, installing..."
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  [ru_nvidia_driver_ok]="Драйвер NVIDIA работает."
-  [en_nvidia_driver_ok]="NVIDIA driver is working."
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
 
-  [ru_cuda_found]="CUDA Toolkit найден."
-  [en_cuda_found]="CUDA Toolkit found."
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
 
-  [ru_cuda_install]="CUDA Toolkit не найден. Устанавливаем..."
-  [en_cuda_install]="CUDA Toolkit not found. Installing..."
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
 
-  [ru_cuda_ok]="CUDA Toolkit успешно установлен."
-  [en_cuda_ok]="CUDA Toolkit successfully installed."
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
 
-  [ru_cuda_fail]="Не удалось установить CUDA Toolkit."
-  [en_cuda_fail]="Failed to install CUDA Toolkit."
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
 
-  [ru_no_nvidia]="NVIDIA GPU не обнаружена."
-  [en_no_nvidia]="NVIDIA GPU not detected."
 
-  [ru_flatpak_install]="Flatpak не найден, устанавливаем..."
-  [en_flatpak_install]="Flatpak not found, installing..."
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
 
-  [ru_flathub_add]="Добавляем Flathub репозиторий..."
-  [en_flathub_add]="Adding Flathub repository..."
 
-  [ru_symlinks]="Символические ссылки созданы"
-  [en_symlinks]="Symlinks created"
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_presets_created]="Пресеты Shotcut созданы."
-  [en_presets_created]="Shotcut presets created."
 
-  [ru_nvenc"]="NVENC доступен: 4K будет через GPU."
-  [en_nvenc"]="NVENC available: 4K will use GPU."
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_no_nvenc]="NVENC недоступен: 4K будет через CPU."
-  [en_no_nvenc]="NVENC unavailable: 4K will use CPU."
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_opengl_ok]="OpenGL GPU доступен."
-  [en_opengl_ok]="OpenGL GPU available."
 
-  [ru_opengl_fail]="OpenGL GPU недоступен внутри Flatpak."
-  [en_opengl_fail]="OpenGL GPU not available inside Flatpak."
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
 
-  [ru_finished]="Установка и настройка завершены!"
-  [en_finished]="Installation and configuration completed!"
-)
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
 
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}" "${2:-}"; }
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
 
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; YELLOW="\033[1;33m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
 
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
 fi
 
 # --- Настройки ---
@@ -110,44 +201,44 @@ GPU_AVAILABLE=false
 NVENC_AVAILABLE=false
 
 if lspci | grep -i nvidia &>/dev/null; then
-    info "$(say nvidia_detected)" | tee -a "$LOG_FILE"
+    info nvidia_detected | tee -a "$LOG_FILE"
     if ! command -v nvidia-smi &>/dev/null; then
-        info "$(say nvidia_driver_install)" | tee -a "$LOG_FILE"
+        info nvidia_driver_install) | tee -a "$LOG_FILE"
         sudo ubuntu-drivers autoinstall
     fi
     if nvidia-smi &>/dev/null; then
-        ok "$(say nvidia_driver_ok)" | tee -a "$LOG_FILE"
+        ok nvidia_driver_ok | tee -a "$LOG_FILE"
         if command -v nvcc &>/dev/null; then
-            ok "$(say cuda_found)" | tee -a "$LOG_FILE"
+            ok cuda_found | tee -a "$LOG_FILE"
             GPU_AVAILABLE=true
         else
-            warn "$(say cuda_install)" | tee -a "$LOG_FILE"
+            warn cuda_install | tee -a "$LOG_FILE"
             sudo apt update
             sudo apt install -y nvidia-cuda-toolkit
             if command -v nvcc &>/dev/null; then
-                ok "$(say cuda_ok)" | tee -a "$LOG_FILE"
+                ok cuda_ok | tee -a "$LOG_FILE"
                 GPU_AVAILABLE=true
             else
-                error "$(say cuda_fail)" | tee -a "$LOG_FILE"
+                error cuda_fail | tee -a "$LOG_FILE"
             fi
         fi
     else
-        warn "NVIDIA driver not working" | tee -a "$LOG_FILE"
+        warn driver_not | tee -a "$LOG_FILE"
     fi
 else
-    info "$(say no_nvidia)" | tee -a "$LOG_FILE"
+    info no_nvidia | tee -a "$LOG_FILE"
 fi
 
 # ----------------- Шаг 1: Flatpak -----------------
 if ! command -v flatpak &>/dev/null; then
-    info "$(say flatpak_install)" | tee -a "$LOG_FILE"
+    info flatpak_install | tee -a "$LOG_FILE"
     sudo apt update
     sudo apt install -y flatpak
 fi
 
 # ----------------- Шаг 2: Flathub -----------------
 if ! flatpak remotes | grep -q flathub; then
-    info "$(say flathub_add)" | tee -a "$LOG_FILE"
+    info flathub_add | tee -a "$LOG_FILE"
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 fi
 
@@ -157,14 +248,6 @@ flatpak install -y flathub org.gimp.GIMP.Plugin.GMic//3
 flatpak install -y flathub org.gimp.GIMP
 flatpak install -y flathub org.kde.krita
 flatpak install -y flathub org.audacityteam.Audacity
-
-# ----------------- Шаг 4: Символические ссылки -----------------
-mkdir -p /mnt/shotcut /mnt/storage/Видео /mnt/storage/Музыка /mnt/storage/Изображения
-ln -sfn /mnt/shotcut "$HOME/shotcut"
-ln -sfn /mnt/storage/Видео "$HOME/Видео"
-ln -sfn /mnt/storage/Музыка "$HOME/Музыка"
-ln -sfn /mnt/storage/Изображения "$HOME/Изображения"
-ok "$(say symlinks)" | tee -a "$LOG_FILE"
 
 # Proxy и Preview
 SHOTCUT_SETTINGS_DIR="$HOME/.config/Shotcut"
@@ -185,7 +268,7 @@ ok "Proxy и Preview Scaling включены." | tee -a "$LOG_FILE"
 
 # ----------------- Шаг 5: GPU/NVENC для Flatpak -----------------
 if $GPU_AVAILABLE; then
-    info "Пропуск GPU в Flatpak Shotcut..." | tee -a "$LOG_FILE"
+    info gpu_skip | tee -a "$LOG_FILE"
     flatpak override --user --device=all org.shotcut.Shotcut
     flatpak run --command=ffmpeg org.shotcut.Shotcut -hide_banner -encoders | grep nvenc && NVENC_AVAILABLE=true
 fi
@@ -197,11 +280,11 @@ mkdir -p "$SHOTCUT_PRESET_DIR"
 if $NVENC_AVAILABLE; then
     CODEC_4K="h264_nvenc"
     RESOURCE_4K="GPU"
-    ok "$(say nvenc)" | tee -a "$LOG_FILE"
+    ok nvenc | tee -a "$LOG_FILE"
 else
     CODEC_4K="libx264"
     RESOURCE_4K="CPU"
-    warn "$(say no_nvenc)" | tee -a "$LOG_FILE"
+    warn no_nvenc | tee -a "$LOG_FILE"
 fi
 
 cat > "$SHOTCUT_PRESET_DIR/4K_export.sml" <<EOF
@@ -238,14 +321,14 @@ cat > "$SHOTCUT_PRESET_DIR/FullHD_CPU_HQ_export.sml" <<'EOF'
   </producer>
 </mlt>
 EOF
-ok "$(say presets_created)" | tee -a "$LOG_FILE"
+ok presets_created | tee -a "$LOG_FILE"
 
 # ----------------- Шаг 7: OpenGL -----------------
 info "Проверка OpenGL внутри Flatpak Shotcut..." | tee -a "$LOG_FILE"
 if flatpak run --command=glxinfo org.shotcut.Shotcut 2>/dev/null | grep -i "OpenGL renderer" &>/dev/null; then
-    ok "$(say opengl_ok)" | tee -a "$LOG_FILE"
+    ok say opengl_ok | tee -a "$LOG_FILE"
 else
-    warn "$(say opengl_fail)" | tee -a "$LOG_FILE"
+    warn opengl_fail | tee -a "$LOG_FILE"
 fi
 
 echo "=== ✅ $(say finished) ===" | tee -a "$LOG_FILE"

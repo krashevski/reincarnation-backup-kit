@@ -24,30 +24,161 @@ DOC
 
 set -euo pipefail
 
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
+
+
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
+
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
+
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
+
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
+
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
+
+
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
+
+
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
 SCRIPT_BASENAME="cron-backup-userdata.sh"
 SCRIPT_PATH="$(realpath "$(dirname "$0")/$SCRIPT_BASENAME")"
-
-# language (simple)
-LANG_CODE="en"
-[[ "${LANG:-}" == ru* ]] && LANG_CODE="ru"
-declare -A MSG_RU MSG_EN
-MSG_RU=(
-  [removed_root]="Cron-задачи удалены из crontab root."
-  [removed_user]="Cron-задачи удалены из crontab пользователя %s."
-  [none]="Cron-задачи не найдены."
-  [before]="Crontab ДО удаления:"
-  [after]="Crontab ПОСЛЕ удаления:"
-  [err_read]="Не удалось прочитать crontab пользователя %s (недостаточно прав?)"
-)
-MSG_EN=(
-  [removed_root]="Cron jobs removed from root crontab."
-  [removed_user]="Cron jobs removed from user %s crontab."
-  [none]="No cron jobs found."
-  [before]="Crontab BEFORE removal:"
-  [after]="Crontab AFTER removal:"
-  [err_read]="Failed to read crontab for user %s (permission?)"
-)
-msg(){ local k="$1"; shift; case "$LANG_CODE" in ru) printf "${MSG_RU[$k]}\n" "$@";; *) printf "${MSG_EN[$k]}\n" "$@";; esac; }
 
 # helper to update crontab from variable content (safe)
 update_crontab_from_var() {
@@ -88,7 +219,7 @@ TARGET_USER="${SUDO_USER:-$USER}"
 if user_cron=$(crontab -l -u "$TARGET_USER" 2>/dev/null || true); then
   if echo "$user_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$user_cron" | grep -Fq "$SCRIPT_PATH"; then
     echo "-----"
-    msg before
+    echo_msg before
     echo "$user_cron"
     echo "-----"
 
@@ -97,15 +228,15 @@ if user_cron=$(crontab -l -u "$TARGET_USER" 2>/dev/null || true); then
     update_crontab_from_var "$TARGET_USER" "$new_user_cron"
 
     echo "-----"
-    msg after
+    echo_msg after
     crontab -l -u "$TARGET_USER" 2>/dev/null || echo "(empty)"
-    msg removed_user "$TARGET_USER"
+    echo_msg removed_user "$TARGET_USER"
     found_any=1
     exit 0
   fi
 else
   # could not read user crontab (permission), warn but continue
-  printf "%s\n" "$(msg err_read "$TARGET_USER")" >&2
+  printf "%s\n" echo_msg err_read "$TARGET_USER" >&2
 fi
 
 # 2) Check root crontab
@@ -118,7 +249,7 @@ fi
 
 if echo "$root_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$root_cron" | grep -Fq "$SCRIPT_PATH"; then
   echo "-----"
-  msg before
+  echo_msg before
   echo "$root_cron"
   echo "-----"
 
@@ -127,18 +258,18 @@ if echo "$root_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$root_cron" | grep -
   update_crontab_from_var "root" "$new_root_cron"
 
   echo "-----"
-  msg after
+  ecdho_msg after
   if [[ $EUID -eq 0 ]]; then
     crontab -l 2>/dev/null || echo "(empty)"
   else
     sudo crontab -l 2>/dev/null || echo "(empty)"
   fi
-  msg removed_root
+  echo_msg removed_root
   found_any=1
   exit 0
 fi
 
 # nothing found
-msg none
+echo_msg none
 exit 0
 
