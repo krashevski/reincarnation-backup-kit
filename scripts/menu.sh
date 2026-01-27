@@ -457,7 +457,6 @@ tools_menu() {
     read -rp "$(echo_msg press_return)"
 }
 
-# --- Подменю Logs ---
 logs_menu() {
     clear
     echo "-----------------------------------------"
@@ -469,15 +468,23 @@ logs_menu() {
     echo "$(say exit_file)"
     echo "$(say exit_ranger)"
     echo "-----------------------------------------"
-    read -rp "$(echo_msg run_return)" choice
 
-    if [[ -z "$choice" ]]; then
-        ranger /mnt/backups/logs || warn no_logs
-    else
-        echo_msg return_menu
-        sleep 1
-    fi
+    read -rp "$(say run_return) " choice
+
+    case "$choice" in
+        "" )
+            ranger /mnt/backups/logs || warn no_logs
+            ;;
+        q|Q )
+            return
+            ;;
+        * )
+            echo_msg return_menu
+            sleep 1
+            ;;
+    esac
 }
+
 
 # --- Подменю SETTINGS ---
 settings_menu() {

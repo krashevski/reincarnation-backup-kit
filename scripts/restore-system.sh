@@ -22,77 +22,173 @@ DOC
 
 set -euo pipefail
 
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
 fi
 
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
-# === Выбор языка ===
-L=${LANG_CHOICE:-ru}
-say() { 
-    local key="${L}_$1"
-    shift
-    printf "${MSG[$key]}" "$@"
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
+
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
+
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
 }
 
-# === Двуязычные сообщения ===
-declare -A MSG=( 
-  [ru_help]="Если АРХИВ не указан, будут использоваться значения по умолчанию в зависимости от системы."
-  [en_help]="If ARCHIVE not specified, defaults will be used depending on system."
-  
-  [ru_detect_system]="Определение системы: "
-  [en_detect_system]="Detected system: "
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
 
-  [ru_not_found_dir]="❌ Каталог BACKUP_DIR не найден. Подключите или смонтируйте диск!"
-  [en_not_found_dir]="❌ Directory BACKUP_DIR not found. Please mount the backup disk!"
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
 
-  [ru_not_supported]="❌ Система %s %s пока не поддерживается"
-  [en_not_supported]="❌ System %s %s is not supported yet"
 
-  [ru_not_found_script]="❌ Скрипт %s не найден или не исполняемый!"
-  [en_not_found_script]="❌ Script %s not found or not executable!"
+# -------------------------------------------------------------
+# 5. Kjuuth ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
 
-  [ru_not_found_archive]="❌ Архив %s не найден!"
-  [en_not_found_archive]="❌ Archive %s not found!"
 
-  [ru_running]="Запуск: "
-  [en_running]="Running: "
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_link_created]="Символическая ссылка создана: ~/Backups"
-  [en_link_created]="Symlink created: ~/Backups"
 
-  [ru_dispatcher_finished]="Dispatcher finished."
-  [en_dispatcher_finished]="Dispatcher finished."
-  
-  [ru_create_simlink]="Создание символической ссылки"
-  [en_create_simlink]="Creating a symbolic link"
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_restore_finished]="Восстановление завершено"
-  [en_restore_finished]="Restore finished"
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-  [ru_log_file]="Файл лога: "
-  [en_log_file]="Log file: "
-  
-  [ru_not_system]="Не удаётся обнаружить систему (нет /etc/os-release)"
-  [en_not_system]="Cannot detect system (no /etc/os-release)"
-  
-  [ru_dispatcher_started]="Диспетчер запущен"
-  [en_dispatcher_started]="Dispatcher started"
-  
-  [ru_dispatcher_finished]="Диспетчер успешно завершил работу"
-  [en_dispatcher_finished]="Dispatcher finished successfully"
-)
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
 
 if [[ "${1:-}" == "--help" ]]; then
-    echo "Usage: $0 [ARCHIVE]"
-    echo "$(say help)"
+    echo_msg usage
+    echo_msg help
     echo
     exit 0
 fi
@@ -103,13 +199,13 @@ LOG_DIR="$BACKUP_DIR/logs"
 RUN_LOG="$LOG_DIR/restore-dispatch-$(date +%F-%H%M%S).log"
 
 cleanup() {
-   info "$(say dispatcher_finished)"
+   info dispatcher_finished
 }
 trap cleanup EXIT INT TERM
 
 # --- Проверки ---
 if [ ! -d "$BACKUP_DIR" ]; then
-    error "$(say not_found_dir)"
+    error not_found_dir
     exit 1
 fi
 
@@ -119,11 +215,11 @@ if [ -r /etc/os-release ]; then
     DISTRO="$ID"
     VERSION="$VERSION_ID"
 else
-    error "$(say not_system)"
+    error not_system
     exit 1
 fi
 
-info "$(say detect_system)" "$DISTRO" "$VERSION"
+info detect_system "$DISTRO" "$VERSION"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
@@ -155,29 +251,30 @@ esac
 
 # --- Проверки наличия ---
 if [ ! -x "$SCRIPT" ]; then
-    error printf "$(say not_found_script "$SCRIPT")"
+    error not_found_script "$SCRIPT"
     exit 1
 fi
 
 if [ ! -f "$ARCHIVE" ]; then
-    error printf "$(say not_found_archive "$ARCHIVE")"
+    error not_found_archive "$ARCHIVE"
     exit 1
 fi
 
 # --- Запуск ---
 info "============================================================="
-info "$(say running)" "$SCRIPT" "$ARCHIVE"
+info running "$SCRIPT" "$ARCHIVE"
 info "============================================================="
 
 {
-    echo "[$(date +%F_%T)] $(say dispatcher_started)"
+    info dispatcher_started "$SCRIPT" "$ARCHIVE"
     "$SCRIPT" "$ARCHIVE"
-    echo "[$(date +%F_%T)] $(say dispatcher_finished)"
 } 2>&1 | tee -a "$RUN_LOG"
 
+
+
+
 info "============================================================="
-ok "$(say restore_finished)"
-info "$(say log_file)" $RUN_LOG
+ok restore_finished
 info "============================================================="
 
 exit 0

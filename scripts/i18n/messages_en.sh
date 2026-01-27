@@ -21,6 +21,54 @@
 MSG[hello]="Hello, world!"
 MSG[start]="Starting"
 
+# install-nvidia-cuda.sh
+MSG[update]="Step 1: Updating package list"
+MSG[driver_install]="Step 2: Automatic NVIDIA driver installation"
+MSG[driver_check]="Step 3: Checking if NVIDIA driver is installed"
+MSG[driver_error]="NVIDIA driver not found. Check installation logs."
+MSG[modprobe]="Step 4: Reloading NVIDIA kernel modules"
+MSG[gpu_info]="Step 5: Checking GPU and driver version"
+MSG[cuda_check]="Step 6: Checking CUDA support"
+MSG[cuda_manage]="To manage the CUDA Toolkit, use the optional script:"
+MSG[cuda_install]="This allows you to install or uninstall the CUDA Toolkit at any time."
+MSG[cuda_version]="Step 7: Checking CUDA version"
+MSG[cuda_warn]="nvcc not found. CUDA may work only via driver."
+MSG[cuda_smi]="Checking CUDA via nvidia-smi"
+MSG[done]="Installation completed! GPU ready for Shotcut acceleration and 4K"
+MSG[nvidia_ok]="nvidia-smi OK"
+
+# backup-userdata.sh
+MSG[run_sudo]="The script must be run with root rights (sudo)"
+
+# restore-sytem.sh
+MSG[help]="If ARCHIVE not specified, defaults will be used depending on system."
+MSG[detect_system]="Detected system: %s %s"
+MSG[not_found_dir]="❌ Directory BACKUP_DIR not found. Please mount the backup disk!"
+MSG[not_supported]="❌ System %s %s is not supported yet"
+MSG[not_found_script]="❌ Script %s not found or not executable!"
+MSG[not_found_archive]="❌ Archive %s not found!"
+MSG[running]="Running: %s %s"
+MSG[link_created]="Symlink created: ~/Backups"
+MSG[dispatcher_finished]="Dispatcher finished."
+MSG[create_simlink]="Creating a symbolic link"
+MSG[restore_finished]="Restore finished"
+MSG[log_file]="Log file: %s"
+MSG[not_system]="Cannot detect system (no /etc/os-release)"
+MSG[dispatcher_started]="Dispatcher started %s %s"
+MSG[dispatcher_finished]="Dispatcher finished successfully"
+MSG[usage]="Usage: $0 [ARCHIVE]"
+
+# check-cuda-tools.sh
+MSG[installed]="CUDA Toolkit is already installed."
+MSG[not_installed]="CUDA Toolkit is not installed."
+MSG[install_prompt]="Do you want to install CUDA Toolkit (~2 GB)? y/n: "
+MSG[remove_prompt]="Do you want to remove CUDA Toolkit? y/n: "
+MSG[installing]="Installing CUDA Toolkit..."
+MSG[removing]="Removing CUDA Toolkit..."
+MSG[done]="Operation completed."
+MSG[cuda_saved]="CUDA Toolkit saved."
+MSG[cuda_installed]="CUDA Toolkit not installed."
+
 # install-mediatools-apt.sh
 MSG[start]="Starting multimedia applications installation via APT/Snap"
 MSG[clean_repos]="Cleaning 3rd-party repositories..."
@@ -52,8 +100,8 @@ MSG[driver_not]="NVIDIA driver not working"
 MSG[gpu_skip]="GPU Skip in Flatpak for Shotcut..."
 
 # backup-system.sh
-MSG[distro_found]="Detected distribution"
-MSG[no_script]="❌ No backup script found for"
+MSG[distro_found]="Detected distribution: %s %s"
+MSG[no_script]="❌ No backup script found for %s %s"
 
 # cron-backup-userdata.sh
 MSG[low_free_space]="Low free space at %b:"

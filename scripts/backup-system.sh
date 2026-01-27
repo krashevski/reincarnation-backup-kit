@@ -12,13 +12,11 @@
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-# Reincarnation Backup Kit — MIT License
-# Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 # Wrapper: backup-system.sh
-# -------------------------------------------------------------
-# backup-system.sh
 # Обёртка для системного бэкапа (Ubuntu 24.04)
 # Автоматически вызывает подходящий скрипт backup-<distro>-<version>.sh
+# Reincarnation Backup Kit — MIT License
+# Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 # =============================================================
 
 set -euo pipefail
@@ -85,7 +83,7 @@ say() {
 
 
 # -------------------------------------------------------------
-# 5. Kjuuth ok
+# 5. Фуекцмя ok
 # -------------------------------------------------------------
 ok() {
     local key="$1"; shift
@@ -190,13 +188,14 @@ fi
 # --- Дистрибутив ---
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-info "${MSG[distro_found]}: $DISTRO_ID $DISTRO_VER"
+
+info distro_found "$DISTRO_ID" "$DISTRO_VER"
 
 SCRIPT_DIR="$(dirname "$0")"
 TARGET="$SCRIPT_DIR/backup-${DISTRO_ID}-${DISTRO_VER}.sh"
 
 if [[ ! -x "$TARGET" ]]; then
-    error "${MSG[no_script]} ${DISTRO_ID}-${DISTRO_VER}"
+    error no_script "$DISTRO_ID"-"$DISTRO_VER"
     exit 1
 fi
 
