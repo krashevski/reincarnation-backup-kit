@@ -337,8 +337,8 @@ restore_menu() {
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
-            1) RESTORE_PACKAGES=manual "$SYS_RESTORE" ;;
-            2) bash "$SYS_RESTORE" ;;
+            1) bash "$SYS_RESTORE" ;;
+            2) RESTORE_PACKAGES=manual "$SYS_RESTORE" ;;
             3) bash "$USER_RESTORE" ;;
             0) return ;;
             *) warn invalid_choice ;;

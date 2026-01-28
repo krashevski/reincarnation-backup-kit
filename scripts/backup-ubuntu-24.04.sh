@@ -2,14 +2,21 @@
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-
 :<<'DOC'
 =============================================================
 backup-ubuntu-24.04.sh v1.16 — System backup (Ubuntu 24.04)
 Part of Backup Kit — minimal restore script with simple logging
 Author: Vladislav Krashevsky
-License: MIT
 =============================================================
 DOC
 
@@ -222,7 +229,7 @@ run_step() {
     local name="$1"
     local func="$2"
 
-    declare -F "$func" >/dev/null || die "Function not found: $func"
+    declare -F "$func" >/dev/null || die not_function "$func"
 
     if "$func"; then
         ok "$name - $step_ok"
@@ -260,7 +267,7 @@ create_archive() {
 # Main
 # -------------------------------------------------------------
 info "======================================================"
-info "Backup Kit — $(echo_msg backup_start)"
+info "REBK — $(echo_msg backup_start)"
 info "======================================================"
 
 info backup_started
@@ -269,7 +276,7 @@ run_step "System packages" backup_packages || die "Backup failed"
 run_step "Archive" create_archive
 
 info "======================================================"
-ok "Backup Kit — $(echo_msg backup_sucess)"
+ok "REBK — $(echo_msg backup_sucess)"
 info log_file "$RUN_LOG"
 info "======================================================"
 

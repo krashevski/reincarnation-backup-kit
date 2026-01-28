@@ -2,6 +2,16 @@
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, subject to the following:
+# The above copyright notice and this permission notice shall
+# be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+# =============================================================
 # Wrapper: backup-system.sh — автоматический вызов backup-<distro>-<version>.sh
 # =============================================================
 
@@ -51,7 +61,6 @@ say() {
     [[ $# -gt 0 ]] && printf "$msg" "$@" || printf '%s' "$msg"
 }
 
-
 # -------------------------------------------------------------
 # 3. Логирование
 # -------------------------------------------------------------
@@ -93,7 +102,7 @@ if [[ $EUID -ne 0 ]]; then
         # Перезапуск скрипта через sudo
         exec sudo bash "$0" "$@"
     else
-        echo "[ERROR] Для выполнения скрипта нужны права root. Установите sudo или запустите под root."
+        error root_run
         exit 1
     fi
 fi
@@ -132,7 +141,7 @@ fi
 # -------------------------------------------------------------
 # 9. Определяем систему
 # -------------------------------------------------------------
-if [[ -r /etc/os-release ]]; then
+if [ -r /etc/os-release ]; then
     source /etc/os-release
     DISTRO="$ID"
     VERSION="$VERSION_ID"
@@ -140,7 +149,8 @@ else
     error not_system
     exit 1
 fi
-info distro_found "$DISTRO" "$VERSION"
+
+info detect_system "$DISTRO" "$VERSION"
 
 # -------------------------------------------------------------
 # 10. Определяем целевой скрипт
@@ -157,7 +167,7 @@ fi
 # -------------------------------------------------------------
 exec "$TARGET" "$@"
 
-
+exit 0
 
 
 
