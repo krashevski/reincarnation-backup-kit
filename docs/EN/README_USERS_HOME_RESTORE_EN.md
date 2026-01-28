@@ -1,6 +1,6 @@
 # README_USERS_HOME_RESTORE.md
 
-[🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/RREADME_USERS_HOME_RESTORE_RU.md)
+[🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/README_USERS_HOME_RESTORE_RU.md)
 
 ## TL;DR / Quick Check
 
