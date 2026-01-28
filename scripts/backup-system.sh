@@ -2,27 +2,13 @@
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, subject to the following:
-# The above copyright notice and this permission notice shall
-# be included in all copies or substantial portions of the Software.
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
-# =============================================================
-# Wrapper: backup-system.sh
-# Обёртка для системного бэкапа (Ubuntu 24.04)
-# Автоматически вызывает подходящий скрипт backup-<distro>-<version>.sh
-# Reincarnation Backup Kit — MIT License
-# Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
+# Wrapper: backup-system.sh — автоматический вызов backup-<distro>-<version>.sh
 # =============================================================
 
 set -euo pipefail
 
 # -------------------------------------------------------------
-# Colors (safe for set -u)
+# 1. Цвета
 # -------------------------------------------------------------
 if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
     RED="\033[0;31m"
@@ -34,32 +20,21 @@ else
     RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
 fi
 
+# -------------------------------------------------------------
+# 2. i18n
+# -------------------------------------------------------------
+declare -Ag MSG
 
-# -------------------------------------------------------------
-# 1. Определяем директорию скрипта
-# -------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$LIB_DIR/.." && pwd)"
 
-# -------------------------------------------------------------
-# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
-# -------------------------------------------------------------
-declare -A MSG
-
-# -------------------------------------------------------------
-# 3. Функция загрузки сообщений
-# -------------------------------------------------------------
 load_messages() {
     local lang="$1"
-    # очищаем предыдущие ключи
     MSG=()
-
+    local i18n_dir="$LIB_DIR/i18n"
     case "$lang" in
-        ru)
-            source "$SCRIPT_DIR/i18n/messages_ru.sh"
-            ;;
-        en)
-            source "$SCRIPT_DIR/i18n/messages_en.sh"
-            ;;
+        ru) source "$i18n_dir/messages_ru.sh" ;;
+        en) source "$i18n_dir/messages_en.sh" ;;
         *)
             echo "Unknown language: $lang" >&2
             return 1
@@ -67,101 +42,73 @@ load_messages() {
     esac
 }
 
-# -------------------------------------------------------------
-# 4. Безопасный say
-# -------------------------------------------------------------
-say() {
-    local key="$1"; shift
-    local msg="${MSG[${key}]:-$key}"
-
-    if [[ $# -gt 0 ]]; then
-        printf "$msg\n" "$@"
-    else
-        printf '%s\n' "$msg"
-    fi
-}
-
-
-# -------------------------------------------------------------
-# 5. Фуекцмя ok
-# -------------------------------------------------------------
-ok() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[OK]%b %b\n" \
-        "${GREEN:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")"
-}
-
-
-# -------------------------------------------------------------
-# 6. Функция info для логирования
-# -------------------------------------------------------------
-info() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[INFO]%b %b\n" \
-        "${BLUE:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 7. Функция warn для логирования
-# -------------------------------------------------------------
-warn() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[WARN]%b %b\n" \
-        "${YELLOW:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-# -------------------------------------------------------------
-# 8. Функция error для логирования
-# -------------------------------------------------------------
-error() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[ERROR]%b %b\n" \
-        "${RED:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 9. Функция echo_echo_msg для логирования
-# -------------------------------------------------------------
-echo_msg() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b\n" "$(printf "$fmt" "$@")"
-}
-
-# -------------------------------------------------------------
-# 10. Функция die для логирования
-# -------------------------------------------------------------
-die() {
-    error "$@"
-    exit 1
-}
-
-# -------------------------------------------------------------
-# 11. Устанавливаем язык по умолчанию и загружаем переводы
-# -------------------------------------------------------------
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
-# --- Проверка root только для команд, где нужны права ---
+say() {
+    local key="$1"; shift
+    local msg="${MSG[$key]:-$key}"
+    [[ $# -gt 0 ]] && printf "$msg" "$@" || printf '%s' "$msg"
+}
+
+
+# -------------------------------------------------------------
+# 3. Логирование
+# -------------------------------------------------------------
+: "${RUN_LOG:=/dev/null}"
+
+ok() {
+    printf "%b[OK]%b %b\n" \
+        "$GREEN" "$NC" "$(say "$@")" |
+    tee -a "$RUN_LOG"
+}
+info() {
+    printf "%b[INFO]%b %b\n" \
+        "$BLUE" "$NC" "$(say "$@")" |
+    tee -a "$RUN_LOG"
+    return 0
+}
+warn() {
+    printf "%b[WARN]%b %b\n" \
+        "$YELLOW" "$NC" "$(say "$@")" |
+    tee -a "$RUN_LOG" >&2
+    return 0
+}
+error() {
+    printf "%b[ERROR]%b %b\n" \
+        "$RED" "$NC" "$(say "$@")" |
+    tee -a "$RUN_LOG" >&2
+    return 1
+}
+die() {
+    error "$@"
+    exit "${2:-1}"
+}
+
+# -------------------------------------------------------------
+# 5. Авто-поднятие до root через sudo (надёжно)
+# -------------------------------------------------------------
+if [[ $EUID -ne 0 ]]; then
+    if command -v sudo >/dev/null 2>&1; then
+        # Перезапуск скрипта через sudo
+        exec sudo bash "$0" "$@"
+    else
+        echo "[ERROR] Для выполнения скрипта нужны права root. Установите sudo или запустите под root."
+        exit 1
+    fi
+fi
+
+# -------------------------------------------------------------
+# 6. Определение домашнего каталога реального пользователя
+# -------------------------------------------------------------
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# -------------------------------------------------------------
+# 7. Функция require_root для дополнительных проверок
+# -------------------------------------------------------------
 require_root() {
     if [[ $EUID -ne 0 ]]; then
         error run_sudo
@@ -169,12 +116,9 @@ require_root() {
     fi
 }
 
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
-fi
-
-# --- Inhibit recursion via systemd-inhibit ---
+# -------------------------------------------------------------
+# 8. systemd-inhibit (после root!)
+# -------------------------------------------------------------
 if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
     if [[ -z "${INHIBIT_LOCK:-}" ]]; then
         export INHIBIT_LOCK=1
@@ -185,19 +129,35 @@ if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
     fi
 fi
 
-# --- Дистрибутив ---
-DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+# -------------------------------------------------------------
+# 9. Определяем систему
+# -------------------------------------------------------------
+if [[ -r /etc/os-release ]]; then
+    source /etc/os-release
+    DISTRO="$ID"
+    VERSION="$VERSION_ID"
+else
+    error not_system
+    exit 1
+fi
+info distro_found "$DISTRO" "$VERSION"
 
-info distro_found "$DISTRO_ID" "$DISTRO_VER"
-
-SCRIPT_DIR="$(dirname "$0")"
-TARGET="$SCRIPT_DIR/backup-${DISTRO_ID}-${DISTRO_VER}.sh"
+# -------------------------------------------------------------
+# 10. Определяем целевой скрипт
+# -------------------------------------------------------------
+TARGET="$LIB_DIR/backup-${DISTRO}-${VERSION}.sh"
 
 if [[ ! -x "$TARGET" ]]; then
-    error no_script "$DISTRO_ID"-"$DISTRO_VER"
+    error no_script "$DISTRO" "$VERSION" "$TARGET"
     exit 1
 fi
 
+# -------------------------------------------------------------
+# 11. Запускаем целевой скрипт
+# -------------------------------------------------------------
 exec "$TARGET" "$@"
+
+
+
+
 

@@ -186,7 +186,7 @@ if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
     fi
 fi
 
-info start
+info start_apt
 
 # --- Очистка сторонних репозиториев ---
 info clean_repos

@@ -206,7 +206,6 @@ CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
-
 # === Функция просмотра логов ===
 show_logs() {
     LOG_DIR="/mnt/backups/logs"

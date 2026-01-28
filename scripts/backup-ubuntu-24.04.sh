@@ -2,128 +2,190 @@
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, subject to the following:
-# The above copyright notice and this permission notice shall
-# be included in all copies or substantial portions of the Software.
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
+
 :<<'DOC'
 =============================================================
-backup-ubuntu-24.04.sh v1.15 — System backup (Ubuntu 24.04)
+backup-ubuntu-24.04.sh v1.16 — System backup (Ubuntu 24.04)
 Part of Backup Kit — minimal restore script with simple logging
-   Author: Vladislav Krashevsky with support from ChatGPT
-   License: MIT
+Author: Vladislav Krashevsky
+License: MIT
 =============================================================
 DOC
 
 set -euo pipefail
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Backup in progress" "$0" "$@"
-fi
-
-# === Colors ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; YELLOW="\033[1;33m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARNING]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# === Language autodetect ===
-if [[ "${LANG:-}" =~ ^ru ]]; then
-    declare -n MSG=MSG_RU
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
 else
-    declare -n MSG=MSG_EN
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
 fi
 
-# === Messages ===
-declare -A MSG_RU=(
-    [start]="Запуск резервного копирования системы (Ubuntu 24.04)"
-    [change_owner]="Меняю владельца каталога на"
-    [no_dir]="Каталог не существует, проверьте монтирование."
-    [clean_tmp]="Очистка временных файлов..."
-    [tmp_cleaned]="Временные файлы очищены."
-    [dir_missing]="Каталог \$BACKUP_DIR не найден. Смонтируйте диск!"
-    [backup_pkgs]="Резервное копирование пакетов и репозиториев..."
-    [pkgs_done]="Системные пакеты сохранены."
-    [create_archive]="Создание архива"
-    [archive_exists]="Архив уже существует. Переименовываю в .old"
-    [archive_done]="Архив создан"
-    [archive_fail]="Ошибка при создании архива"
-    [done]="Резервное копирование завершено успешно!"
-    [run_sudo]="Скрипт нужно запускать с правами root (sudo)"
-    [step_ok]="Шаг выполнен."
-    [step_fail]="Шаг завершился с ошибкой. Проверьте лог."
-)
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-declare -A MSG_EN=(
-    [start]="Starting system backup (Ubuntu 24.04)"
-    [change_owner]="Changing owner of directory to"
-    [no_dir]="Directory does not exist, check mount point."
-    [clean_tmp]="Cleaning temporary files..."
-    [tmp_cleaned]="Temporary files cleaned."
-    [dir_missing]="Directory \$BACKUP_DIR not found. Please mount the disk!"
-    [backup_pkgs]="Backing up system packages and repositories..."
-    [pkgs_done]="System packages saved."
-    [create_archive]="Creating archive"
-    [archive_exists]="Archive already exists. Renaming to .old"
-    [archive_done]="Archive created"
-    [archive_fail]="Archive creation failed"
-    [done]="System backup completed successfully!"
-    [run_sudo]="The script must be run with root rights (sudo)"
-    [step_ok]="Step completed."
-    [step_fail]="Step completed with an error. Check the log."
-)
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG
+# -------------------------------------------------------------
+declare -A MSG
 
-# --- Проверка root только для команд, где нужны права ---
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    MSG=()
+    case "$lang" in
+        ru) source "$SCRIPT_DIR/i18n/messages_ru.sh" ;;
+        en) source "$SCRIPT_DIR/i18n/messages_en.sh" ;;
+        *) echo "Unknown language: $lang" >&2; return 1 ;;
+    esac
+}
+
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[$key]:-$key}"
+    if [[ $# -gt 0 ]]; then
+        printf "$msg" "$@"
+    else
+        printf '%s' "$msg"
+    fi
+}
+
+# -------------------------------------------------------------
+# 4a. echo_msg безопасный (возвращает строку)
+# -------------------------------------------------------------
+echo_msg() {
+    say "$@"
+}
+
+# -------------------------------------------------------------
+# 5-8. Логирование
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local msg
+    msg="$(say "$key" "$@")"
+    printf "%b[OK]%b %b\n" "${GREEN:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
+}
+
+info() {
+    local key="$1"; shift
+    local msg
+    msg="$(say "$key" "$@")"
+    printf "%b[INFO]%b %s\n" "${BLUE:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
+}
+
+warn() {
+    local key="$1"; shift
+    local msg
+    msg="$(say "$key" "$@")"
+    printf "%b[WARN]%b %b\n" "${YELLOW:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
+}
+
+error() {
+    local key="$1"; shift
+    local msg
+    msg="$(say "$key" "$@")"
+    printf "%b[ERROR]%b %b\n" "${RED:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
+}
+
+# -------------------------------------------------------------
+# 10. die
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Язык и загрузка сообщений
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# -------------------------------------------------------------
+# Проверка root
+# -------------------------------------------------------------
 require_root() {
     if [[ $EUID -ne 0 ]]; then
-        error "${MSG[run_sudo]}"
+        error run_sudo
         return 1
     fi
 }
 
-# === Paths ===
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# -------------------------------------------------------------
+# Inhibit recursion via systemd-inhibit
+# -------------------------------------------------------------
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
+
+# -------------------------------------------------------------
+# Paths
+# -------------------------------------------------------------
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
+readonly RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
 
-# === Ownership check ===
+# -------------------------------------------------------------
+# Ownership check
+# -------------------------------------------------------------
+require_root || die run_sudo
+
 if [ -d "$BACKUP_DIR" ]; then
     real_user="${SUDO_USER:-$USER}"
     owner=$(stat -c %U "$BACKUP_DIR")
-
     if [ "$owner" != "$real_user" ]; then
-        info "${MSG[change_owner]} $real_user:$real_user"
-        sudo chown -R "$real_user:$real_user" "$BACKUP_DIR"
-        sudo chmod -R u+rwX,go+rX "$BACKUP_DIR"
+        info change_owner "$real_user:$real_user"
+        chown -R "$real_user:$real_user" "$BACKUP_DIR"
+        chmod -R u+rwX,go+rX "$BACKUP_DIR"
     fi
 else
-    error "${MSG[no_dir]}"
-    exit 1
+    die no_dir
 fi
 
-# === Cleanup on exit ===
+# -------------------------------------------------------------
+# Cleanup on exit
+# -------------------------------------------------------------
 cleanup() {
-    info "${MSG[clean_tmp]}"
+    info clean_tmp
     rm -rf "$WORKDIR"
-    ok "${MSG[tmp_cleaned]}"
+    ok tmp_cleaned
 }
 trap cleanup EXIT INT TERM
 
-# === Backup packages ===
+# -------------------------------------------------------------
+# Backup packages
+# -------------------------------------------------------------
 backup_packages() {
-    info "${MSG[backup_pkgs]}"
+    info backup_pkgs
     PKG_DIR="$WORKDIR/system_packages"
     mkdir -p "$PKG_DIR"
 
@@ -139,98 +201,80 @@ backup_packages() {
     mkdir -p "$PKG_DIR/keyrings"
     cp -a /etc/apt/keyrings/* "$PKG_DIR/keyrings/" 2>/dev/null || true
 
-    # === Dual-language README ===
     cat > "$PKG_DIR/README" <<'EOF'
 =============================================================
 System Packages Backup and Restore (Ubuntu 24.04)
 =============================================================
-This module is part of **Backup Kit v1.15**.
+This module is part of Backup Kit v1.16.
 Contains package lists, repositories and GPG keyrings.
-
-⚠️ Note: User home data (~/) is not included here.
-Use `backup-restore-userdata.sh` for user data backup.
-
-## Restore
-Run:
-
-    ./restore-ubuntu-24.04.sh
-
-### Packages
-    RESTORE_PACKAGES=manual — restore manually installed packages (recommended)
-    RESTORE_PACKAGES=full   — restore full list
-    RESTORE_PACKAGES=none   — skip packages
-
-=============================================================
-Резервное копирование и восстановление пакетов (Ubuntu 24.04)
-=============================================================
-Этот модуль входит в **Backup Kit v1.15**.
-Содержит списки пакетов, репозиториев и GPG ключей.
-
-⚠️ Важно: данные пользователей (~/) не включены сюда.
-Используйте `backup-restore-userdata.sh` для бэкапа.
-
-## Восстановление
-Запустите:
-
-    ./restore-ubuntu-24.04.sh
-
-### Пакеты
-    RESTORE_PACKAGES=manual — восстановить вручную установленные пакеты (рекомендуется)
-    RESTORE_PACKAGES=full   — восстановить полный список пакетов
-    RESTORE_PACKAGES=none   — пропустить восстановление пакетов
 EOF
 
-    ok "${MSG[pkgs_done]}"
+    ok pkgs_done
 }
 
-# === Run step ===
+# -------------------------------------------------------------
+# Run step
+# -------------------------------------------------------------
+step_ok="completed successfully"
+step_fail="failed"
+
 run_step() {
-    local name="$1"; local func="$2"
-    info "$name..."
-    if "$func" >>"$RUN_LOG" 2>&1; then
-        ok "$name — ${MSG[step_ok]}"
+    local name="$1"
+    local func="$2"
+
+    declare -F "$func" >/dev/null || die "Function not found: $func"
+
+    if "$func"; then
+        ok "$name - $step_ok"
     else
-        error "$name — ${MSG[step_fail]}: $RUN_LOG"
-        exit 1
+        error "$name - $step_fail (see $RUN_LOG)"
+        return 1
     fi
 }
 
-# === Create archive ===
+# -------------------------------------------------------------
+# Create archive
+# -------------------------------------------------------------
 create_archive() {
-    info "${MSG[create_archive]} $BACKUP_NAME ..."
+    require_root || return 1
+
+    info create_archive "$BACKUP_NAME..."
+
     SIZE=$(du -sb "$WORKDIR" | awk '{print $1}')
 
-    if [ -f "$BACKUP_NAME" ]; then
-        warn "${MSG[archive_exists]}"
-        sudo rm -f "${BACKUP_NAME}.old"
-        sudo mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
+    if [[ -f "$BACKUP_NAME" ]]; then
+        warn archive_exists
+        rm -f "${BACKUP_NAME}.old"
+        mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
     fi
-    
-    require_root && { error "${MSG[run_sudo]}"; exit 1; }
 
-    if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" | gzip > "$BACKUP_NAME" 2>>"$RUN_LOG"; then
-        ok "${MSG[archive_done]}: $BACKUP_NAME"
+    if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" | gzip > "$BACKUP_NAME"; then
+        ok archive_done "$BACKUP_NAME"
     else
-        error "${MSG[archive_fail]}"
-        exit 1
+        error archive_fail
+        return 1
     fi
 }
 
-# === Main ===
+# -------------------------------------------------------------
+# Main
+# -------------------------------------------------------------
 info "======================================================"
-info "Backup Kit — ${MSG[start]}"
+info "Backup Kit — $(echo_msg backup_start)"
 info "======================================================"
 
-echo "[$(date +%F_%T)] Backup started" >>"$RUN_LOG"
+info backup_started
 
-run_step "System packages" backup_packages
+run_step "System packages" backup_packages || die "Backup failed"
 run_step "Archive" create_archive
 
 info "======================================================"
-ok "Backup Kit — ${MSG[done]}"
-info "Log file: $RUN_LOG"
+ok "Backup Kit — $(echo_msg backup_sucess)"
+info log_file "$RUN_LOG"
 info "======================================================"
 
-echo "[$(date +%F_%T)] Backup finished successfully" >>"$RUN_LOG"
+info backup_finished
+
 exit 0
+
 

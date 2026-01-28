@@ -239,10 +239,10 @@ SCRIPTS_OS=()
 SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
 HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh" "setup-symlinks.sh")
 SCRIPTS_I18N=(
-  "i18n/messages.sh"
   "i18n/messages_ru.sh"
   "i18n/messages_en.sh"
 )
+SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -251,16 +251,19 @@ if [[ "$DISTRO_ID" == "ubuntu" ]]; then
     elif [[ "$DISTRO_VER" == "24.04" ]]; then
         SCRIPTS_OS=("backup-ubuntu-24.04.sh" "restore-ubuntu-24.04.sh")
     else
-        error "Ubuntu $DISTRO_VER not supported"
+        error distro_ver_not_supported "$DISTRO_VER"
         exit 1
     fi
 elif [[ "$DISTRO_ID" == "debian" ]]; then
     SCRIPTS_OS=("backup-debian-12.sh" "restore-debian-12.sh")
 else
-    error "Distro $DISTRO_ID not supported"
+    error distro not_supported "$DISTRO_ID"
     exit 1
 fi
 
+# -------------------------------------------------------------
+# Функция установки файлов i18n
+# -------------------------------------------------------------
 install_i18n() {
   echo "Installing i18n message files..."
 
@@ -269,9 +272,23 @@ install_i18n() {
   done
 }
 
+# -------------------------------------------------------------
+# Функция установки файлов библиотеки lib
+# -------------------------------------------------------------
+install_lib() {
+    echo "Installing library files..."
 
-SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}")
+    for file in "${SCRIPTS_LIB[@]}"; do
+        install -Dm644 "$file" "$TARGET_DIR/$file"
+    done
+}
 
+# -------------------------------------------------------------
+# Установка исполняемых скриптов
+# -------------------------------------------------------------
+SCRIPTS=("install.sh" "${SCRIPTS_OS[@]}" "${SCRIPTS_SYSTEM[@]}" \
+         "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" \
+         "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}")
 
 # --- Копирование скриптов ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -281,12 +298,13 @@ for script in "${SCRIPTS[@]}"; do
         chmod +x "$TARGET_DIR/$script"
         ok "$script → $TARGET_DIR"
     else
-        warn "$script not found in $SCRIPT_DIR, skipped"
+        warn script_skipped "$script" "$SCRIPT_DIR"
     fi
 done
 
-# --- Установка i18n ----
+# --- Установка i18n и lib ----
 install_i18n
+install_lib
 
 # --- PATH ---
 PATH_ADDED=false
@@ -322,17 +340,18 @@ check_and_install_deps() {
 
     # --- если всё есть ---
     if [ "${#MISSING_PKGS[@]}" -eq 0 ]; then
-        ok "${MSG[deps_ok]}"
+        ok deps_ok
         return 0
     fi
 
-    echo "⚠️ Отсутствуют зависимости: ${MISSING_PKGS[*]}"
-    echo "🔧 Попытка автоматической установки..."
+    warn deps_missing_list "${MISSING_PKGS[*]}"
+    info deps_install_try
 
     # --- определение пакетного менеджера ---
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update
         sudo apt-get install -y "${MISSING_PKGS[@]}"
+        # ВНИМАНИЕ: предполагается, что имя команды совпадает с именем пакета# 
 
     elif command -v dnf >/dev/null 2>&1; then
         sudo dnf install -y "${MISSING_PKGS[@]}"
@@ -347,7 +366,7 @@ check_and_install_deps() {
         sudo zypper install -y "${MISSING_PKGS[@]}"
 
     else
-        error "Неизвестный пакетный менеджер. Установите вручную: ${MISSING_PKGS[*]}"
+        error manager_manually ${MISSING_PKGS[*]}
         return 1
     fi
 

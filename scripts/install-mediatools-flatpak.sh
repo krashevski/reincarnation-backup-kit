@@ -194,7 +194,7 @@ LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 LOG_FILE="$LOG_DIR/install_mediatools.log"
 
-echo "[`date`] $(say start)" > "$LOG_FILE"
+info start_media
 
 # ----------------- Шаг 0: NVIDIA GPU и CUDA -----------------
 GPU_AVAILABLE=false
