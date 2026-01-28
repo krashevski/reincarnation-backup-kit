@@ -1,6 +1,6 @@
 # REBK Lib — Мини-README
 
-[🇬🇧 English](../EN/README_REBK_LIB_EN.md| [🇷🇺 Русский]()
+[🇬🇧 English](../EN/README_REBK_LIB_EN.md) | [🇷🇺 Русский]()
 
 ## 📂 Структура папки lib
 
