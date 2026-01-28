@@ -2,7 +2,7 @@
 
 [🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/README_USERS_HOME_RESTORE_RU.md)
 
-## TL;DR / Quick Check
+## Too Long; Didn’t Read / Quick Check
 
 If after reinstalling Ubuntu the user cannot log in
 or does not have access to their `/home`:
