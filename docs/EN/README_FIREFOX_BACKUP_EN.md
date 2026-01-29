@@ -46,6 +46,7 @@ and save
 ### 📦 Archive the full Firefox profile
 
 ```bash
+# Close Firefox completely before archiving
 tar -czf ~/backups/REBK/firefox/profile/firefox-profile-2026-01.tar.gz \
 /home/vladislav/snap/firefox/common/.mozilla/firefox/8pefenhl.default-release-3
 ```
