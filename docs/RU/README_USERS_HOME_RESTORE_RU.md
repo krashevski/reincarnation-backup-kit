@@ -1,4 +1,4 @@
-# README USERS HOME RESTORE
+# Восстановление учётных записей пользователей
 
 [🇬🇧 English](../EN/README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](README_USERS_HOME_RESTORE_RU.md)
 
