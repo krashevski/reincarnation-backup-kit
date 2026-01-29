@@ -1,4 +1,4 @@
-# README_USERS_HOME_RESTORE
+# Recovering user accounts
 
 [🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/README_USERS_HOME_RESTORE_RU.md)
 
