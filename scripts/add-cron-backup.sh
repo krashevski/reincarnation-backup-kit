@@ -210,7 +210,7 @@ LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/backup-userdata_${USER_NAME}_$(date +%F).log"
 
-CRON_LINE="$MINUTE $HOUR * * * ionice -c2 -n7 nice -n10 $SCRIPT_PATH $USER_NAME >> $LOG_FILE 2>&1"
+CRON_LINE="$MINUTE $HOUR * * * ionice -c2 -n7 nice -n10 "$SCRIPT_PATH" "$USER_NAME" >> "$LOG_FILE" 2>&1"
 
 CURRENT_CRON=$(crontab -l 2>/dev/null || true)
 NEW_CRON=$(echo "$CURRENT_CRON" | grep -v "$SCRIPT_PATH" || true)
@@ -222,8 +222,17 @@ ok cron_task "$USER_NAME"
 info current_jobs
 crontab -l
 
-info run_test
-ionice -c2 -n7 nice -n10 $SCRIPT_PATH $USER_NAME >> "$LOG_FILE" 2>&1
-ok test_done
-ls -l "$LOG_FILE"
+run_cron_test() {
+   /usr/bin/ionice -c2 -n7 /usr/bin/nice -n10 "$SCRIPT_PATH" "$USER_NAME" >> "$LOG_FILE" 2>&1
+}
 
+info run_test
+
+if run_cron_test; then
+    ok test_done "$LOG_FILE"
+else
+    error test_failed "$LOG_FILE"
+    return 1
+fi
+
+exit 0

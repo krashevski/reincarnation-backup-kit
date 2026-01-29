@@ -150,22 +150,6 @@ fi
 
 export REBK_INHIBITED=1
 
-inhibit_run() {
-    systemd-inhibit \
-        --who="REBK" \
-        --why="Backup in progress" \
-        --what=shutdown:sleep \
-        "$@"
-}
-
-# === Настройки ===
-BACKUP_DIR="/mnt/backups"
-WORKDIR="$BACKUP_DIR/workdir"
-LOG_DIR="$BACKUP_DIR/logs"
-BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-mkdir -p "$WORKDIR" "$LOG_DIR"
-RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
-
 # Очистка при выходе
 cleanup() {
     info clean_tmp
@@ -174,30 +158,52 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+inhibit_run() {
+    systemd-inhibit \
+        --who="REBK" \
+        --why="Backup in progress" \
+        --what=shutdown:sleep \
+        "$@"
+}
+
+# -------------------------------------------------------------
+# Настройки
+# -------------------------------------------------------------
+BACKUP_DIR="/mnt/backups"
+WORKDIR="$BACKUP_DIR/workdir"
+LOG_DIR="$BACKUP_DIR/logs"
+BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
+mkdir -p "$WORKDIR" "$LOG_DIR"
+RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
+
+# -------------------------------------------------------------
 # Проверка архива
+# -------------------------------------------------------------
 if [ ! -f "$BACKUP_NAME" ]; then
     error archive_not_found "$BACKUP_NAME"
     exit 1
 fi
 
-# === Функции ===
+# -------------------------------------------------------------
+# Функции
+# -------------------------------------------------------------
 extract_archive() {
     info extracting
     if pv "$BACKUP_NAME" | tar -xzv --skip-old-files -C "$WORKDIR" >>"$RUN_LOG" 2>&1; then
         ok extract_ok
     else
         error extract_fail
-        exit 1
+        return 1
     fi
 }
 
 restore_repos_and_keys() {
     info repos
-    PKG_DIR="$WORKDIR/system_packages"
+    PKG_DIR="$BACKUP_DIR/system/packages"
 
     if [ ! -d "$PKG_DIR" ]; then
         error repos_fail
-        exit 1
+        return 1
     fi
 
     sudo cp -a "$PKG_DIR/sources.list" /etc/apt/sources.list
@@ -210,13 +216,21 @@ restore_repos_and_keys() {
 }
 
 restore_packages() {
-    PKG_DIR="$WORKDIR/system_packages"
-    mode="${RESTORE_PACKAGES:-manual}"
+    PKG_DIR="$BACKUP_DIR/system/packages"
+    mode="$RESTORE_PACKAGES"
 
     case "$mode" in
         manual)
             info packages_manual
-            if xargs -a "$PKG_DIR/manual-packages.list" sudo apt install -y >>"$RUN_LOG" 2>&1; then
+
+            if [[ ! -f "$PKG_DIR/manual-packages.list" ]]; then
+                error packages_list_missing "$PKG_DIR/manual-packages.list"
+                return 1
+            fi
+
+
+            if xargs -a "$PKG_DIR/manual-packages.list" sudo apt install -y \
+                >>"$RUN_LOG" 2>&1; then
                 ok packages_manual_ok
             else
                 error packages_manual_fail
@@ -243,11 +257,13 @@ restore_packages() {
     esac
 }
 
+: "${RESTORE_PACKAGES:=manual}"
+
 restore_logs() {
     if [ "${RESTORE_LOGS:-false}" = "true" ]; then
         info relogs
         mkdir -p "$BACKUP_DIR/logs"
-        cp -a "$WORKDIR/system_packages/README" "$BACKUP_DIR/logs/" || true
+        cp -a "$BACKUP_DIR/system/packages/README" "$BACKUP_DIR/logs/" 2>/dev/null || true
         ok relogs_ok
     else
         info relogs_skip
@@ -271,8 +287,9 @@ run_step() {
     fi
 }
 
-
-# === Основной процесс ===
+# -------------------------------------------------------------
+# Основной процесс
+# -------------------------------------------------------------
 info "======================================================"
 info "REBK — $(echo_msg re_start)" 
 info "======================================================"

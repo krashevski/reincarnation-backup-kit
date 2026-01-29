@@ -284,40 +284,28 @@ backup_menu() {
         echo_msg backup_options
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
-        echo_msg backup_system
+        echo_msg backup_system_full
+        echo_msg backup_system_manual
         echo
         echo_msg userdata 
         echo_msg userdata_backup
         echo_msg full_backup
-        echo_msg cron_backup_menu
         echo
         echo_msg back_main
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
-            1) bash "$SYS_BACKUP" ;;
-            2) bash "$USER_BACKUP" ;;
-            3) bash "$USER_BACKUP" --fresh ;;
-            4)
-            read -rp "$(echo_msg enter_time)" CRON_TIME
-            read -rp "$(echo_msg enter_user)" CRON_USER
-            
-            if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-
-                info adding_cron "$CRON_TIME" "$CRON_USER"
-                bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                ok cron_installed
-            else
-                error empty_entered
-            fi
-            read -rp "$(echo_msg press_continue)"
-            ;;
+            1) bash "$SYS_BACKUP" full ;;      # Создаём full backup
+            2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
+            3) bash "$USER_BACKUP" ;;
+            4) bash "$USER_BACKUP" --fresh ;;
             0) return ;;
             *) warn invalid_choice ;;
         esac
         read -rp "$(echo_msg press_return)"
     done
 }
+
 
 # --- Подменю Restore ---
 restore_menu() {
@@ -327,8 +315,8 @@ restore_menu() {
         echo_msg restore_options
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
-        echo_msg restore_packeages
-        echo_msg restore_manual
+        echo_msg restore_system_full
+        echo_msg restore_system_manual
         echo
         echo_msg userdata
         echo_msg restore_userdata
@@ -337,9 +325,9 @@ restore_menu() {
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
-            1) bash "$SYS_RESTORE" ;;
-            2) RESTORE_PACKAGES=manual "$SYS_RESTORE" ;;
-            3) bash "$USER_RESTORE" ;;
+            1) bash "$SYS_RESTORE" ;;              # default
+            2) bash "$SYS_RESTORE" manual ;;       # ручной режим
+            3) bash "$USER_RESTORE" ;;             # restore userdata
             0) return ;;
             *) warn invalid_choice ;;
         esac
@@ -372,7 +360,7 @@ cron_menu() {
                 error empty_entered
             fi
             read -rp "$(echo_msg press_continue)"
-            ;;
+            ;;        
         2) bash "$CLEAN_LOGS" ;;
         3) bash "$REMOVE_CRON" ;;
         0) return ;;

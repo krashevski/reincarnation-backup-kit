@@ -152,7 +152,7 @@ if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
 fi
 
 # -------------------------------------------------------------
-# Paths
+# Настройки
 # -------------------------------------------------------------
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
@@ -193,14 +193,13 @@ trap cleanup EXIT INT TERM
 # -------------------------------------------------------------
 backup_packages() {
     info backup_pkgs
-    PKG_DIR="$WORKDIR/system_packages"
+    PKG_DIR="$BACKUP_DIR/system/packages"
     mkdir -p "$PKG_DIR"
 
     dpkg --get-selections > "$PKG_DIR/installed-packages.list"
     dpkg-query -W -f='${Package} ${Version}\n' > "$PKG_DIR/installed-packages-versions.list"
     apt-mark showmanual > "$PKG_DIR/manual-packages.list"
 
-    ls /etc/apt/sources.list.d/ > "$PKG_DIR/custom-repos.list" || true
     cp /etc/apt/sources.list "$PKG_DIR/sources.list"
     mkdir -p "$PKG_DIR/sources.list.d"
     cp -a /etc/apt/sources.list.d/* "$PKG_DIR/sources.list.d/" 2>/dev/null || true
@@ -240,8 +239,6 @@ run_step() {
 # Create archive
 # -------------------------------------------------------------
 create_archive() {
-    require_root || return 1
-
     info create_archive "$BACKUP_NAME..."
 
     SIZE=$(du -sb "$WORKDIR" | awk '{print $1}')
@@ -261,7 +258,7 @@ create_archive() {
 }
 
 # -------------------------------------------------------------
-# Main
+# Основной процесс
 # -------------------------------------------------------------
 info "======================================================"
 info "REBK — $(echo_msg backup_start)"
