@@ -222,19 +222,16 @@ EOF
 # -------------------------------------------------------------
 # Run step
 # -------------------------------------------------------------
-step_ok="completed successfully"
-step_fail="failed"
-
 run_step() {
-    local name="$1"
+    local step_key="$1"
     local func="$2"
 
     declare -F "$func" >/dev/null || die not_function "$func"
 
     if "$func"; then
-        ok "$name - $step_ok"
+        ok step_ok "$step_key"
     else
-        error "$name - $step_fail (see $RUN_LOG)"
+        error step_fail "$step_key" "$RUN_LOG" || true
         return 1
     fi
 }
@@ -272,8 +269,8 @@ info "======================================================"
 
 info backup_started
 
-run_step "System packages" backup_packages || die "Backup failed"
-run_step "Archive" create_archive
+run_step "$(say system_packages)" backup_packages || die backup_fail
+run_step "$(say archive)" create_archive
 
 info "======================================================"
 ok "REBK — $(echo_msg backup_sucess)"

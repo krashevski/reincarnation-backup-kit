@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================
-# /scripts/lib/guards-inhibit.sh
-# Универсальные guard-модули (lock + inhibit + recursion check)
-# Ключевые обязанности:
-# проверка: уже под inhibit или нет;
-# защита от самоперезапуска;
-# единая точка входа для systemd-inhibit
+# /scripts/lib/privileges.sh
+# Privilege checks
 # -------------------------------------------------------------
-# Использование guards-inhibit.sh
-#
+# Использование privileges.sh
 # SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # LIB_DIR="$SCRIPT_DIR/lib"
 #
 # LANG_CODE=ru
 # export RUN_LOG="/var/log/rebk.log"
-# source "$LIB_DIR/guards-inhibit.sh"
-# inhibit_run "$@"
+# source "$LIB_DIR/logging.sh"
+# source "$LIB_DIR/privileges.sh"
+#
+# require_root || return 1
 # =============================================================
 
 set -o errexit
@@ -27,21 +24,17 @@ set -o pipefail
 [[ -n "${_REBK_PRIVILEGES_LOADED:-}" ]] && return 0
 _REBK_PRIVILEGES_LOADED=1
 
-if [[ -n "${REBK_INHIBITED:-}" ]]; then
-    return 0
-fi
-
-export REBK_INHIBITED=1
-
-inhibit_run() {
-    systemd-inhibit \
-        --who="REBK" \
-        --why="Backup in progress" \
-        --what=shutdown:sleep \
-        "$@"
+# -------------------------------------------------------------
+# runtime-проверка зависимоси от logging.sh
+# -------------------------------------------------------------
+type error >/dev/null 2>&1 || {
+    echo "privileges.sh requires logging.sh" >&2
+    return 1
 }
 
-# -------------------------------------------------------------
-# Экспорт say как readonly API
-# -------------------------------------------------------------
-readonly -f say ok info warn error die
+require_root() {
+    if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+        error run_sudo || true
+        return 1
+    fi
+}

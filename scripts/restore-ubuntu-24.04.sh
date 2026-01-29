@@ -168,9 +168,9 @@ RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
 
 # Очистка при выходе
 cleanup() {
-    info re_clean_tmp
+    info clean_tmp
     rm -rf "$WORKDIR"
-    ok re_clean_ok
+    ok clean_ok
 }
 trap cleanup EXIT INT TERM
 
@@ -257,22 +257,20 @@ restore_logs() {
 # -------------------------------------------------------------
 # Run step
 # -------------------------------------------------------------
-step_ok="completed successfully"
-step_fail="failed"
-
 run_step() {
-    local name="$1"
+    local step_key="$1"
     local func="$2"
 
     declare -F "$func" >/dev/null || die not_function "$func"
 
     if "$func"; then
-        ok "$name - $step_ok"
+        ok step_ok "$step_key"
     else
-        error "$name - $step_fail (see $RUN_LOG)"
+        error step_fail "$step_key" "$RUN_LOG" || true
         return 1
     fi
 }
+
 
 # === Основной процесс ===
 info "======================================================"
@@ -281,10 +279,10 @@ info "======================================================"
 
 info re_started
 
-run_step "Extracting archive" extract_archive
-run_step "Restoring repositories and keyrings" restore_repos_and_keys
-run_step "Restoring packages" restore_packages
-run_step "Restoring logs" restore_logs
+run_step "$(say step_extract)" extract_archive
+run_step "$(say step_repos)" restore_repos_and_keys
+run_step "$(say step_packages)" restore_packages
+run_step "$(say step_logs)" restore_logs
 
 info "======================================================"
 ok "REBK — $(echo_msg re_done)"

@@ -1,10 +1,31 @@
 #!/usr/bin/env bash
-# -------------------------------------------------------------
+# =============================================================
 # /scripts/lib/logging.sh — эталонная библиотека логирования REBK
 # -------------------------------------------------------------
+# Использование logging.sh
+#
+# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# LIB_DIR="$SCRIPT_DIR/lib"
+#
+# LANG_CODE=ru
+# export RUN_LOG="/var/log/rebk.log"
+# source "$LIB_DIR/logging.sh"
+# 
+# info dispatcher_started
+# ok operation_completed
+# warn low_disk_space
+# error something_wrong || true
+# die 2 fatal_error
+# =============================================================
 
 set -o errexit
 set -o pipefail
+
+# -------------------------------------------------------------
+# Защита от повторного подключения
+# -------------------------------------------------------------
+[[ -n "${_REBK_LOGGING_LOADED:-}" ]] && return 0
+_REBK_LOGGING_LOADED=1
 
 # -------------------------------------------------------------
 # Цвета
@@ -27,12 +48,13 @@ declare -Ag MSG
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$LIB_DIR/.." && pwd)"
 
+
 load_messages() {
     local lang="$1"
     MSG=()
     case "$lang" in
-        ru) source "$ROOT_DIR/i18n/messages_ru.sh" ;;
-        en) source "$ROOT_DIR/i18n/messages_en.sh" ;;
+        ru) [[ -f "$ROOT_DIR/i18n/messages_ru.sh" ]] && source "$ROOT_DIR/i18n/messages_ru.sh" ;;
+        en) [[ -f "$ROOT_DIR/i18n/messages_en.sh" ]] && source "$ROOT_DIR/i18n/messages_en.sh" ;;
         *)
             echo "Unknown language: $lang" >&2
             return 1
@@ -73,10 +95,13 @@ error() {
 
 die() {
     local code=1
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        code="$1"
-        shift
-    fi
-    error "$@"
+    [[ "$1" =~ ^[0-9]+$ ]] && { code="$1"; shift; }
+    printf "%b[ERROR]%b %b\n" "$RED" "$NC" "$(say "$@")" | tee -a "$RUN_LOG" >&2
     exit "$code"
 }
+
+# -------------------------------------------------------------
+# Экспорт say как readonly API
+# -------------------------------------------------------------
+readonly -f say ok info warn error die
+

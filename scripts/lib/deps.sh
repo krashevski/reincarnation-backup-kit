@@ -1,18 +1,45 @@
 #!/usr/bin/env bash
+# =============================================================
+# /scripts/lib/deps.sh — dependency checks
+# Requires: logging.sh
 # -------------------------------------------------------------
-# /scripts/lib/deps.sh — проверка команд и установка пакетов
-# -------------------------------------------------------------
+# Использование deps.sh
+#
+# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# LIB_DIR="$SCRIPT_DIR/lib"
+#
+# LANG_CODE=ru
+# export RUN_LOG="/var/log/rebk.log"
+# RUN_LOG="$HOME/rebk.log"
+# source "$LIB_DIR/logging.sh"
+# source "$LIB_DIR/deps.sh"
+#
+# check_and_install_commands git curl tar pv
+# =============================================================
 
 set -o errexit
 set -o pipefail
 
-# подключаем логирование и i18n
-LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$LIB_DIR/logging.sh"
+# -------------------------------------------------------------
+# Защита от повторного подключения
+# -------------------------------------------------------------
+[[ -n "${_REBK_DEPS_LOADED:-}" ]] && return 0
+_REBK_DEPS_LOADED=1
 
-check_and_install_deps() {
+# -------------------------------------------------------------
+# runtime-проверка зависимоси от logging.sh
+# -------------------------------------------------------------
+type ok >/dev/null 2>&1 || {
+    echo "deps.sh requires logging.sh" >&2
+    return 1
+}
+
+# check_and_install_deps принимает ИМЕНА КОМАНД
+check_and_install_commands() {
     local REQUIRED_PKGS=("$@")
     local MISSING_PKGS=()
+    local SUDO=""
+    [[ ${EUID:-$(id -u)} -ne 0 ]] && SUDO="sudo"
 
     # --- проверка наличия команд ---
     for pkg in "${REQUIRED_PKGS[@]}"; do
@@ -43,16 +70,21 @@ check_and_install_deps() {
     elif command -v zypper >/dev/null 2>&1; then
         sudo zypper install -y "${MISSING_PKGS[@]}"
     else
-        die "unknown_package_manager" "${MISSING_PKGS[*]}"
+        die unknown_manager "${MISSING_PKGS[*]}"
     fi
 
     # --- повторная проверка ---
     for pkg in "${REQUIRED_PKGS[@]}"; do
         if ! command -v "$pkg" >/dev/null 2>&1; then
-            error "'$pkg' ${MSG[deps_missing]}"
+            error deps_missing "$pkg" || true
             return 1
         fi
     done
 
     ok deps_ok
 }
+
+# -------------------------------------------------------------
+# Экспорт say как readonly API
+# -------------------------------------------------------------
+readonly -f say ok info warn error die

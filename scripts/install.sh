@@ -366,7 +366,7 @@ check_and_install_deps() {
         sudo zypper install -y "${MISSING_PKGS[@]}"
 
     else
-        error manager_manually ${MISSING_PKGS[*]}
+        error unknown_manager ${MISSING_PKGS[*]}
         return 1
     fi
 
