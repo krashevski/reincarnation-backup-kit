@@ -1,4 +1,4 @@
-# Firefox Backup
+# Резервное копирование Firefox 
 
 [🇬🇧 English](../EN/README_FIREFOX_BACKUP_EN.md) | [🇷🇺 Русский](README_FIREFOX_BACKUP_RU.md)
 

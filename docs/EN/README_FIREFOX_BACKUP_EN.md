@@ -1,6 +1,6 @@
 # Firefox Backup
 
-[🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/README_USERS_HOME_RESTORE_RU.md)
+[🇬🇧 English](README_FIREFOX_BACKUP_EN.md) | [🇷🇺 Русский](../RU/README_FIREFOX_BACKUP_RU.md)
 
 This README describes the process of archiving and restoring Firefox.
 
