@@ -88,13 +88,13 @@ check_and_install_deps rsync tar gzip pv
 
 ## 5️⃣ Colors and Streams
 
-| Function | Color| Stream | Return Code |
-| ------------------------------------ |
-| ok | green | stdout | 0 |
-| info | blue | stdout | 0 |
-| warn | yellow | stderr | 0 |
-| error | red | stderr | 1 |
-| die | red | stderr | script exit with code 1 or specified |
+| Function | Color  | Stream | Return Code |
+| ---------|--------|--------|------------ |
+| ok       | green  | stdout | 0           |
+| info     | blue   | stdout | 0           |
+| warn     | yellow | stderr | 0           |
+| error    | red    | stderr | 1           |
+| die      | red    | stderr | script exit with code 1 or specified |
 
 - Colors are automatically disabled if `stdout` is not `tty` or `FORCE_COLOR=0`
 - Logs are saved in `RUN_LOG` if the variable is set
