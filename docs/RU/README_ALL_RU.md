@@ -33,7 +33,7 @@
   2. Копирует необходимые скрипты в `~/bin`.
   3. Создаёт рабочие каталоги для бэкапов и логов.
   4. Проверяет зависимости (`rsync`, `screen`, `tar`, `gzip`).
-  5. Копирует архивный пакет `backup_kit` в `/media/backups` при необходимости.
+  5. Копирует архивный пакет `backup_kit` в `/mnt/backups` при необходимости.
   
 ### См. также
 - Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
@@ -77,7 +77,7 @@
 ## Установка и запуск
 
 ```bash
-git clone https://github.com/username/reincarnation-backup-kit.git
+git clone https://github.com/krashevski/reincarnation-backup-kit
 cd reincarnation-backup-kit
 ./install.sh
 ```
@@ -114,12 +114,12 @@ cd reincarnation-backup-kit
 
 - Для бэкапа пользовательских данных (может быть в локальной консоли TTY3 [Cirl+Alt+F3]):
 ```bash
-sudo ./backup-userdata.sh
+sudo ./backup-restore-userdata.sh
 ```
 
 - Пример полное обновление архива (с удалением старого зеркала)
 ```bash
-sudo ./backup-userdata.sh --fresh
+sudo ./backup-restore-userdata.sh --fresh
 ```
 
 ### Форматирование HDD и создание пользователей в логике SSD/HDD

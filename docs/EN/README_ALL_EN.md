@@ -33,7 +33,7 @@ Consists of two steps:
 2. Copies the necessary scripts to `~/bin`.
 3. Creates working directories for backups and logs.
 4. Checks dependencies (`rsync`, `screen`, `tar`, `gzip`).
-5. Copies the `backup_kit` archive package to `/media/backups` if necessary.
+5. Copies the `backup_kit` archive package to `/mnt/backups` if necessary.
 
 ### See also
 - Reinstalling the operating system, see [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
@@ -78,7 +78,7 @@ Consists of two steps:
 ## Installation and Launch
 
 ```bash
-git clone https://github.com/username/reincarnation-backup-kit.git
+git clone https://github.com/krashevski/reincarnation-backup-kit
 cd reincarnation-backup-kit
 ./install.sh
 ```
@@ -116,12 +116,12 @@ To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see
 
 - To backup user data (can be done in the local TTY3 console [Cirl+Alt+F3]):
 ```bash
-sudo ./backup-userdata.sh
+sudo ./backup-restore-userdata.sh
 ```
 
 - Example of a complete archive update (with deletion of the old mirror)
 ```bash
-sudo ./backup-userdata.sh --fresh
+sudo ./backup-restore-userdata.sh --fresh
 ```
 
 ### Format HDD and create users in SSD/HDD logic

@@ -11,16 +11,24 @@ lib/
 
 ## 1️⃣ Подключение в скрипте REBK
 
+```bash
 #!/usr/bin/env bash
+```
 
+```bash
 # путь к lib
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/lib" && pwd)"
+```
 
+```bash
 # подключаем логирование и i18n
 source "$LIB_DIR/logging.sh"
+```
 
+```bash
 # подключаем проверку зависимостей
 source "$LIB_DIR/deps.sh"
+```
 
 > После этого доступны все функции:
 > ok/info/warn/error/die
@@ -30,16 +38,21 @@ source "$LIB_DIR/deps.sh"
 ## 2️⃣ Использование логирования с i18n
 
 ### 2.1 Настройка языка
+```bash
 # по умолчанию ru
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
+```
 
 ### 2.2 Примеры логирования
+
+```bash
 ok deps_ok                    # [OK] Сообщение из MSG['deps_ok']
 info deps_install_try          # [INFO] Попытка установки зависимостей…
 warn deps_missing_list "rsync tar gzip"
 error no_script "$DISTRO" "$VERSION" "$TARGET"
 die 2 "fatal_error_occurred"
+```
 
 > Все сообщения берутся из MSG[] в i18n/messages_ru.sh или messages_en.sh.
 
@@ -48,20 +61,22 @@ die 2 "fatal_error_occurred"
 - Подставляет аргументы в шаблон i18n через printf
 
 Пример в messages_ru.sh:
-```bas
+```bash
 MSG[no_script]='%s %s — скрипт %s не найден или не является исполняемым'
 ```
-Вызов:
-```bas
-say no_script "$DISTRO" "$VERSION" "$TARGET"
 
+Вызов:
+```bash
+say no_script "$DISTRO" "$VERSION" "$TARGET"
 ```
+
 Вывод:
 ```bash
 Ubuntu 22.04 — скрипт backup-system.sh не найден или не является исполняемым
 ```
 
 ## 4️⃣ Проверка зависимостей
+
 
 ```bash
 # Проверяет команды и пытается установить отсутствующие
@@ -75,6 +90,7 @@ check_and_install_deps rsync tar gzip pv
 
 ## 5️⃣ Цвета и потоки
 
+
 | Функция | Цвет| Поток | Код возврата |
 | ------------------------------------ |
 | ok | зелёный	| stdout | 0 |
@@ -87,6 +103,7 @@ check_and_install_deps rsync tar gzip pv
 - Логи сохраняются в RUN_LOG, если задана переменная
 
 ## 6️⃣ Пример полного скрипта
+
 
 ```bash
 #!/usr/bin/env bash
