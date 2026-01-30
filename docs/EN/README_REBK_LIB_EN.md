@@ -4,10 +4,11 @@
 
 ## 📂 Lib Folder Structure
 
-`lib/`
-├─ `logging.sh` # logging + i18n + colors
-├─ `deps.sh` # dependency check and installation
-└─ (additional modules) # utils, guards, locks, etc.
+lib/
+├── logging.sh        # logging + i18n + colors
+├── deps.sh           # dependency check and installation
+└── additional/       # utils, guards, locks, etc.
+
 
 ## 1️⃣ Including in a REBK script
 
