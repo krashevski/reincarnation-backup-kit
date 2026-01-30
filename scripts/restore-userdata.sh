@@ -203,7 +203,7 @@ RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
 
 # === Проверка скрипта ===
 if [[ ! -x "$RESTORE_SCRIPT" ]]; then
-    error error_no_script "$RESTORE_SCRIPT"
+    error no_restore_script "$RESTORE_SCRIPT"
     exit 1
 fi
 
@@ -211,21 +211,21 @@ fi
 backup_ok=true
 for dir in "$BR_USERDATA" "$BR_ARCHIVE"; do
     if [[ ! -d "$dir" ]]; then
-        error error_no_backup "$dir"
+        error no_backup_dir "$dir"
         backup_ok=false
     fi
 done
 $backup_ok || exit 1
 
 # === Запуск восстановления ===
-info info_safe
+info recovery_info
 # Перенаправляем вывод в лог с прогрессом
 if SAFE=1 FORCE_COLOR=1 sudo -E bash "$RESTORE_SCRIPT" restore "$@" \
     > >(tee -a "$RUN_LOG") 2>&1; then
-    ok ok_finished
+    ok recovery_finished
 else
-    warn recovery_warnings "Восстановление завершилось с предупреждениями, проверьте лог"
-    # exit 0 — чтобы menu.sh не считал это ошибкой
+    warn recovery_warnings "$RUN_LOG"
+    exit 0 
 fi
 
 exit 0

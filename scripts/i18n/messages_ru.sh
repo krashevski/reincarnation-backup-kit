@@ -233,13 +233,11 @@ MSG[distro not_supported]="Дистрибутив %s not supported"
 MSG[script_skipped]="%s не найден в %s, пропущен"
 
 # restore-userdata.sh
-MSG[restore_start]="Запуск безопасного Backup Kit восстановления..."
-MSG[error_no_script]="Не найден restore-скрипт: %s"
-MSG[error_no_backup]="Ошибка: каталог резервных копий не найден: %s"
-MSG[ok_finished]="Все операции восстановления завершены успешно."
-MSG[error_finished]="Восстановление завершилось с ошибками."
-MSG[info_safe]="Запускается безопасное восстановление (без удаления лишних файлов)..."
-MSG[recovery_warnings]="Восстановление завершилось с предупреждениями, проверьте лог"
+MSG[no_restore_script]="Не найден restore-скрипт: %s"
+MSG[no_backup_dir]="Ошибка: каталог резервных копий не найден: %s"
+MSG[recovery_info]="Запускается безопасное восстановление (без удаления лишних файлов)..."
+MSG[recovery_finished]="Все операции восстановления завершены успешно."
+MSG[recovery_warnings]="Восстановление завершилось с предупреждениями, проверьте лог. Лог: %s"
 
 # backup-restore-userdata.sh
 MSG[error_root]="Скрипт нужно запускать с правами root (sudo)"

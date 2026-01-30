@@ -237,14 +237,11 @@ MSG[distro_not_supported]="Distro %s not supported"
 MSG[script_skipped]="%s not found in %s, skipped"
 
 # restore-userdata.sh
-MSG[restore_start]="Starting safe Backup Kit restore..."
-MSG[error_no_script]="Restore script not found: %s"
-MSG[error_no_backup]="Error: backup directory not found: %s"
-MSG[ok_finished]="All restore operations completed successfully."
-MSG[error_finished]="Restore finished with errors."
-MSG[info_safe]="Starting safe restore (without deleting extra files)..."
-MSG[recovery_warnings]="Recovery completed with warnings, please check the log"
-
+MSG[no_restore_script]="Restore script not found: %s"
+MSG[no_backup_dir]="Error: backup directory not found: %s"
+MSG[recovery_info]="Starting safe restore (without deleting extra files)..."
+MSG[recovery_finished]="All restore operations completed successfully."
+MSG[recovery_warnings]="Recovery completed with warnings, check the log. Log: %s"
 
 # backup-restore-userdata.sh
 MSG[error_root]="Script must be run as root (sudo)"
