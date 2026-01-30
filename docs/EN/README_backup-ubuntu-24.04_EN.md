@@ -62,4 +62,6 @@ Restore variables:
 
 ## See also
 
+- Recovering user accounts [README_USERS_HOME_RESTORE_EN.md](README_USERS_HOME_RESTORE_EN.md)
+- Firefox backup [README_FIREFOX_BACKUP_EN.md](README_FIREFOX_BACKUP_EN.md)
 - Reincarnation Backup Kit — Installation and Usage, see [README_ALL_EN.md](README_ALL_EN.md)
