@@ -1,8 +1,8 @@
-# REBK Lib — Mini-README
+# REBK lib — Mini-README
 
 [🇬🇧 English](README_REBK_LIB_EN.md) | [🇷🇺 Русский](../RU/README_REBK_LIB_RU.md)
 
-## 📂 Lib Folder Structure
+## 📂 lib folder structure
 
 ```text
 lib/
