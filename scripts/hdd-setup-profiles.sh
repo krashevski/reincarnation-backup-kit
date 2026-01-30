@@ -162,10 +162,9 @@ die() {
 LANG_CODE="${LANG_CODE:-ru}"
 load_messages "$LANG_CODE"
 
-# --- Проверка root только для команд, где нужны права ---
 require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
+    if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+        error run_sudo || true
         return 1
     fi
 }
@@ -319,8 +318,10 @@ if [[ ! "$answer" =~ ^[Yy]$ ]]; then
 fi
 # --- $EXISTING_USER ---
 # --- Выбор существующего пользователя для multi-user системы ---
-if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
-    EXISTING_USER="$SUDO_USER"
+sudo_user="${SUDO_USER:-}"
+
+if [[ -n "$sudo_user" && "$sudo_user" != "root" ]]; then
+    EXISTING_USER="$sudo_user"
 elif logname &>/dev/null; then
     EXISTING_USER="$(logname)"
 else

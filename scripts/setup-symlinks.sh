@@ -52,7 +52,8 @@ load_messages() {
     # очищаем предыдущие ключи
     MSG=()
 
-    case "$lang" in
+#    case "$lang" in
+    case "${LANG_CODE:-en}" in
         ru)
             source "$SCRIPT_DIR/i18n/messages_ru.sh"
             ;;
@@ -249,14 +250,17 @@ ensure_symlink() {
     local target="$2"
 
     # already correct
-    if [[ -L "$link" && "$(readlink -f "$link")" == "$target" ]]; then
+#    if [[ -L "$link" && "$(readlink -f "$link")" == "$target" ]]; then
+    if [[ -L "$link" && "$(realpath -m "$link")" == "$(realpath -m "$target")" ]]; then
         info link_ok "$link" "$target"
         return
     fi
 
     # empty dir → replace silently
-    if [[ -d "$link" && -z "$(ls -A "$link")" ]]; then
-        rm -r "$link"
+#    if [[ -d "$link" && -z "$(ls -A "$link")" ]]; then
+    if [[ -d "$link" && -z "$(find "$link" -mindepth 1 -maxdepth 1 2>/dev/null)" ]]; then
+#        rm -r "$link"
+        rm -rf -- "$link"
         ln -s "$target" "$link"
         info link_replaced "$link" "$target"
         return
@@ -275,7 +279,7 @@ ensure_symlink() {
         return
     fi
 
-    # exists but not link (file, etc)
+    # exists but not dir or symlink
     if [[ -e "$link" ]]; then
         warn link_conflict "$link"
         return
@@ -302,14 +306,19 @@ for key in "${!TARGET_DIRS[@]}"; do
 done
 
 for pair in "${EXTRA_SYMLINKS[@]}"; do
+    [[ "$pair" == *:* ]] || {
+        warn invalid_symlink_spec "$pair"
+        continue
+    }
+
     name="${pair%%:*}"
     target="${pair##*:}"
-    link_path="$TARGET_HOME/$name"
 
+    link_path="${TARGET_HOME}/${name}"
     ensure_dir "$target"
     ensure_symlink "$link_path" "$target"
 done
 
 info done_symlinks
 
-
+exit 0

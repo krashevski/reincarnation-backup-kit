@@ -409,12 +409,13 @@ MSG[returned_menu]="Вернулись в меню."
 # setup-symlinks.sh
 MSG[start_symlinks]="Начинаю настройку символических ссылок"
 MSG[link_created]="Создана ссылка: %s → %s"
+MSG[confirm_replace]="Хотите ли обновить ссылку"
 MSG[link_replaced]="Ссылка обновлена: %s → %s"
 MSG[link_skipped]="Ссылка пропущена: %s"
-MSG[done_symlinks]="Настройка символических ссылок завершена"
 MSG[link_ok]="Ссылка корректна: %s → %s"
-MSG[confirm_replace]="Хотите ли обновить ссылку"
-MSG[link_conflict]=""
+MSG[link_conflict]="Конфликт: путь уже существует и не является симлинком — пропущено: %s"
+MSG[invalid_symlink_spec]="Некорректное описание симлинка (ожидается формат name:%s)"
+MSG[done_symlinks]="Настройка символических ссылок завершена"
 
 # show-system-mounts.sh
 MSG[physical_disks]="===== Информация о физических дисках ====="

@@ -415,12 +415,14 @@ MSG[returned_menu]="Returned to the menu."
 # setup-symlinks.sh
 MSG[start_symlinks]="Starting to configure symbolic links"
 MSG[link_created]="Link created: %s → %s"
+MSG[confirm_replace]="Would you like to update link"
 MSG[link_replaced]="Link updated: %s → %s"
 MSG[link_skipped]="Link skipped: %s"
-MSG[done_symlinks]="Symbolic link configuration complete"
 MSG[link_ok]="Link is correct: %s → %s"
-MSG[confirm_replace]="Wont replace link"
-MSG[link_conflict]=""
+MSG[link_conflict]="Conflict: path already exists and is not a symlink — skipped: %s"
+MSG[invalid_symlink_spec]="Invalid symlink specification (expected name:%s)"
+MSG[done_symlinks]="Symbolic link configuration complete"
+
 
 # show-system-mounts.sh
 MSG[physical_disks]="===== Information about physical disks ====="
