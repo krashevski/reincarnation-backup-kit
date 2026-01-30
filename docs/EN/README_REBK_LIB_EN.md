@@ -76,7 +76,7 @@ Output:
 Ubuntu 22.04 — script backup-system.sh not found or not executable
 ```
 
-## 4️⃣ Dependency Checker
+## 4️⃣ Dependency checker
 
 ```bash
 # Checks commands and attempts to install missing ones
@@ -88,7 +88,7 @@ check_and_install_deps rsync tar gzip pv
 - Missing packages are logged via warn
 - `[OK]` is printed upon successful verification
 
-## 5️⃣ Colors and Streams
+## 5️⃣ Colors and streams
 
 | Function | Color  | Stream | Return Code |
 | ---------|--------|--------|------------ |

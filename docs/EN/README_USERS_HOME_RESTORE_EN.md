@@ -2,7 +2,7 @@
 
 [🇬🇧 English](README_USERS_HOME_RESTORE_EN.md) | [🇷🇺 Русский](../RU/README_USERS_HOME_RESTORE_RU.md)
 
-## Too Long; Didn’t Read / Quick Check
+## Too long; Didn’t read / Quick check
 
 If after reinstalling Ubuntu the user cannot log in
 or does not have access to their `/home`:
@@ -34,7 +34,7 @@ This document is intended for:
 - Manually mounting the old /home
 - Using it as part of the Reincarnation Backup Kit (REBK)
 
-## The Problem
+## The problem
 
 After reinstalling Ubuntu:
 - User accounts are recreated
@@ -125,7 +125,7 @@ Compare:
 | Old UID | Hidden incompatibility |
 | Directory is empty | Possible mount error or invalid `/home` |
 
-## Stage 2. Informed Recovery
+## Stage 2. Informed recovery
 
 Before any changes:
 - user **must exist**
@@ -140,7 +140,7 @@ sudo chown -R username:username /home/username
 
 > [!] This command applies **only to a specific directory**, never to the entire `/home`.
 
-## Protective Restrictions (Mandatory)
+## Protective restrictions (mandatory)
 
 Any tools or scripts **must fail** if:
 - username is `root`
@@ -149,7 +149,7 @@ Any tools or scripts **must fail** if:
 - path is empty or suspicious
 This is a safeguard against irreversible errors.
 
-## Recommended Automation
+## Recommended automation
 
 Automation is allowed in **only two modes**:
 1. **Audit** — audit and report (default)
