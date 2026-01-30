@@ -1,9 +1,6 @@
-# 📦 backup-ubuntu-22.04.sh — system backup (Ubuntu 24.04)
+# 📦 System backup (Ubuntu 24.04)
 
-[🇬🇧 English](README.backup-ubuntu-24.04.sh_EN.md) | [🇷🇺 Русский](../RU/README_backup-ubuntu-24.04_RU.md)
-
-**Author:** Vladislav Krashevsky
-**Support:** ChatGPT
+[🇬🇧 English](README_backup-ubuntu-24.04_EN.md) | [🇷🇺 Русский](../RU/README_backup-ubuntu-24.04_RU.md)
 
 This script is responsible for saving the Ubuntu 24.04 system configuration: packages, repositories, keys.
 User data is not backed up—there is a separate script for that, backup-restore-userdata.sh.
