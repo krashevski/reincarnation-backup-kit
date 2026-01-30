@@ -1,13 +1,15 @@
-# REBK Lib — Мини-README
+# REBK lib — Мини-README
 
-[🇬🇧 English](../EN/README_REBK_LIB_EN.md) | [🇷🇺 Русский]()
+[🇬🇧 English](../EN/README_REBK_LIB_EN.md) | [🇷🇺 Русский](README_REBK_LIB_RU.md)
 
 ## 📂 Структура папки lib
 
+```text
 lib/
 ├── logging.sh        # логирование + i18n + цвета
 ├── deps.sh           # проверка зависимостей и установка
 └── additional/       # utils, guards, locks, и др.
+```
 
 ## 1️⃣ Подключение в скрипте REBK
 
