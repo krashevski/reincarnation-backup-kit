@@ -174,3 +174,8 @@ sudo chown -R username:username /home/username
 - не уничтожала данные
 
 **Статус:** Canonical / Stable
+
+## См. также
+
+- Резервное копирование Firefox [README_FIREFOX_BACKUP_RU.md](README_FIREFOX_BACKUP_RU.md)
+- Резервное копирование системы (Ubuntu 24.04) [README_backup-ubuntu-24.04_RU.md](README_backup-ubuntu-24.04_RU.md)

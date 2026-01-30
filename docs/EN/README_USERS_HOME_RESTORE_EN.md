@@ -174,3 +174,8 @@ This document captures this knowledge so that the problem:
 - doesn't destroy data
 
 **Status:** Canonical / Stable
+
+## See also
+
+- Firefox backup [README_FIREFOX_BACKUP_EN.md](README_FIREFOX_BACKUP_EN.md)
+- System backup (Ubuntu 24.04) [README_backup-ubuntu-24.04_EN.md](README_backup-ubuntu-24.04_EN.md)

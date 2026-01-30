@@ -83,3 +83,8 @@ about:profiles → Set as default profile
 - ❌ Firefox Sync is not used
 - ✅ All data is available offline
 - ✅ Recovery is possible without internet connection
+
+## See also
+
+- Recovering user accounts [README_USERS_HOME_RESTORE_EN.md](README_USERS_HOME_RESTORE_EN.md)
+- System backup (Ubuntu 24.04) [README_backup-ubuntu-24.04_EN.md](README_backup-ubuntu-24.04_EN.md)
