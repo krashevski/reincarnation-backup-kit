@@ -1,14 +1,14 @@
-# Firefox Backup
+# Firefox backup
 
 [🇬🇧 English](README_FIREFOX_BACKUP_EN.md) | [🇷🇺 Русский](../RU/README_FIREFOX_BACKUP_RU.md)
 
 This README describes the process of archiving and restoring Firefox.
 
-## 🔁 Monthly Archiving Procedure
+## 🔁 Monthly archiving procedure
 
 📅 Once a month
-- 📌 Export bookmarks → bookmarks-YYYY-MM.html
-- 📦 Archive full profile → firefox-profile-YYYY-MM.tar.gz
+- 📌 Export bookmarks → `bookmarks-YYYY-MM.html`
+- 📦 Archive full profile → `firefox-profile-YYYY-MM.tar.gz`
 - 💾 (optional) copy to external media / DVD / NAS
 
 ## Archiving the current Firefox profile
@@ -29,7 +29,7 @@ The root directory will be set to the path to the working profile.
 ### Removing obsolete profiles
 👉 If the current profile contains all the necessary bookmarks, history, and extensions, then the remaining profiles can be removed.
 Refreshing Firefox will make recovery easier.
-In about:profiles:
+In `about:profiles`:
 - For profiles you no longer need, click "Delete Profile."
 - Agree to delete files (if you definitely don't need them).
 
@@ -57,7 +57,7 @@ Preserved in full:
 - extensions
 - settings
 - containers
-- about:config
+- `about:config`
 
 ## ♻️ Restore (when reinstalling the system)
 
