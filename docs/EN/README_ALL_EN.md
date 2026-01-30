@@ -36,9 +36,9 @@ Consists of two steps:
 5. Copies the `backup_kit` archive package to `/mnt/backups` if necessary.
 
 ### See also
-- Reinstalling the operating system, see [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
-- SSD + HDD partitioning for Linux (for mounting in Shotcut), see [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
-- Connecting a second disk in Linux, see [README_DISK_EN.md](README_DISK_EN.md)
+- Reinstalling the operating system [README_REINSTALL_SYSTEM_EN.md](README_REINSTALL_SYSTEM_EN.md)
+- SSD + HDD partitioning for Linux (for mounting in Shotcut) [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
+- Connecting a second disk in Linux [README_DISK_EN.md](README_DISK_EN.md)
 
 ### System backup
 - `backup-system.sh` - creates a backup copy of system settings and packages.
@@ -111,8 +111,8 @@ Other options are accessible without privileges.
 ./backup-system.sh
 ```
 
-See also:
-To save the Ubuntu 24.04 system configuration: packages, repositories, keys, see the file [README.backup-ubuntu-24.04_EN.md](README.backup-ubuntu-24.04_EN.md)
+### See also:
+- System backup (Ubuntu 24.04) [README_backup-ubuntu-24.04_EN.md](README_backup-ubuntu-24.04_EN.md)
 
 - To backup user data (can be done in the local TTY3 console [Cirl+Alt+F3]):
 ```bash
@@ -134,8 +134,8 @@ install-mediatools-flatpak.sh
 ```
 > ⚠️ Important: For fast operation of the Shotcut video editor when installing Ubuntu on an SSD, it is necessary to create a partition on the SSD for Shotcut proxy files.
 
-See also:
-SSD + HDD partitioning for Linux (for editing in Shotcut) see file [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
+### See also:
+- SSD + HDD partitioning for Linux (for editing in Shotcut) [README_SSD_SETUP_EN.md](README_SSD_SETUP_EN.md)
 
 ```bash
 install-mediatools-apt.sh
@@ -177,12 +177,12 @@ sudo ./add-cron-backup.sh 10:30
 sudo ./remove-cron-backup.sh
 ```
 
-See also
-- Backup Kit — Cron Backup Scripts, see [README_CRON_EN.md](README_CRON_EN.md)
+### See also
+- Cron Backup Scripts [README_CRON_EN.md](README_CRON_EN.md)
 
 ## Information about the system and Backup Kit settings
 
-An informational script that displays useful information about the system and Backup Kit settings:
+An informational script that displays useful information about the system and Reincarnation Backup Kit settings:
 - list of mount points with labels and UUIDs;
 - symbolic links in the current user's home directory;
 - list of cron jobs (via `sudo crontab -l`).

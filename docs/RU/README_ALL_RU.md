@@ -35,10 +35,10 @@
   4. Проверяет зависимости (`rsync`, `screen`, `tar`, `gzip`).
   5. Копирует архивный пакет `backup_kit` в `/mnt/backups` при необходимости.
   
-### См. также
-- Переустановка операционной системы см. файл [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
-- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
-- Подключения второго диска в Linux см. файл [README_DISK_RU.md](README_DISK_RU.md)
+### Смотри также
+- Переустановка операционной системы [README_REINSTALL_SYSTEM_RU.md](README_REINSTALL_SYSTEM_RU.md)
+- SSD + HDD разметка для Linux (под монтаж в Shotcut) [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
+- Подключения второго диска в Linux [README_DISK_RU.md](README_DISK_RU.md)
 
 ### Архивирование системы
 - `backup-system.sh` - cоздаёт резервную копию системных настроек и пакетов.
@@ -109,8 +109,8 @@ cd reincarnation-backup-kit
 ./backup-system.sh
 ```
 
-См. также:
-сохранение системной конфигурации Ubuntu 24.04: пакеты, репозитории, ключи см. файл [README.backup-ubuntu-24.04_RU.md](README.backup-ubuntu-24.04_RU.md)
+### Смотри также:
+- Резервное копирование системы (Ubuntu 24.04) [README_backup-ubuntu-24.04_RU.md](README_backup-ubuntu-24.04_RU.md)
 
 - Для бэкапа пользовательских данных (может быть в локальной консоли TTY3 [Cirl+Alt+F3]):
 ```bash
@@ -131,8 +131,9 @@ sudo /home/<имя_пользователя>/bin/hdd-setup-profiles.sh
 install-mediatools-flatpak.sh
 ```
 > ⚠️ Важно: Для быстрой работы видеоредактора Shotcut при установке Ubuntu на SSD твёрдый диск обязательно создание на SSD раздела для Proxy файлов Shotcut. 
-См. также:
-SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
+
+### Смотри также:
+- SSD + HDD разметка для Linux (под монтаж в Shotcut) см. файл [README_SSD_SETUP_RU.md](README_SSD_SETUP_RU.md)
 
 ```bash
 install-mediatools-apt.sh
@@ -174,12 +175,12 @@ sudo ./add-cron-backup.sh 10:30
 sudo ./remove-cron-backup.sh
 ```
 
-См. также
-- Backup Kit — Скрипты резервного копирования с cron, см. [README_CRON_RU.md](README_CRON_RU.md)
+### Смотри также
+- Скрипты резервного копирования с cron [README_CRON_RU.md](README_CRON_RU.md)
 
-## Информация о системе и настройках Backup Kit
+## Информация о системе и настройках 
 
-Информационный скрипт, отображающий полезную информацию о системе и настройках Backup Kit:
+Информационный скрипт, отображающий полезную информацию о системе и настройках Reincarnation Backup Kit:
 - список точек монтирования с метками и UUID;
 - символические ссылки в домашнем каталоге текущего пользователя;
 - список заданий cron (через `sudo crontab -l`).
@@ -195,7 +196,7 @@ sudo ./show-system-mounts.sh
 
 ## Заметки
 
-- Убедитесь, что ~/bin добавлен в переменную PATH (install.sh делает это автоматически).
+- Убедитесь, что `~/bin` добавлен в переменную PATH (`install.sh` делает это автоматически).
 - Архивирование и восстановление полностью логируются.
 - Пакет **Backup Kit** предназначен строго для поддерживаемых версий дистрибутивов:
   1. Ubuntu 22.04 / 24.04
