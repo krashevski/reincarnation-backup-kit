@@ -6,18 +6,28 @@
 # Использование cleanup.sh
 # SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # LIB_DIR="$SCRIPT_DIR/lib"
-#
-# source "$LIB_DIR/logging.sh"
-# source "$LIB_DIR/cleanup.sh"
-# 
-# WORKDIR="$(mktemp -d)"
-#
-# cleanup_custom() {
-#     echo "my cleanup"
-# }
-# 
-# trap 'cleanup_custom; cleanup_workdir "$WORKDIR"' EXIT INT TERM
-# =============================================================
+:<<'DOC'
+=============================================================
+source "$LIB_DIR/directories.sh"
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/privileges.sh"
+source "$LIB_DIR/safety.sh"
+source "$LIB_DIR/cleanup.sh"
+
+register_cleanup "$WORKDIR"
+
+main() {
+    init_user_dirs || exit 1
+    init_system_dirs || exit 1
+
+    run_backup
+}
+
+main "$@"
+
+trap 'cleanup_custom; cleanup_workdir "$WORKDIR"' EXIT INT TERM
+=============================================================
+DOC
 
 set -o errexit
 set -o pipefail
@@ -40,22 +50,19 @@ cleanup_workdir() {
     local dir="$1"
 
     [[ -z "$dir" ]] && return 0
-    [[ "$dir" == "/" ]] && {
-        error clean_invalid_dir "$dir" || true
-        return 1
-    }
 
-    if [[ -d "$dir" ]]; then
-        info clean_tmp "$dir"
-        rm -rf --one-file-system "$dir" || true
-        ok clean_ok
-    fi
+    info clean_tmp "$dir"
+
+    safe_rm_rf "$dir" || return 1
+
+    ok clean_ok
 }
 
 register_cleanup() {
     local dir="$1"
     trap "cleanup_workdir '$dir'" EXIT INT TERM
 }
+
 
 # -------------------------------------------------------------
 # Экспорт say как readonly API

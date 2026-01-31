@@ -191,7 +191,7 @@ if command -v nvcc &>/dev/null; then
         info removing
         sudo apt remove --purge -y nvidia-cuda-toolkit
         sudo apt autoremove -y
-        ok done
+        ok done_cuda_tools
     else
         info cuda_saved
     fi
@@ -202,7 +202,7 @@ else
         info installing
         sudo apt update
         sudo apt install -y nvidia-cuda-toolkit
-        ok done
+        ok done_cuda_tools
     else
         info cuda_installed
     fi

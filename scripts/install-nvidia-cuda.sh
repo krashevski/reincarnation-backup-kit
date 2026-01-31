@@ -22,58 +22,169 @@ DOC
 
 set -euo pipefail
 
-# === Двуязычные сообщения ===
-declare -A MSG=(
-  [ru_update]="Шаг 1: Обновление списка пакетов"
-  [en_update]="Step 1: Updating package list"
+# -------------------------------------------------------------
+# Colors (safe for set -u)
+# -------------------------------------------------------------
+if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[0;34m"
+    NC="\033[0m"
+else
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+fi
 
-  [ru_driver_install]="Шаг 2: Автоматическая установка драйвера NVIDIA"
-  [en_driver_install]="Step 2: Automatic NVIDIA driver installation"
 
-  [ru_driver_check]="Шаг 3: Проверка, что драйвер установлен"
-  [en_driver_check]="Step 3: Checking if NVIDIA driver is installed"
+# -------------------------------------------------------------
+# 1. Определяем директорию скрипта
+# -------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  [ru_driver_error]="Драйвер NVIDIA не найден. Проверьте логи установки."
-  [en_driver_error]="NVIDIA driver not found. Check installation logs."
+# -------------------------------------------------------------
+# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
+# -------------------------------------------------------------
+declare -A MSG
 
-  [ru_modprobe]="Шаг 4: Перезагрузка модулей ядра NVIDIA"
-  [en_modprobe]="Step 4: Reloading NVIDIA kernel modules"
+# -------------------------------------------------------------
+# 3. Функция загрузки сообщений
+# -------------------------------------------------------------
+load_messages() {
+    local lang="$1"
+    # очищаем предыдущие ключи
+    MSG=()
 
-  [ru_gpu_info]="Шаг 5: Проверка карты и версии драйвера"
-  [en_gpu_info]="Step 5: Checking GPU and driver version"
+    case "$lang" in
+        ru)
+            source "$SCRIPT_DIR/i18n/messages_ru.sh"
+            ;;
+        en)
+            source "$SCRIPT_DIR/i18n/messages_en.sh"
+            ;;
+        *)
+            echo "Unknown language: $lang" >&2
+            return 1
+            ;;
+    esac
+}
 
-  [ru_cuda_check]="Шаг 6: Проверка поддержки CUDA"
-  [en_cuda_check]="Step 6: Checking CUDA support"
-  
-  [ru_cuda_manage]="Для управления CUDA Toolkit используйте опциональный скрипт:"
-  [en_cuda_manage]="To manage the CUDA Toolkit, use the optional script:"
-  
-  [ru_cuda_install]="С его помощью можно установить или удалить CUDA Toolkit в любое время."
-  [en_cuda_install]="This allows you to install or uninstall the CUDA Toolkit at any time."
+# -------------------------------------------------------------
+# 4. Безопасный say
+# -------------------------------------------------------------
+say() {
+    local key="$1"; shift
+    local msg="${MSG[${key}]:-$key}"
 
-  [ru_cuda_version]="Шаг 7: Проверка версии CUDA"
-  [en_cuda_version]="Step 7: Checking CUDA version"
+    if [[ $# -gt 0 ]]; then
+        printf "$msg\n" "$@"
+    else
+        printf '%s\n' "$msg"
+    fi
+}
 
-  [ru_cuda_warn]="nvcc не найден. CUDA может работать только через драйвер."
-  [en_cuda_warn]="nvcc not found. CUDA may work only via driver."
 
-  [ru_cuda_smi]="Проверка CUDA через nvidia-smi"
-  [en_cuda_smi]="Checking CUDA via nvidia-smi"
+# -------------------------------------------------------------
+# 5. Фуекцмя ok
+# -------------------------------------------------------------
+ok() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[OK]%b %b\n" \
+        "${GREEN:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")"
+}
 
-  [ru_done]="Установка завершена! GPU готов для ускорения Shotcut и 4K"
-  [en_done]="Installation completed! GPU ready for Shotcut acceleration and 4K"
-)
 
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}" "${2:-}"; }
+# -------------------------------------------------------------
+# 6. Функция info для логирования
+# -------------------------------------------------------------
+info() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[INFO]%b %b\n" \
+        "${BLUE:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
 
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; YELLOW="\033[1;33m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
+# -------------------------------------------------------------
+# 7. Функция warn для логирования
+# -------------------------------------------------------------
+warn() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[WARN]%b %b\n" \
+        "${YELLOW:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+# -------------------------------------------------------------
+# 8. Функция error для логирования
+# -------------------------------------------------------------
+error() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b[ERROR]%b %b\n" \
+        "${RED:-}" \
+        "${NC:-}" \
+        "$(printf "$fmt" "$@")" >&2
+}
+
+
+# -------------------------------------------------------------
+# 9. Функция echo_echo_msg для логирования
+# -------------------------------------------------------------
+echo_msg() {
+    local key="$1"; shift
+    local fmt
+    fmt="$(say "$key")"
+    printf "%b\n" "$(printf "$fmt" "$@")"
+}
+
+# -------------------------------------------------------------
+# 10. Функция die для логирования
+# -------------------------------------------------------------
+die() {
+    error "$@"
+    exit 1
+}
+
+# -------------------------------------------------------------
+# 11. Устанавливаем язык по умолчанию и загружаем переводы
+# -------------------------------------------------------------
+LANG_CODE="${LANG_CODE:-ru}"
+load_messages "$LANG_CODE"
+
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
 # --- Логирование ---
 LOG_DIR="/mnt/backups/logs"
 mkdir -p "$LOG_DIR"
@@ -111,5 +222,6 @@ nvcc --version || warn "$(say cuda_warn)"
 info "$(say cuda_smi)"
 nvidia-smi -q | grep -i "CUDA Version"
 
-ok "$(say done)"
+ok done_nvidia_ins
 
+exit 0

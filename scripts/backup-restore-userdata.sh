@@ -399,7 +399,7 @@ for sel in "${selections[@]}"; do
 done
 
 if [ $status -eq 0 ]; then
-    ok all_done "$OPERATION"
+    ok done_all "$OPERATION"
 else
     error some_failed "$OPERATION" "$RUN_LOG"
 fi

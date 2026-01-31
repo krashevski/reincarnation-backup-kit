@@ -196,7 +196,7 @@ for file in /etc/apt/sources.list.d/*; do
         sudo rm -f "$file"
     fi
 done
-info repos_done
+info done_repos
 
 # Обработка блокировки apt перед запуском
 if sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
@@ -209,4 +209,4 @@ sudo apt update
 sudo apt install -y vlc digikam darktable keepassxc mc ranger cpu-x
 sudo snap install telegram-desktop
 
-ok done
+ok done_apt

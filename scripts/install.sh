@@ -217,19 +217,16 @@ if [[ -d "$WORKDIR" ]]; then
     ok "${MSG[workdir_cleaned]}"
 fi
 
-# --- Символическая ссылка /mnt/backups → ~/backups ---
-ln -sfn "$BACKUP_DIR" "$HOME/backups"
-
-echo "${MSG[installer]}"
+info installer
 
 # --- Дистрибутив ---
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-info "${MSG[distro_found]}: $DISTRO_ID $DISTRO_VER"
+info distro_found "$DISTRO_ID" "$DISTRO_VER"
 
 # --- ~/bin ---
 mkdir -p "$TARGET_DIR"
-ok "$TARGET_DIR — ${MSG[dir_created]}"
+ok  dir_created "$TARGET_DIR"
 
 # --- Списки скриптов ---
 SCRIPTS_SYSTEM=("backup-system.sh" "restore-system.sh")
@@ -312,12 +309,12 @@ if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
     if [ -w "$BASHRC" ] && ! grep -Fxq "$EXPORT_LINE" "$BASHRC"; then
         echo "$EXPORT_LINE" >> "$BASHRC"
         PATH_ADDED=true
-        warn "${MSG[path_added_bashrc]}"
+        warn path_added_bashrc
     fi
     if [ -w "$PROFILE" ] && ! grep -Fxq "$EXPORT_LINE" "$PROFILE"; then
         echo "$EXPORT_LINE" >> "$PROFILE"
         PATH_ADDED=true
-        warn "${MSG[path_added_profile]}"
+        warn path_added_profile
     fi
 else
     ok "~/bin already in PATH"
@@ -423,7 +420,7 @@ if [[ ${ERROR_COUNT:-0} -eq 0 ]]; then
 fi
 
 # --- Итоговый вывод скриптов для запуска пользователем ---
-info "${MSG[scripts_list]}"
+info scripts_list
 for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}"; do
     # пропускаем служебные скрипты
     if [[ "$script" == "backup-restore-userdata.sh" || "$script" == "cron-backup-userdata.sh" ]]; then
@@ -433,5 +430,5 @@ for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" 
 done
 
 # --- Завершение ---
-ok "${MSG[done]}: $DISTRO_ID $DISTRO_VER"
+ok "done_ins "$DISTRO_ID $DISTRO_VER"
 
