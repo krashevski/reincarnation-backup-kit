@@ -122,8 +122,8 @@ MSG[driver_error]="Драйвер NVIDIA не найден. Проверьте �
 MSG[modprobe]="Шаг 4: Перезагрузка модулей ядра NVIDIA"
 MSG[gpu_info]="Шаг 5: Проверка карты и версии драйвера"
 MSG[cuda_check]="Шаг 6: Проверка поддержки CUDA"
-MSG[cuda_manage]="Для управления CUDA Toolkit используйте опциональный скрипт:"
-MSG[cuda_install]="С его помощью можно установить или удалить CUDA Toolkit в любое время."
+MSG[cuda_install]="Установка CUDA Toolkit"
+MSG[cuda_remove]="Удаление CUDA Toolkit"
 MSG[cuda_version]="Шаг 7: Проверка версии CUDA"
 MSG[cuda_warn]="nvcc не найден. CUDA может работать только через драйвер."
 MSG[cuda_smi]="Проверка CUDA через nvidia-smi"
@@ -131,7 +131,7 @@ MSG[done_nvidia_ins]="Установка завершена! GPU готов дл
 MSG[nvidia_ok]="nvidia-smi OK"
 
 # check-cuda-tools.sh
-MSG[installed]="CUDA Toolkit уже установлен."
+MSG[cuda_installed]="CUDA Toolkit уже установлен."
 MSG[not_installed]="CUDA Toolkit не установлен."
 MSG[install_prompt]="Хотите установить CUDA Toolkit (~2 ГБ)? y/n: "
 MSG[remove_prompt]="Хотите удалить CUDA Toolkit? y/n: "
@@ -140,6 +140,7 @@ MSG[removing]="Удаление CUDA Toolkit..."
 MSG[done_cuda_tools]="Операция завершена."
 MSG[cuda_saved]="CUDA Toolkit сохранён."
 MSG[cuda_installed]="CUDA Toolkit не установлен."
+MSG[cuda_usage]="Usage: $0 {install|remove|check}"
 
 # install-mediatools-apt.sh
 MSG[start_apt]="Старт установки приложений через APT/Snap"
@@ -418,6 +419,10 @@ MSG[apt_busy]="apt сейчас занят другим процессом."
 MSG[installation_error]="Ошибка установки (код %s)."
 MSG[returned_main_menu]="Вернулись в главное меню."
 MSG[returned_menu]="Вернулись в меню."
+MSG[choose_option]="Выберите вариант: "
+MSG[cuda_present]="CUDA tools обнаружены в системе"
+MSG[cuda_missing]="CUDA tools не найдены в системе"
+MSG[menu_cuda_choice]="                ВЫБОР CUDA"
 
 # setup-symlinks.sh
 MSG[start_symlinks]="Начинаю настройку символических ссылок"

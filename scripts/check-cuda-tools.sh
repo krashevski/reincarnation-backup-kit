@@ -183,30 +183,34 @@ if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
     fi
 fi
 
-# --- Проверка наличия CUDA Toolkit ---
-if command -v nvcc &>/dev/null; then
-    ok installed
-    read -rp "$(echo_msg remove_prompt)" resp
-    if [[ "$resp" =~ ^[Yy]$ ]]; then
-        info removing
-        sudo apt remove --purge -y nvidia-cuda-toolkit
-        sudo apt autoremove -y
-        ok done_cuda_tools
-    else
-        info cuda_saved
-    fi
-else
-    warn not_installed
-    read -rp "$(echo_msg install_prompt)" resp
-    if [[ "$resp" =~ ^[Yy]$ ]]; then
-        info installing
+
+ACTION="${1:-}"
+
+case "$ACTION" in
+    install)
+        info cuda_install
         sudo apt update
         sudo apt install -y nvidia-cuda-toolkit
-        ok done_cuda_tools
-    else
-        info cuda_installed
-    fi
-fi
+        ;;
+    remove)
+        info cuda_remove
+        sudo apt remove -y nvidia-cuda-toolkit
+        ;;
+    check)
+        if command -v nvcc &>/dev/null; then
+           info cuda_present
+           exit 0
+        else
+           warn cuda_missing
+           exit 1
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {install|remove|check}"
+        return 1 2>/dev/null || exit 1
+        ;;
+esac
+
 
 exit 0
 

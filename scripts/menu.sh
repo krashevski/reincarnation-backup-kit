@@ -239,7 +239,10 @@ change_language() {
     case "$choice" in
         1) LANG_CODE="ru" ;;
         2) LANG_CODE="en" ;;
+        *) LANG_CODE="ru" ;;
     esac
+
+    export LANG_CODE
 
     # перезагружаем переводы
     load_messages "$LANG_CODE"
@@ -498,14 +501,51 @@ settings_menu() {
                 read -rp "$(echo_msg press_continue)"
                 ;;
             3)
-                # Проверяем наличие скрипта
-                if [[ -x "$CUDA_SCRIPT" ]]; then
-                    "$CUDA_SCRIPT"
-                else
-                    warn checkcuda_not
+                if [[ ! -x "$CUDA_SCRIPT" ]]; then
+                   warn checkcuda_not
+                   read -rp "$(echo_msg press_continue)"
+                   break
                 fi
-                read -rp "$(echo_msg press_return)"
-                ;;
+
+                while true; do
+                   clear
+                   echo "-----------------------------------------"
+                   echo "$(say menu_cuda_choice)"
+                   echo "-----------------------------------------"
+                   echo "1) Проверить CUDA tools"
+                   echo "2) Установить CUDA tools"
+                   echo "3) Удалить CUDA tools"
+                   echo "0) Назад"
+                   echo
+                   echo "-----------------------------------------"
+                   read -rp "$(echo_msg choose_option) " cuda_choice
+                   case "$cuda_choice" in
+                   1)
+                        if "$CUDA_SCRIPT" check; then
+                           :
+                        else
+                           :
+                        fi
+                        ;;
+                   2)
+
+                        "$CUDA_SCRIPT" install
+                        ;;
+                   3)
+                        "$CUDA_SCRIPT" remove
+                        ;;
+                   0) 
+                        break
+                        ;;                     
+
+                   *)
+                        warn invalid_choice
+                        ;;
+                   esac
+
+                   read -rp "$(echo_msg press_continue)"
+                   done
+                   ;;
             0) return ;;
             *) warn invalid_choice ;;
         esac

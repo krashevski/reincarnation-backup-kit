@@ -203,7 +203,7 @@ NVENC_AVAILABLE=false
 if lspci | grep -i nvidia &>/dev/null; then
     info nvidia_detected | tee -a "$LOG_FILE"
     if ! command -v nvidia-smi &>/dev/null; then
-        info nvidia_driver_install) | tee -a "$LOG_FILE"
+        info nvidia_driver_install | tee -a "$LOG_FILE"
         sudo ubuntu-drivers autoinstall
     fi
     if nvidia-smi &>/dev/null; then
@@ -212,18 +212,19 @@ if lspci | grep -i nvidia &>/dev/null; then
             ok cuda_found | tee -a "$LOG_FILE"
             GPU_AVAILABLE=true
         else
-            warn cuda_install | tee -a "$LOG_FILE"
-            sudo apt update
-            sudo apt install -y nvidia-cuda-toolkit
-            if command -v nvcc &>/dev/null; then
+           warn cuda_install | tee -a "$LOG_FILE"
+           if bash "$SCRIPT_DIR/scripts/check-cuda-tools.sh" install >>"$LOG_FILE" 2>&1; then
+           if command -v nvcc &>/dev/null; then
                 ok cuda_ok | tee -a "$LOG_FILE"
                 GPU_AVAILABLE=true
-            else
+           else
                 error cuda_fail | tee -a "$LOG_FILE"
-            fi
-        fi
-    else
+           fi
+           else
+                error cuda_fail | tee -a "$LOG_FILE"
+           fi
         warn driver_not | tee -a "$LOG_FILE"
+        fi
     fi
 else
     info no_nvidia | tee -a "$LOG_FILE"
@@ -333,3 +334,4 @@ fi
 
 echo "=== ✅ $(say finished) ===" | tee -a "$LOG_FILE"
 
+exit 0
