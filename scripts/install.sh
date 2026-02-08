@@ -239,7 +239,7 @@ SCRIPTS_I18N=(
   "i18n/messages_ru.sh"
   "i18n/messages_en.sh"
 )
-SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh")
+SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/i18n-init.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then

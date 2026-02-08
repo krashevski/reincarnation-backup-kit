@@ -19,6 +19,14 @@
 
 set -euo pipefail
 
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+source "$SCRIPT_DIR/lib/i18n-init.sh"
+source "$SCRIPT_DIR/lib/ui.sh"
+
+
 # -------------------------------------------------------------
 # Colors (safe for set -u)
 # -------------------------------------------------------------
@@ -231,22 +239,22 @@ show_logs() {
 # Переключатель языка
 change_language() {
     clear
-    echo "Choose language / Выберите язык:"
-    echo "1) Русский"
-    echo "2) English"
-    read -p "> " choice
+    echo "Choose language:"
+    echo "1) English"
+    echo "2) Русский"
+    echo "3) 日本語"
+
+    read -r choice
 
     case "$choice" in
-        1) LANG_CODE="ru" ;;
-        2) LANG_CODE="en" ;;
-        *) LANG_CODE="ru" ;;
+        1) APP_LANG="en" ;;
+        2) APP_LANG="ru" ;;
+        3) APP_LANG="ja" ;;
     esac
 
-    export LANG_CODE
-
-    # перезагружаем переводы
-    load_messages "$LANG_CODE"
+    export APP_LANG
 }
+
 
 # --- Главное меню ---
 main_menu() {

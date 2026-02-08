@@ -4,8 +4,6 @@
 # -------------------------------------------------------------
 # Использование logging.sh
 #
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
 :<<'DOC'
 =============================================================
 source "$LIB_DIR/logging.sh"
@@ -52,13 +50,13 @@ declare -Ag MSG
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$LIB_DIR/.." && pwd)"
 
-
 load_messages() {
-    local lang="$1"
     MSG=()
-    case "$lang" in
-        ru) [[ -f "$ROOT_DIR/i18n/messages_ru.sh" ]] && source "$ROOT_DIR/i18n/messages_ru.sh" ;;
-        en) [[ -f "$ROOT_DIR/i18n/messages_en.sh" ]] && source "$ROOT_DIR/i18n/messages_en.sh" ;;
+
+    case "${APP_LANG:-en}" in
+        ru) source "$ROOT_DIR/i18n/messages_ru.sh" ;;
+        ja) source "$ROOT_DIR/i18n/messages_ja.sh" ;;
+        en|*) source "$ROOT_DIR/i18n/messages_en.sh" ;;
         *)
             echo "Unknown language: $lang" >&2
             return 1
@@ -66,14 +64,14 @@ load_messages() {
     esac
 }
 
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
+load_messages
 
 say() {
     local key="$1"; shift
     local msg="${MSG[$key]:-$key}"
     [[ $# -gt 0 ]] && printf "$msg" "$@" || printf '%s' "$msg"
 }
+
 
 # -------------------------------------------------------------
 # Лог-функции
