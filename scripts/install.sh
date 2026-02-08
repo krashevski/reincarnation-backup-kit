@@ -238,6 +238,7 @@ HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda
 SCRIPTS_I18N=(
   "i18n/messages_ru.sh"
   "i18n/messages_en.sh"
+  "i18n/messages_ja.sh"
 )
 SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh")
 
