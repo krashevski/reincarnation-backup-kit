@@ -8,40 +8,52 @@
 # единая точка входа для systemd-inhibit
 # -------------------------------------------------------------
 # Использование guards-inhibit.sh
+:<<'DOC'
+source "$LIB_DIR/guards-inhibit.sh"
 #
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
-#
-# LANG_CODE=ru
-# export RUN_LOG="/var/log/rebk.log"
-# source "$LIB_DIR/guards-inhibit.sh"
-# inhibit_run "$@"
-# =============================================================
+inhibit_run "$0" "$@"
+DOC
 
 set -o errexit
 set -o pipefail
 
-# -------------------------------------------------------------
 # Защита от повторного подключения
-# -------------------------------------------------------------
-[[ -n "${_REBK_PRIVILEGES_LOADED:-}" ]] && return 0
-_REBK_PRIVILEGES_LOADED=1
-
-if [[ -n "${REBK_INHIBITED:-}" ]]; then
-    return 0
+if [[ -n "${_REBK_GUARDS_LOADED:-}" ]]; then
+    return 0 2>/dev/null || exit 0
 fi
+_REBK_GUARDS_LOADED=1
 
+# Проверка, уже есть inhibit
+[[ -n "${REBK_INHIBITED:-}" ]] && return 0 2>/dev/null || true
 export REBK_INHIBITED=1
 
+# -------------------------------------------------------------
+# Надёжная функция inhibit_run
+# -------------------------------------------------------------
 inhibit_run() {
+    local cmd=("$@")
+
+    # Проверка, что systemd-inhibit доступен
+    if ! command -v systemd-inhibit >/dev/null 2>&1; then
+        warn "systemd-inhibit not found, skipping inhibit"
+        return 0
+    fi
+
+    # Проверка, не запущен ли уже REBK inhibit
+    if systemd-inhibit --list 2>/dev/null | grep -q "REBK"; then
+        info "Inhibit already active, skipping"
+        return 0
+    fi
+
+    # Попытка запуска inhibit, игнорируя ошибки No buffer space available
     systemd-inhibit \
         --who="REBK" \
         --why="Backup in progress" \
         --what=shutdown:sleep \
-        "$@"
+        "${cmd[@]}" 2>/dev/null || {
+        warn "Failed to inhibit (systemd buffer full or other error), continuing anyway"
+    }
 }
 
-# -------------------------------------------------------------
-# Экспорт say как readonly API
-# -------------------------------------------------------------
+# Экспорт say из logging.sh
 readonly -f say ok info warn error die

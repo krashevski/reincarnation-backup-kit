@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
@@ -19,22 +19,13 @@
 
 set -euo pipefail
 
-#!/usr/bin/env bash
+set -euo pipefail
 
 source "$(dirname "$0")/lib/init.sh"
-
-# --- Проверка root только для команд, где нужны права ---
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
-fi
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/privileges.sh"
+source "$LIB_DIR/context.sh"
+source "$LIB_DIR/guards-inhibit.sh"
 
 # --- Inhibit recursion via systemd-inhibit ---
 if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
@@ -50,8 +41,9 @@ fi
 # --- Пути к скриптам ---
 BIN_DIR="$REAL_HOME/bin"
 SYS_BACKUP="$BIN_DIR/backup-system.sh"
-SYS_RESTORE="$BIN_DIR/restore-system.sh"
+FIREFOX_BACKUP_RESTORE="$BIN_DIR/backup-restore-firefox.sh"
 USER_BACKUP="$BIN_DIR/backup-userdata.sh"
+SYS_RESTORE="$BIN_DIR/restore-system.sh"
 USER_RESTORE="$BIN_DIR/restore-userdata.sh"
 CRON_BACKUP="$BIN_DIR/add-cron-backup.sh"
 CLEAN_LOGS="$BIN_DIR/clean-backup-logs.sh"
@@ -154,6 +146,7 @@ backup_menu() {
         info system "$DISTRO_ID $DISTRO_VER"
         echo_msg backup_system_full
         echo_msg backup_system_manual
+        echo_msg backup_firefox
         echo
         echo_msg userdata 
         echo_msg userdata_backup
@@ -165,8 +158,16 @@ backup_menu() {
         case "$choice" in
             1) bash "$SYS_BACKUP" full ;;      # Создаём full backup
             2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
-            3) bash "$USER_BACKUP" ;;
-            4) bash "$USER_BACKUP" --fresh ;;
+            3)
+               if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
+                   source "$FIREFOX_BACKUP_RESTORE"
+                   backup_firefox_profile
+               else
+                   error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
+               fi
+               ;;
+            4) bash "$USER_BACKUP" ;;
+            5) bash "$USER_BACKUP" --fresh ;;
             0) return ;;
             *) warn invalid_choice ;;
         esac
@@ -185,6 +186,7 @@ restore_menu() {
         info system "$DISTRO_ID $DISTRO_VER"
         echo_msg restore_system_full
         echo_msg restore_system_manual
+        echo_msg restore_firefox
         echo
         echo_msg userdata
         echo_msg restore_userdata
@@ -195,7 +197,15 @@ restore_menu() {
         case "$choice" in
             1) bash "$SYS_RESTORE" ;;              # default
             2) bash "$SYS_RESTORE" manual ;;       # ручной режим
-            3) bash "$USER_RESTORE" ;;             # restore userdata
+            3)
+               if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
+                   source "$FIREFOX_BACKUP_RESTORE"
+                   restore_firefox_profile
+               else
+                   error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
+               fi
+               ;;
+            4) bash "$USER_RESTORE" ;;             # restore userdata
             0) return ;;
             *) warn invalid_choice ;;
         esac

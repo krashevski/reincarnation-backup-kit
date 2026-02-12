@@ -1,20 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================
-# /scripts/lib/privileges.sh
-# Privilege checks
+# /scripts/lib/privileges.sh - privilege checks
 # -------------------------------------------------------------
 # Использование privileges.sh
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
 :<<'DOC'
-=============================================================
-LANG_CODE=ru
-export RUN_LOG="/var/log/rebk.log"
 source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
 
 require_root || return 1
-=============================================================
 DOC
 
 set -o errexit

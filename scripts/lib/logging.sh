@@ -3,13 +3,7 @@
 # /scripts/lib/logging.sh — эталонная библиотека логирования REBK
 # -------------------------------------------------------------
 # Использование logging.sh
-#
 :<<'DOC'
-=============================================================
-source "$LIB_DIR/logging.sh"
-
-LANG_CODE=ru
-export RUN_LOG="/var/log/rebk.log"
 source "$LIB_DIR/logging.sh"
 
 info dispatcher_started
@@ -17,7 +11,6 @@ ok operation_completed
 warn low_disk_space
 error something_wrong || true
 die 2 fatal_error
-=============================================================
 DOC
 
 set -o errexit

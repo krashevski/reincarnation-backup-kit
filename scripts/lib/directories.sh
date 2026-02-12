@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================
 # scripts/lib/directories.sh — пути и переменные
-# =============================================================
+# -------------------------------------------------------------
 # Использование cleanup.sh
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
+#
 :<<'DOC'
-=============================================================
 source "$LIB_DIR/directories.sh"
-=============================================================
 DOC
-
-# --- Пользователь ---
-RUN_USER="${SUDO_USER:-$USER}"
 
 # --- Домашний каталог пользователя ---
 USER_HOME="$(getent passwd "$RUN_USER" | cut -d: -f6)"
@@ -56,7 +50,5 @@ I18N_DIR="$SCRIPT_DIR/i18n"
 # RUN_LOG="$LOG_DIR/backres-$(date +%F-%H%M%S).log"
 # BACKUP_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
 # RESTORE_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
-
-RUN_USER="${SUDO_USER:-$USER}"
 
 
