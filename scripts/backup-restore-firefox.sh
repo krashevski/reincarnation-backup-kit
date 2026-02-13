@@ -28,6 +28,7 @@ source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/guards-firefox.sh"
 
 # inhibit_run "$0" "$@"
 
@@ -46,17 +47,18 @@ ARCHIVE_NAME="firefox-profile-$DATE_TAG.tar.gz"
 
 # -------------------------------------------------------------
 require_not_running() {
-    if pgrep -x firefox >/dev/null; then
-        error msg_firefox_close
-        exit 1
+    if firefox_is_running; then
+        error msg_firefox_running
+        return 1
     fi
+    return 0
 }
 
 # -------------------------------------------------------------
 detect_default_profile() {
     [[ -f "$PROFILES_INI" ]] || {
         error msg_firefox_not_ini 
-        exit 1
+        return 1
     }
 
     awk '
@@ -72,28 +74,61 @@ detect_default_profile() {
 
 # -------------------------------------------------------------
 backup_firefox_profile() {
-    require_not_running
 
+    # --- guard: Firefox не должен быть запущен ---
+    set +e
+    require_not_running
+    local rr=$?
+    set -e
+
+    if [[ $rr -ne 0 ]]; then
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
+
+    # --- определение профиля ---
+    set +e
     local profile_rel
     profile_rel="$(detect_default_profile)"
+    local dr=$?
+    set -e
+
+    if [[ $dr -ne 0 ]]; then
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
 
     local profile_path="$FIREFOX_BASE/$profile_rel"
 
-    [[ -d "$profile_path" ]] || {
-        error msg_firefox_not_profile $profile_path
-        exit 1
-    }
+    if [[ ! -d "$profile_path" ]]; then
+        error msg_firefox_not_profile "$profile_path"
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
 
     mkdir -p "$PROFILE_BACKUP_DIR"
 
-    info msg_firefox_archiving 
-    echo "   $profile_path"
+    info msg_firefox_archiving
+#    info msg_firefox_path "$profile_path"
 
+    # --- критическая операция ---
+    set +e
     tar -czf "$PROFILE_BACKUP_DIR/$ARCHIVE_NAME" "$profile_path"
+    local tr=$?
+    set -e
+
+    if [[ $tr -ne 0 ]]; then
+        error msg_firefox_tar_failed
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
 
     info msg_firefox_done
-    echo "   $PROFILE_BACKUP_DIR/$ARCHIVE_NAME"
+    info msg_firefox_profile_archive "$PROFILE_BACKUP_DIR/$ARCHIVE_NAME"
+
+    read -rp "$(echo_msg menu_firefox_return)"
 }
+
 
 # -------------------------------------------------------------
 restore_firefox_profile() {
