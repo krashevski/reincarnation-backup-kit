@@ -28,10 +28,10 @@ MSG[run_sudo]="スクリプトはroot権限（sudo）で実行する必要があ
 MSG[clean_ok]="一時ファイルを削除しました。"
 MSG[clean_tmp]="一時ファイルをクリーンアップしています…"
 MSG[clean_invalid_dir]="無効なディレクトリ: %s"
-msg_cleanup_start="一時ファイルをクリーンアップしています"
-msg_cleanup_done="クリーンアップ完了"
-msg_removing="削除中"
-msg_unsafe_path="安全でないパスのため、操作はキャンセルされました"
+MSG[msg_cleanup_start]="一時ファイルをクリーンアップしています"
+MSG[msg_cleanup_done]="クリーンアップ完了"
+MSG[msg_removing]="削除中"
+MSG[msg_unsafe_path]="安全でないパスのため、操作はキャンセルされました"
 # deps.sh
 MSG[deps_missing_list]="依存関係がありません: %s"
 MSG[deps_install_try]="自動インストールを試行します…"
@@ -211,11 +211,6 @@ MSG[usage]="使用状況: $0 [アーカイブ]"
 MSG[not system]="システムが定義されていません"
 MSG[no_script]="%s %s — スクリプト %s が見つからないか実行できません"
 MSG[root_run]="このスクリプトを実行するには root 権限が必要です。sudo をインストールするか、root として実行してください。"
-
-
-
-
-
 
 # backup-restore-userdata.sh
 MSG[error_root]="スクリプトはroot (sudo) として実行する必要があります。"
@@ -458,7 +453,6 @@ MSG[backup_owner_fix]="ディレクトリの所有者を変更しています"
 MSG[backup_not_exist]="ディレクトリ /mnt/backups が存在しません。マウントを確認してください"
 MSG[path_added_bashrc]="エクスポート PATH が ~/.bashrc に追加されました。PATH を更新するには、source ~/.bashrc を実行してください"
 MSG[path_added_profile]="エクスポート PATH が ~/.profile に追加されました。再ログインするか、source ~/.profile を実行してください"
-MSG[deps_missing]="パッケージがインストールされていません。インストールしてください"
 MSG[deps_ok]="すべての依存関係がインストールされました"
 MSG[copy_skip]="backup_kitが既に存在するため、コピーをスキップします"
 MSG[copy_done]="backup_kitパッケージをコピーしました"
@@ -469,7 +463,6 @@ MSG[can_run]="以下のスクリプトを実行できます"
 MSG[scripts_list]="ユーザーが実行できるスクリプト:"
 MSG[text_menu]="\nReincarnation Backup Kitテキストメニューを起動しています…"
 MSG[menu_not]="\n[警告] スクリプト menu.sh が見つからないか、実行できません。標準出力を表示しています:"
-MSG[deps_missing_list]="依存関係がありません: %s"
 MSG[deps_install_try]="自動インストールを試みます…"
 MSG[distro_ver_not_supported]="Ubuntu %s はサポートされていません"
 MSG[distro_not_supported]="ディストリビューション %s はサポートされていません"
