@@ -47,7 +47,7 @@ ARCHIVE_NAME="firefox-profile-$DATE_TAG.tar.gz"
 # -------------------------------------------------------------
 require_not_running() {
     if pgrep -x firefox >/dev/null; then
-        error firefox_close
+        error msg_firefox_close
         exit 1
     fi
 }
@@ -55,7 +55,7 @@ require_not_running() {
 # -------------------------------------------------------------
 detect_default_profile() {
     [[ -f "$PROFILES_INI" ]] || {
-        error firefox_not_ini 
+        error msg_firefox_not_ini 
         exit 1
     }
 
@@ -80,18 +80,18 @@ backup_firefox_profile() {
     local profile_path="$FIREFOX_BASE/$profile_rel"
 
     [[ -d "$profile_path" ]] || {
-        error firefox_not_profile $profile_path
+        error msg_firefox_not_profile $profile_path
         exit 1
     }
 
     mkdir -p "$PROFILE_BACKUP_DIR"
 
-    info firefox_archiving 
+    info msg_firefox_archiving 
     echo "   $profile_path"
 
     tar -czf "$PROFILE_BACKUP_DIR/$ARCHIVE_NAME" "$profile_path"
 
-    info firefox_done
+    info msg_firefox_done
     echo "   $PROFILE_BACKUP_DIR/$ARCHIVE_NAME"
 }
 
@@ -99,44 +99,44 @@ backup_firefox_profile() {
 restore_firefox_profile() {
     require_not_running
 
-    info firefox_available
+    info msg_firefox_available
     ls -1 "$PROFILE_BACKUP_DIR"
 
     echo
-    read -rp "$(echo_msg firefox_enter_name)" archive
+    read -rp "$(echo_msg msg_firefox_enter_name)" archive
 
     local archive_path="$PROFILE_BACKUP_DIR/$archive"
 
     [[ -f "$archive_path" ]] || {
-        error firefox_not_found 
+        error msg_firefox_not_found 
         exit 1
     }
 
-    info firefox_recovering 
+    info msg_firefox_recovering 
     tar -xzf "$archive_path" -C /
 
-    info firefox_recovered 
-    info firefox_open 
+    info msg_firefox_recovered 
+    info msg_firefox_open 
 }
 
 # -------------------------------------------------------------
 menu() {
     clear
     echo "---------------------------------------"
-    echo " Firefox Backup / Restore (REBK)"
+    echo_msg menu_firefox_backres
     echo "---------------------------------------"
-    echo "1) Backup Firefox profile"
-    echo "2) Restore Firefox profile"
-    echo "0) Exit"
+    echo_msg menu_firefox_backup
+    echo_msg menu_firefox_restore
+    echo_msg menu_firefox_exit
     echo
     echo "-----------------------------------------"
-    read -rp "Выбор: " choice
+    read -rp "$(echo_msg menu_firefox_options)" choice
 
     case "$choice" in
         1) backup_firefox_profile ;;
         2) restore_firefox_profile ;;
         0) exit 0 ;;
-        *) echo "Неверный выбор" ;;
+        *) warn menu_invalid_choice ;;
     esac
 }
 

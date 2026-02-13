@@ -23,9 +23,11 @@ LIB_DIR="$SCRIPT_DIR/lib"
 RUN_USER="${SUDO_USER:-$USER}"
 export RUN_USER
 
-# Язык по умолчанию
-: "${APP_LANG:=en}"
-export APP_LANG
+# -------------------------------------------------------------
+# i18n
+# -------------------------------------------------------------
+source "$PROJECT_ROOT/lib/i18n.sh"
+init_app_lang
 
 # Общие библиотеки
 source "$PROJECT_ROOT/lib/logging.sh"
