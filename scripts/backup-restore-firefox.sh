@@ -131,7 +131,17 @@ backup_firefox_profile() {
 
 # -------------------------------------------------------------
 restore_firefox_profile() {
+
+    # --- guard: Firefox не должен быть запущен ---
+    set +e
     require_not_running
+    local rr=$?
+    set -e
+
+    if [[ $rr -ne 0 ]]; then
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
 
     info msg_firefox_available
     ls -1 "$PROFILE_BACKUP_DIR"
@@ -141,17 +151,32 @@ restore_firefox_profile() {
 
     local archive_path="$PROFILE_BACKUP_DIR/$archive"
 
-    [[ -f "$archive_path" ]] || {
-        error msg_firefox_not_found 
-        exit 1
-    }
+    if [[ ! -f "$archive_path" ]]; then
+        error msg_firefox_not_found
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
 
-    info msg_firefox_recovering 
+    info msg_firefox_recovering
+
+    # --- критическая операция ---
+    set +e
     tar -xzf "$archive_path" -C /
+    local tr=$?
+    set -e
 
-    info msg_firefox_recovered 
-    info msg_firefox_open 
+    if [[ $tr -ne 0 ]]; then
+        error msg_firefox_tar_failed
+        read -rp "$(echo_msg menu_firefox_return)"
+        return 0
+    fi
+
+    info msg_firefox_recovered
+    info msg_firefox_open
+
+    read -rp "$(echo_msg menu_firefox_return)"
 }
+
 
 # -------------------------------------------------------------
 menu() {
