@@ -48,20 +48,20 @@ I18N_DIR="$TARGET_DIR/i18n"
 if [ -d "$BACKUP_DIR" ]; then
     owner=$(stat -c %U "$BACKUP_DIR")
     if [ "$owner" != "$RUN_USER" ]; then
-        info "${MSG[backup_owner_fix]} $BACKUP_DIR → $RUN_USER:$RUN_USER"
+        info backup_owner_fix $BACKUP_DIR → $RUN_USER:$RUN_USER
         sudo chown -R "$RUN_USER:$RUN_USER" "$BACKUP_DIR"
         sudo chmod -R 755 "$BACKUP_DIR"
     fi
 else
-    error "${MSG[backup_not_exist]}"
+    error backup_not_exist
     exit 1
 fi
 
 # --- Очистка WORKDIR ---
 if [[ -d "$WORKDIR" ]]; then
-    info "${MSG[workdir_clean]} $WORKDIR"
+    info workdir_clean $WORKDIR
     rm -rf "$WORKDIR"/*
-    ok "${MSG[workdir_cleaned]}"
+    ok workdir_cleaned
 fi
 
 info installer
@@ -216,14 +216,19 @@ check_and_install_deps() {
     fi
 
     # --- повторная проверка ---
+    missing=()
     for pkg in "${REQUIRED_PKGS[@]}"; do
         if ! command -v "$pkg" >/dev/null 2>&1; then
-            error "'$pkg' ${MSG[deps_missing]}"
-            return 1
+            missing+=("$pkg")
         fi
     done
 
-    ok "${MSG[deps_ok]}"
+    if [ ${#missing[@]} -gt 0 ]; then
+        error deps_missing_list "${missing[*]}"
+        return 1
+    fi
+
+    ok deps_ok
 }
 
 check_and_install_deps rsync tar gzip pv
@@ -234,13 +239,13 @@ DEST_DIR="$BACKUP_DIR/backup_kit"
 if [[ -d "$SRC_DIR" ]]; then
     mkdir -p "$BACKUP_DIR"
     if [[ -d "$DEST_DIR" ]]; then
-        info "${MSG[copy_skip]}: $DEST_DIR"
+        info copy_skip $DEST_DIR
     else
         cp -r "$SRC_DIR" "$BACKUP_DIR/"
-        ok "${MSG[copy_done]} → $DEST_DIR"
+        ok copy_done → $DEST_DIR
     fi
 else
-    warn "${MSG[copy_missing]} ($SRC_DIR)"
+    warn copy_missing $SRC_DIR
 fi
 
 require_root() {

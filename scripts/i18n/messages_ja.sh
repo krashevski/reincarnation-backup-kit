@@ -474,6 +474,7 @@ MSG[deps_install_try]="自動インストールを試みます…"
 MSG[distro_ver_not_supported]="Ubuntu %s はサポートされていません"
 MSG[distro_not_supported]="ディストリビューション %s はサポートされていません"
 MSG[script_skipped]="%s が %s に見つからないため、スキップしました"
+MSG[install_root_required]="ルート権限が必要です！"
 
 # restore-userdata.sh
 MSG[no_restore_script]="復元スクリプトが見つかりません: %s"

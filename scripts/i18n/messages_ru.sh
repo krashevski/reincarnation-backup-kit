@@ -263,6 +263,7 @@ MSG[menu_not]="\n[WARN] Скрипт menu.sh не найден или не ис�
 MSG[distro_ver_not_supported]="Ubuntu &s not supported"
 MSG[distro not_supported]="Дистрибутив %s not supported"
 MSG[script_skipped]="%s не найден в %s, пропущен"
+MSG[install_root_required]="Требуются права root!"
 
 # restore-userdata.sh
 MSG[no_restore_script]="Не найден restore-скрипт: %s"
