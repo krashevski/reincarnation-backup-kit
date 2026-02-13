@@ -109,7 +109,6 @@ backup_firefox_profile() {
     mkdir -p "$PROFILE_BACKUP_DIR"
 
     info msg_firefox_archiving
-#    info msg_firefox_path "$profile_path"
 
     # --- критическая операция ---
     set +e
