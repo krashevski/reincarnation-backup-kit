@@ -29,7 +29,7 @@ MSG[clean_ok]="Temporary files deleted."
 MSG[clean_tmp]="Cleaning temporary files..."
 MSG[clean_invalid_dir]="Invalid directory: %s"
 MSG[msg_cleanup_start]="Cleaning temporary files"
-MSG[msg_cleanup_done=]"Cleaning complete"
+MSG[msg_cleanup_done]="Cleaning complete"
 MSG[msg_removing]="Removing"
 MSG[msg_unsafe_path]="Unsafe path, operation canceled"
 # deps.sh
