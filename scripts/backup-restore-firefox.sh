@@ -19,6 +19,7 @@
 
 set -euo pipefail
 
+# Стандартная библиотека REBK
 # --- Определяем BIN_DIR относительно скрипта ---
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Путь к библиотекам всегда относительно BIN_DIR
@@ -28,9 +29,10 @@ source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
-source "$LIB_DIR/guards-firefox.sh"
-
 # inhibit_run "$0" "$@"
+
+# Библиотека Firefox
+source "$LIB_DIR/guards-firefox.sh"
 
 # -------------------------------------------------------------
 # Firefox backup / restore (REBK)
