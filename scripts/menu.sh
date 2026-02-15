@@ -49,7 +49,7 @@ SEIUP_SYMLINKS="$BIN_DIR/setup-symlinks.sh"
 CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 
 # Проверка root
-# require_root
+require_root
 # inhibit_run "$0" "$@"
 
 # --- Дистрибутив ---
