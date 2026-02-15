@@ -37,3 +37,26 @@ require_root() {
     fi
 }
 
+REBK_CHOWN_EXCLUDES=(
+    br_workdir
+    '.Trash-*'
+)
+
+# --- Исправление прав (кроме br_workdir) ---
+fix_backup_dir_permissions() {
+    local dir="$1"
+    local user="${SUDO_USER:-$USER}"
+    local group
+    group="$(id -gn "$user")"
+
+    local prune_expr=()
+    for ex in "${REBK_CHOWN_EXCLUDES[@]}"; do
+        prune_expr+=( -name "$ex" -o )
+    done
+    unset 'prune_expr[${#prune_expr[@]}-1]'
+
+    find "$dir" -mindepth 1 \
+        \( "${prune_expr[@]}" \) -prune -o \
+        -exec chown "$user:$group" {} + 2>/dev/null
+}
+

@@ -47,19 +47,21 @@ WORKDIR="$BACKUP_DIR/workdir"
 I18N_DIR="$TARGET_DIR/i18n"
 
 # Проверка root
-# require_root || return 1
-# --- Проверка и создание BACKUP_DIR ---
-if [ -z "${BACKUP_DIR:-}" ]; then
-    BACKUP_DIR="/mnt/backups"
-fi
+require_root || return 1
 
-if [ ! -d "$BACKUP_DIR" ]; then
-    info dir_not_exist $BACKUP_DIR
+# --- Проверка и создание BACKUP_DIR ---
+BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
+
+if [[ ! -d "$BACKUP_DIR" ]]; then
+    info dir_not_exist "$BACKUP_DIR"
     mkdir -p "$BACKUP_DIR" || {
-        error failed_create_dir $BACKUP_DIR
+        error failed_create_dir "$BACKUP_DIR"
         exit 1
     }
 fi
+
+# --- Исправление прав (кроме br_workdir) ---
+fix_backup_dir_permissions "$BACKUP_DIR"
 
 # inhibit_run "$0" "$@"
 
