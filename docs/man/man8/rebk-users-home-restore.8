@@ -1,0 +1,165 @@
+.TH REBK-USERS-HOME-RESTORE 8 "February 2026" "REBK" "System Administration"
+
+.SH NAME
+rebk-users-home-restore — restoring access to user home directories after reinstalling Ubuntu
+
+.SH DESCRIPTION
+After reinstalling Ubuntu or manually restoring the /home partition, user accounts are recreated, and each user is assigned a new UID.
+
+Home directories
+.BR /home/USERNAME
+may remain:
+.IP \(bu 2
+owned by
+.B root:root
+.IP \(bu 2
+owned by an old UID that no longer exists.
+
+The system intentionally does not automatically change data ownership,
+since it cannot know who exactly owns it.
+
+This document describes a safe, deliberate, and canonical procedure
+for diagnosing and restoring user home directories.
+
+.SH SYNOPSIS
+.nf
+getent passwd USERNAME
+ls -ld /home/USERNAME
+stat /home/USERNAME
+
+chown -R USERNAME:USERNAME /home/USERNAME
+.fi
+
+.SH SYMPTOMS
+Typical symptoms:
+.IP \(bu 2
+user cannot log in
+.IP \(bu 2
+empty desktop
+.IP \(bu 2
+file access errors
+.IP \(bu 2
+Applications don't save settings
+.IP \(bu 2
+messages
+.BR "Permission denied"
+.IP \(bu 2
+failed to restore user data in REBK
+
+.SH DIAGNOSTICS
+Checking user existence:
+.RS
+.nf
+getent passwd USERNAME
+.fi
+.RE
+
+Expected result:
+.RS
+.nf
+USERNAME:x:1000:1000:...:/home/USERNAME:/bin/bash
+.fi
+.RE
+Note the UID and path to the home directory.
+
+Checking directory owner:
+.RS
+.nf
+ls -ld /home/USERNAME
+.fi
+.RE
+
+or
+
+.RS
+.nf
+stat /home/USERNAME
+.fi
+.RE
+
+After running the commands, compare the user UID
+and the directory owner.
+
+Typical problem states:
+.TP
+.B root:root
+user does not have access to the home directory
+.TP
+.B old\ UID
+hidden incompatibility between the account and the directory owner
+.TP
+.B empty\ directory
+possible mounting error
+.BR /home
+
+.SH RECOVERY
+.SS "Check before restore"
+.IP \(bu 2
+user exists
+.IP \(bu 2
+directory is located exactly in
+.BR /home/USERNAME
+.IP \(bu 2
+data actually belongs to this user
+
+.SS "Correct owner"
+.RS
+.nf
+chown -R USERNAME:USERNAME /home/USERNAME
+.fi
+.RE
+This command is only applicable selectively.
+
+.SH WARNINGS
+Never execute
+.BR "chown -R /home" .
+Without careful verification, this can lead to irreversible data loss
+and compromise the integrity of the system.
+
+.SH SAFETY\ RULES
+Any tools or scripts should fail if:
+.IP \(bu 2
+username
+.B root
+.IP \(bu 2
+directory is not in
+.BR /home
+.IP \(bu 2
+user does not exist
+.IP \(bu 2
+path is empty or looks suspicious
+
+.SH AUTOMATION\ POLICY
+Only two automation modes are allowed:
+.IP \(bu 2
+.B audit
+— audit and report (default)
+.IP \(bu 2
+.B fix
+— fix by explicit flag and confirmation
+
+Automatic fix without diagnostics is prohibited.
+
+.SH INTEGRATION
+This procedure is canonical for the Reincarnation Backup Kit (REBK) and is used as:
+.IP \(bu 2
+basis for recovery scripts
+.IP \(bu 2
+checklist after a system reinstall
+.IP \(bu 2
+explanation of Ubuntu architectural behavior
+
+.SH NOTES
+Reinstalling a system isn't about losing data,
+it's about understanding who owns it.
+
+.SH SEE ALSO
+chown(1), stat(1), getent(1), passwd(5)
+
+.PP
+.SH AUTHOR
+Reincarnation Backup Kit Project
+
+.PP
+.SH STATUS
+Canonical / Stable

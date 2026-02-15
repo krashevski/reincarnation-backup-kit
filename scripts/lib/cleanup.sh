@@ -7,7 +7,6 @@
 # SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # LIB_DIR="$SCRIPT_DIR/lib"
 :<<'DOC'
-=============================================================
 source "$LIB_DIR/directories.sh"
 source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
@@ -26,7 +25,6 @@ main() {
 main "$@"
 
 trap 'cleanup_custom; cleanup_workdir "$WORKDIR"' EXIT INT TERM
-=============================================================
 DOC
 
 set -o errexit

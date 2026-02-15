@@ -22,16 +22,18 @@ DOC
 
 set -euo pipefail
 
-source "$(dirname "$0")/lib/init.sh"
+# Стандартная библиотека REBK
+# --- Определяем BIN_DIR относительно скрипта ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Путь к библиотекам всегда относительно BIN_DIR
+LIB_DIR="$BIN_DIR/lib"
+
 source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
 
-inhibit_run "$0" "$@"
-
 # === Пути и переменные ===
-
 BASHRC="$HOME/.bashrc"
 PROFILE="$HOME/.profile"
 EXPORT_LINE='export PATH="$HOME/bin:$PATH"'
@@ -44,18 +46,22 @@ LOG_DIR="$BACKUP_DIR/logs"
 WORKDIR="$BACKUP_DIR/workdir"
 I18N_DIR="$TARGET_DIR/i18n"
 
-# --- Проверка BACKUP_DIR ---
-if [ -d "$BACKUP_DIR" ]; then
-    owner=$(stat -c %U "$BACKUP_DIR")
-    if [ "$owner" != "$RUN_USER" ]; then
-        info backup_owner_fix $BACKUP_DIR → $RUN_USER:$RUN_USER
-        sudo chown -R "$RUN_USER:$RUN_USER" "$BACKUP_DIR"
-        sudo chmod -R 755 "$BACKUP_DIR"
-    fi
-else
-    error backup_not_exist
-    exit 1
+# Проверка root
+# require_root || return 1
+# --- Проверка и создание BACKUP_DIR ---
+if [ -z "${BACKUP_DIR:-}" ]; then
+    BACKUP_DIR="/mnt/backups"
 fi
+
+if [ ! -d "$BACKUP_DIR" ]; then
+    info dir_not_exist $BACKUP_DIR
+    mkdir -p "$BACKUP_DIR" || {
+        error failed_create_dir $BACKUP_DIR
+        exit 1
+    }
+fi
+
+# inhibit_run "$0" "$@"
 
 # --- Очистка WORKDIR ---
 if [[ -d "$WORKDIR" ]]; then
@@ -87,7 +93,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/context.sh" 'lib/i18n.sh' 'lib/guards-firefox.sh')
+SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/install-man.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -110,7 +116,7 @@ fi
 # Функция установки файлов i18n
 # -------------------------------------------------------------
 install_i18n() {
-  echo "Installing i18n message files..."
+  info install_i18n
 
   for file in "${SCRIPTS_I18N[@]}"; do
      install -Dm644 "$file" "$TARGET_DIR/$file"
@@ -121,7 +127,7 @@ install_i18n() {
 # Функция установки файлов библиотеки lib
 # -------------------------------------------------------------
 install_lib() {
-    echo "Installing library files..."
+    info install_lib
 
     for file in "${SCRIPTS_LIB[@]}"; do
         install -Dm644 "$file" "$TARGET_DIR/$file"
@@ -247,13 +253,6 @@ if [[ -d "$SRC_DIR" ]]; then
 else
     warn copy_missing $SRC_DIR
 fi
-
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error "Требуются права root!"
-        return 1
-    fi
-}
 
 # --- Проверка ошибок ---
 if [[ ${ERROR_COUNT:-0} -eq 0 ]]; then

@@ -19,24 +19,14 @@
 
 set -euo pipefail
 
-set -euo pipefail
-
 source "$(dirname "$0")/lib/init.sh"
 source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
-fi
+# Библиотека install-man:
+source "$LIB_DIR/install-man.sh"
 
 # --- Пути к скриптам ---
 BIN_DIR="$REAL_HOME/bin"
@@ -57,6 +47,10 @@ SYSTEM_MOUNTS="$BIN_DIR/show-system-mounts.sh"
 HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
 SEIUP_SYMLINKS="$BIN_DIR/setup-symlinks.sh"
 CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
+
+# Проверка root
+# require_root
+# inhibit_run "$0" "$@"
 
 # --- Дистрибутив ---
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -184,20 +178,26 @@ restore_menu() {
         echo_msg restore_options
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
-        echo_msg restore_system_full
-        echo_msg restore_system_manual
-        echo_msg restore_firefox
         echo
-        echo_msg userdata
-        echo_msg restore_userdata
+        echo "$(say menu_recover_acconts)"      # Restore user accounts
+        echo "$(say restore_system_full)"      # Incremental restore of system packages
+        echo "$(say restore_system_manual)"    # Manual restore of system
+        echo "$(say restore_firefox)"          # Restore Firefox profile
         echo
-        echo_msg back_main
+        echo "$(say restore_userdata)"         # Restore userdata
+        echo
+        echo "$(say back_main)"                # Back to main menu
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
+
         case "$choice" in
-            1) bash "$SYS_RESTORE" ;;              # default
-            2) bash "$SYS_RESTORE" manual ;;       # ручной режим
-            3)
+            1)  
+                ensure_man_pages           # Проверяем/устанавливаем man-страницы
+                man rebk-users-home-restore
+                ;;
+            2) bash "$SYS_RESTORE" ;;              # default
+            3) bash "$SYS_RESTORE" manual ;;       # ручной режим
+            4)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
                    source "$FIREFOX_BACKUP_RESTORE"
                    restore_firefox_profile
@@ -205,7 +205,7 @@ restore_menu() {
                    error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
                fi
                ;;
-            4) bash "$USER_RESTORE" ;;             # restore userdata
+            5) bash "$USER_RESTORE" ;;             # restore userdata
             0) return ;;
             *) warn invalid_choice ;;
         esac

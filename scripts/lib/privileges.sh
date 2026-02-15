@@ -19,6 +19,9 @@ set -o pipefail
 [[ -n "${_REBK_PRIVILEGES_LOADED:-}" ]] && return 0
 _REBK_PRIVILEGES_LOADED=1
 
+set -o errexit
+set -o pipefail
+
 # -------------------------------------------------------------
 # runtime-проверка зависимоси от logging.sh
 # -------------------------------------------------------------
@@ -29,9 +32,8 @@ type error >/dev/null 2>&1 || {
 
 require_root() {
     if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
+        info exec_via_sudo
+        exec sudo "$0" "$@"
     fi
-    return 0
 }
 

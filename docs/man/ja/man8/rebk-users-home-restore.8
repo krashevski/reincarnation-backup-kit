@@ -1,0 +1,163 @@
+.TH REBK-USERS-HOME-RESTORE 8 "2026年2月" "REBK" "システム管理"
+
+.SH 名前
+rebk-users-home-restore — Ubuntu の再インストール後にユーザーのホームディレクトリへのアクセスを復元する
+
+.SH 説明
+Ubuntu を再インストールするか、/home パーティションを手動で復元すると、ユーザーアカウントが再作成され、各ユーザーに新しい UID が割り当てられます。
+
+ホームディレクトリ
+.BR /home/USERNAME
+以下の状態が残る場合があります:
+.IP \(bu 2
+所有者:
+.B root:root
+.IP \(bu 2
+所有者: 存在しない古いUID
+
+システムはデータの所有者を正確に把握できないため、データの所有権を自動的に変更しません。
+
+このドキュメントでは、ユーザーのホームディレクトリを診断および復元するための、安全で慎重かつ標準的な手順について説明します。
+
+.SH 概要
+.nf
+getent passwd USERNAME
+ls -ld /home/USERNAME
+stat /home/USERNAME
+
+chown -R USERNAME:USERNAME /home/USERNAME
+.fi
+
+.SH の症状
+一般的な症状:
+.IP \(bu 2
+ユーザーがログインできない
+.IP \(bu 2
+デスクトップが空になる
+.IP \(bu 2
+ファイルアクセスエラーが発生する
+.IP \(bu 2
+アプリケーションが保存されない設定
+.IP \(bu 2
+メッセージ
+.BR "権限が拒否されました"
+.IP \(bu 2
+REBK 内のユーザーデータの復元に失敗しました
+
+.SH 診断
+ユーザーの存在を確認しています:
+.RS
+.nf
+getent passwd USERNAME
+.fi
+.RE
+
+期待される結果:
+.RS
+.nf
+USERNAME:x:1000:1000:...:/home/USERNAME:/bin/bash
+.fi
+.RE
+UID とホームディレクトリのパスをメモしてください。
+
+ディレクトリの所有者を確認しています:
+.RS
+.nf
+ls -ld /home/USERNAME
+.fi
+.RE
+
+または
+
+.RS
+.nf
+stat /home/USERNAME
+.fi
+.RE
+
+コマンド実行後、ユーザーの UID と
+ディレクトリの所有者を比較してください。
+
+一般的な問題の状態:
+.TP
+.B root:root
+ユーザーにはホームディレクトリへのアクセス権がありません
+.TP
+.B古い\ UID
+アカウントとディレクトリ所有者の間に隠れた不一致があります
+.TP
+.B 空の\ ディレクトリ
+マウントエラーの可能性
+.BR /home
+
+.SH リカバリ
+.SS "復元前に確認"
+.IP \(bu 2
+ユーザーが存在します
+.IP \(bu 2
+ディレクトリは正確に
+.BR /home/USERNAME にあります
+.IP \(bu 2
+データは実際にこのユーザーに属しています
+
+.SS "正しい所有者"
+.RS
+.nf
+chown -R USERNAME:USERNAME /home/USERNAME
+.fi
+.RE
+このコマンドは選択的にのみ適用可能です。
+
+.SH 警告
+決して実行しないでください
+.BR "chown -R /home" 。
+慎重に検証しないと、回復不能なデータ損失につながる可能性があり、
+システムの整合性が損なわれる可能性があります。
+
+.SH 安全規則
+以下の場合、ツールまたはスクリプトは失敗します。
+.IP \(bu 2
+ユーザー名
+.B root
+.IP \(bu 2
+ディレクトリが
+.BR /home 内にありません
+.IP \(bu 2
+ユーザーが存在しません
+.IP \(bu 2
+パスが空か、疑わしい
+
+.SH 自動化ポリシー
+許可される自動化モードは2つだけです。
+.IP \(bu 2
+.B audit
+— 監査とレポート（デフォルト）
+.IP \(bu 2
+.B fix
+— 明示的なフラグと確認による修正
+
+診断なしの自動修正は禁止されています。
+
+.SH 統合
+この手順は、Reincarnation Backup Kit (REBK) の標準であり、次のように使用されます。
+.IP \(bu 2
+リカバリスクリプトの基礎
+.IP \(bu 2
+システム再インストール後のチェックリスト
+.IP \(bu 2
+Ubuntu のアーキテクチャ動作の説明
+
+.SH 注意事項
+システムの再インストールは、データを失うことではありません。
+データの所有者を把握することです。
+
+.SH 参照その他
+chown(1), stat(1), getent(1), passwd(5)
+
+.PP
+.SH 作者
+Reincarnation Backup Kit プロジェクト
+
+.PP
+.SH ステータス
+正式版 / 安定版
