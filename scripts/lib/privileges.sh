@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================
-# /scripts/lib/privileges.sh - privilege checks
+# /lib/privileges.sh - privilege checks
 # -------------------------------------------------------------
 # Использование privileges.sh
 :<<'DOC'
@@ -9,6 +9,7 @@ source "$LIB_DIR/privileges.sh"
 
 require_root || return 1
 DOC
+# =============================================================
 
 set -o errexit
 set -o pipefail
@@ -42,7 +43,7 @@ REBK_CHOWN_EXCLUDES=(
     '.Trash-*'
 )
 
-# --- Исправление прав (кроме br_workdir) ---
+# --- Исправление прав (кроме REBK_CHOWN_EXCLUDES) ---
 fix_backup_dir_permissions() {
     local dir="$1"
     local user="${SUDO_USER:-$USER}"

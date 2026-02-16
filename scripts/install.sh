@@ -46,7 +46,8 @@ LOG_DIR="$BACKUP_DIR/logs"
 WORKDIR="$BACKUP_DIR/workdir"
 I18N_DIR="$TARGET_DIR/i18n"
 
-# Проверка root
+# lib privileges
+## Проверка root
 require_root || return 1
 
 # --- Проверка и создание BACKUP_DIR ---
@@ -60,7 +61,7 @@ if [[ ! -d "$BACKUP_DIR" ]]; then
     }
 fi
 
-# --- Исправление прав (кроме br_workdir) ---
+## --- Исправление прав (кроме REBK_CHOWN_EXCLUDES) ---
 fix_backup_dir_permissions "$BACKUP_DIR"
 
 # inhibit_run "$0" "$@"
@@ -95,7 +96,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/install-man.sh")
+SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/install-man.sh" "lib/cleanup.sh" "maintenance/cleanup.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then

@@ -12,7 +12,7 @@
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-# backup-restore-firefox.sh
+# backup-restore-firefox.sh - 
 # Reincarnation Backup Kit — Text Menu Interface (draft)
 # MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
 # =============================================================

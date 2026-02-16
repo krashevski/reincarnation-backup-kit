@@ -80,8 +80,8 @@ Consists of two steps:
 ### 2. User data scripts
 | Script | Description |
 |--------|---------|
-| `backup-userdata.sh` | Daily/manual backup of user data. |
-| `restore-userdata.sh` | Safely restores user data. |
+| `backup-restore-userdata.sh` | Daily/manual backup and Safely restores of user data. |
+| `backup-restore-firefox.sh` - | Backup and restore firefox profile and userdata. |
 
 ### 3. Utilities and wrappers
 | Script | Description |
@@ -93,7 +93,6 @@ Consists of two steps:
 | `check-last-archive.sh` | Checks for the presence of the user's last archive. |
 | `check-cuda-tools.sh` | Checking and managing CUDA Toolkit. |
 | `menu.sh` | Text menu for Reincarnation Backup Kit. |
-| `messages.sh` | Unified messages for all scripts. |
 
 ### 4. Media and GPU tools
 | Script | Description |
@@ -110,6 +109,17 @@ Consists of two steps:
 | `cron-backup-userdata.sh` | Archives user data to /mnt/backups/user_data// |
 | `clean-backup-logs.sh` | Clears old logs. |
 | `remove-cron-backup.sh` | Removes the backup cron job. |
+
+### 6.  Libraries
+lib/ — REBK's standard library.
+Contains only functions and has no side effects.
+
+maintenance/ — Executable maintenance utilities.
+They include libraries and manage the lifecycle.
+
+i18n/ — Internationalization resources.
+Contains language files with localized user-facing messages.
+Used by the i18n library to provide consistent, translatable output.
 
 ## Reincarnation Backup Kit text menu
 
@@ -147,6 +157,12 @@ sudo ./install.sh
 
 - [📖 Documentation (EN)](docs/EN/README_ALL_EN.md)
 - [📖 Документация (RU)](docs/RU/README_ALL_RU.md)
+
+After installation, use:
+- rebk-users-home-restore.8
+
+Man pages are the authoritative reference for usage details,
+options, and examples.
 
 ## ⚖️ License / Лицензия
 
