@@ -29,6 +29,8 @@ BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$BIN_DIR/lib"
 
 source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/safety.sh"
+source "$LIB_DIR/cleanup.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
@@ -67,11 +69,13 @@ fix_backup_dir_permissions "$BACKUP_DIR"
 # inhibit_run "$0" "$@"
 
 # --- Очистка WORKDIR ---
-if [[ -d "$WORKDIR" ]]; then
-    info workdir_clean $WORKDIR
-    rm -rf "$WORKDIR"/*
-    ok workdir_cleaned
-fi
+# Регистрируем $WORKDIR и устанавливаем trap
+register_cleanup "$WORKDIR"
+trap 'cleanup_custom; cleanup_workdir' EXIT INT TERM
+
+info msg_install_cleaning $WORKDIR
+cleanup_workdir
+ok msg_install_cleaned
 
 info installer
 

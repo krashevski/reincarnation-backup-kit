@@ -25,9 +25,6 @@ source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
 
-# Библиотека install-man:
-source "$LIB_DIR/install-man.sh"
-
 # --- Пути к скриптам ---
 BIN_DIR="$REAL_HOME/bin"
 SYS_BACKUP="$BIN_DIR/backup-system.sh"
@@ -138,15 +135,15 @@ backup_menu() {
         echo_msg backup_options
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
-        echo_msg backup_system_full
-        echo_msg backup_system_manual
-        echo_msg backup_firefox
+        echo "$(say backup_system_full)"
+        echo "$(saybackup_system_manual)"
+        echo "$(saybackup_firefox)"
         echo
-        echo_msg userdata 
-        echo_msg userdata_backup
-        echo_msg full_backup
+        echo "$(say userdata)" 
+        echo "$(say userdata_backup)"
+        echo "$(say full_backup)"
         echo
-        echo_msg back_main
+        echo "$(say back_main)"
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
         case "$choice" in
@@ -179,7 +176,7 @@ restore_menu() {
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
         echo
-        echo "$(say menu_recover_acconts)"      # Restore user accounts
+        echo "$(say menu_recover_acconts)"     # Restore user accounts
         echo "$(say restore_system_full)"      # Incremental restore of system packages
         echo "$(say restore_system_manual)"    # Manual restore of system
         echo "$(say restore_firefox)"          # Restore Firefox profile
@@ -192,9 +189,9 @@ restore_menu() {
 
         case "$choice" in
             1)  
-                ensure_man_pages           # Проверяем/устанавливаем man-страницы
-                man rebk-users-home-restore
-                ;;
+               MAINT_DIR="$(dirname "$0")/maintenance"
+               bash "$MAINT_DIR/install-man.sh"
+               ;;
             2) bash "$SYS_RESTORE" ;;              # default
             3) bash "$SYS_RESTORE" manual ;;       # ручной режим
             4)
@@ -387,10 +384,10 @@ settings_menu() {
                    echo "-----------------------------------------"
                    echo "$(say menu_cuda_choice)"
                    echo "-----------------------------------------"
-                   echo "1) Проверить CUDA tools"
-                   echo "2) Установить CUDA tools"
-                   echo "3) Удалить CUDA tools"
-                   echo "0) Назад"
+                   echo "$(say menu_cuda_check)"
+                   echo "$(say menu_cuda_install)"
+                   echo "$(say menu_cuda_uninstall)"
+                   echo "$(say menu_return)"
                    echo
                    echo "-----------------------------------------"
                    read -rp "$(echo_msg choose_option) " cuda_choice
