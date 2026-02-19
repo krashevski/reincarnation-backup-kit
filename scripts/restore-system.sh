@@ -22,198 +22,162 @@ DOC
 
 set -euo pipefail
 
-# -------------------------------------------------------------
-# 1. Colors (safe for set -u)
-# -------------------------------------------------------------
-if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
-    RED="\033[0;31m"
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[0;34m"
-    NC="\033[0m"
-else
-    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+# --- systemd-inhibit ---
+if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+    export INHIBIT_LOCK=1
+    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="Running restore" "$0" "$@"
 fi
 
-# -------------------------------------------------------------
-# 2. i18n
-# -------------------------------------------------------------
-declare -Ag MSG
+# === Цвета ===
+RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; NC="\033[0m"
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
-LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$LIB_DIR/.." && pwd)"
-
-load_messages() {
-    local lang="$1"
-    MSG=()
-    local i18n_dir="$LIB_DIR/i18n"
-    case "$lang" in
-        ru) source "$i18n_dir/messages_ru.sh" ;;
-        en) source "$i18n_dir/messages_en.sh" ;;
-        *)
-            echo "Unknown language: $lang" >&2
-            return 1
-            ;;
-    esac
+# === Выбор языка ===
+L=${LANG_CHOICE:-ru}
+say() { 
+    local key="${L}_$1"
+    shift
+    printf "${MSG[$key]}" "$@"
 }
 
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
+# === Двуязычные сообщения ===
+declare -A MSG=( 
+  [ru_help]="Если АРХИВ не указан, будут использоваться значения по умолчанию в зависимости от системы."
+  [en_help]="If ARCHIVE not specified, defaults will be used depending on system."
+  
+  [ru_detect_system]="Определение системы: "
+  [en_detect_system]="Detected system: "
 
-say() {
-    local key="$1"; shift
-    local msg="${MSG[$key]:-$key}"
-    [[ $# -gt 0 ]] && printf "$msg" "$@" || printf '%s' "$msg"
-}
+  [ru_not_found_dir]="❌ Каталог BACKUP_DIR не найден. Подключите или смонтируйте диск!"
+  [en_not_found_dir]="❌ Directory BACKUP_DIR not found. Please mount the backup disk!"
 
-# -------------------------------------------------------------
-# 2a. echo_msg безопасный (возвращает строку)
-# -------------------------------------------------------------
-echo_msg() {
-    say "$@"
-}
+  [ru_not_supported]="❌ Система %s %s пока не поддерживается"
+  [en_not_supported]="❌ System %s %s is not supported yet"
 
-# -------------------------------------------------------------
-# 3. Логирование
-# -------------------------------------------------------------
-: "${RUN_LOG:=/dev/null}"
+  [ru_not_found_script]="❌ Скрипт %s не найден или не исполняемый!"
+  [en_not_found_script]="❌ Script %s not found or not executable!"
 
-ok() {
-    printf "%b[OK]%b %b\n" \
-        "$GREEN" "$NC" "$(say "$@")" |
-    tee -a "$RUN_LOG"
-}
-info() {
-    printf "%b[INFO]%b %b\n" \
-        "$BLUE" "$NC" "$(say "$@")" |
-    tee -a "$RUN_LOG"
-    return 0
-}
-warn() {
-    printf "%b[WARN]%b %b\n" \
-        "$YELLOW" "$NC" "$(say "$@")" |
-    tee -a "$RUN_LOG" >&2
-    return 0
-}
-error() {
-    printf "%b[ERROR]%b %b\n" \
-        "$RED" "$NC" "$(say "$@")" |
-    tee -a "$RUN_LOG" >&2
-    return 1
-}
-die() {
-    error "$@"
-    exit "${2:-1}"
-}
+  [ru_not_found_archive]="❌ Архив %s не найден!"
+  [en_not_found_archive]="❌ Archive %s not found!"
 
-# -------------------------------------------------------------
-# 5. Авто-поднятие до root через sudo (надёжно)
-# -------------------------------------------------------------
-if [[ $EUID -ne 0 ]]; then
-    if command -v sudo >/dev/null 2>&1; then
-        # Перезапуск скрипта через sudo
-        exec sudo bash "$0" "$@"
-    else
-        echo root_run
-        exit 1
-    fi
-fi
+  [ru_running]="Запуск: "
+  [en_running]="Running: "
 
-# -------------------------------------------------------------
-# 6. Функция require_root для дополнительных проверок
-# -------------------------------------------------------------
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
+  [ru_link_created]="Символическая ссылка создана: ~/Backups"
+  [en_link_created]="Symlink created: ~/Backups"
+
+  [ru_dispatcher_finished]="Dispatcher finished."
+  [en_dispatcher_finished]="Dispatcher finished."
+  
+  [ru_create_simlink]="Создание символической ссылки"
+  [en_create_simlink]="Creating a symbolic link"
+
+  [ru_restore_finished]="Восстановление завершено"
+  [en_restore_finished]="Restore finished"
+
+  [ru_log_file]="Файл лога: "
+  [en_log_file]="Log file: "
+  
+  [ru_not_system]="Не удаётся обнаружить систему (нет /etc/os-release)"
+  [en_not_system]="Cannot detect system (no /etc/os-release)"
+  
+  [ru_dispatcher_started]="Диспетчер запущен"
+  [en_dispatcher_started]="Dispatcher started"
+  
+  [ru_dispatcher_finished]="Диспетчер успешно завершил работу"
+  [en_dispatcher_finished]="Dispatcher finished successfully"
+)
 
 if [[ "${1:-}" == "--help" ]]; then
-    echo_msg usage
-    echo_msg help
+    echo "Usage: $0 [ARCHIVE]"
+    echo "$(say help)"
     echo
     exit 0
 fi
 
-# -------------------------------------------------------------
-# 7. Определение домашнего каталога реального пользователя
-# -------------------------------------------------------------
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
-fi
-
-# -------------------------------------------------------------
-# 8. Настройки
-# -------------------------------------------------------------
+# --- Настройки ---
 BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
 RUN_LOG="$LOG_DIR/restore-dispatch-$(date +%F-%H%M%S).log"
 
 cleanup() {
-   info dispatcher_finished
+   info "$(say dispatcher_finished)"
 }
 trap cleanup EXIT INT TERM
 
-# -------------------------------------------------------------
-# 9. systemd-inhibit (после root!)
-# -------------------------------------------------------------
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
+# --- Проверки ---
+if [ ! -d "$BACKUP_DIR" ]; then
+    error "$(say not_found_dir)"
+    exit 1
 fi
 
-# -------------------------------------------------------------
-# 10. Определяем систему
-# -------------------------------------------------------------
+# --- Определяем систему ---
 if [ -r /etc/os-release ]; then
     source /etc/os-release
     DISTRO="$ID"
     VERSION="$VERSION_ID"
 else
-    error not_system
+    error "$(say not_system)"
     exit 1
 fi
 
-info detect_system "$DISTRO" "$VERSION"
+info "$(say detect_system)" "$DISTRO" "$VERSION"
 
-# -------------------------------------------------------------
-# 11. Определяем целевой restore-скрипт и архив
-# -------------------------------------------------------------
-TARGET="$LIB_DIR/restore-${DISTRO}-${VERSION}.sh"
-ARCHIVE="${1:-$BACKUP_DIR/backup-${DISTRO}-${VERSION}.tar.gz}"
+# --- Определяем скрипт и архив ---
+SCRIPT=""
+ARCHIVE="${1:-}"
 
-# -------------------------------------------------------------
-# 12. Проверки
-# -------------------------------------------------------------
-if [ ! -d "$BACKUP_DIR" ]; then
-    error not_found_dir
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+case "$DISTRO-$VERSION" in
+    ubuntu-24.04)
+        SCRIPT="$REAL_HOME/bin/restore-ubuntu-24.04.sh"
+        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
+        ;;
+    ubuntu-22.04)
+        SCRIPT="$REAL_HOME/bin/restore-ubuntu-22.04.sh"
+        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-22.04.tar.gz}"
+        ;;
+    debian-12)
+        SCRIPT="$REAL_HOME/bin/restore-debian-12.sh"
+        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-debian-12.tar.gz}"
+        ;;
+    *)
+        error "$(say not_supported $DISTRO $VERSION)"
+        exit 1
+        ;;
+esac
+
+# --- Проверки наличия ---
+if [ ! -x "$SCRIPT" ]; then
+    error printf "$(say not_found_script "$SCRIPT")"
     exit 1
 fi
 
-if [[ ! -x "$TARGET" ]]; then
-    error no_script "$DISTRO" "$VERSION" "$TARGET"
+if [ ! -f "$ARCHIVE" ]; then
+    error printf "$(say not_found_archive "$ARCHIVE")"
     exit 1
 fi
 
-# -------------------------------------------------------------
-# 13. Запускаем целевой скрипт
-# -------------------------------------------------------------
-# Первый аргумент — архив
-ARCHIVE="${1:-$BACKUP_DIR/backup-${DISTRO}-${VERSION}.tar.gz}"
+# --- Запуск ---
+info "============================================================="
+info "$(say running)" "$SCRIPT" "$ARCHIVE"
+info "============================================================="
 
-# Второй аргумент — режим (manual/user/full/none)
-MODE="${2:-manual}"  # по умолчанию manual
+{
+    echo "[$(date +%F_%T)] $(say dispatcher_started)"
+    "$SCRIPT" "$ARCHIVE"
+    echo "[$(date +%F_%T)] $(say dispatcher_finished)"
+} 2>&1 | tee -a "$RUN_LOG"
 
-export RESTORE_PACKAGES="$MODE"
-
-exec "$TARGET" "$ARCHIVE"
+info "============================================================="
+ok "$(say restore_finished)"
+info "$(say log_file)" $RUN_LOG
+info "============================================================="
 
 exit 0
-
