@@ -35,22 +35,29 @@ source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
 
-# === Пути и переменные ===
-BASHRC="$HOME/.bashrc"
-PROFILE="$HOME/.profile"
+# --- Определение реального пользователя ---
+if [[ -n "${SUDO_USER:-}" ]]; then
+    REAL_USER="$SUDO_USER"
+else
+    REAL_USER="$(id -un)"
+fi
+
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+
+TARGET_DIR="$REAL_HOME/bin"
+BASHRC="$REAL_HOME/.bashrc"
+PROFILE="$REAL_HOME/.profile"
 EXPORT_LINE='export PATH="$HOME/bin:$PATH"'
 
 ## layout / policy
-TARGET_DIR="$HOME/bin"
 BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
-
 WORKDIR="$BACKUP_DIR/workdir"
 I18N_DIR="$TARGET_DIR/i18n"
 
 # lib privileges
 ## Проверка root
-require_root || return 1
+require_root
 
 # --- Проверка и создание BACKUP_DIR ---
 BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
@@ -85,6 +92,9 @@ DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 info distro_found "$DISTRO_ID" "$DISTRO_VER"
 
 # --- ~/bin ---
+info "Installing for user: $REAL_USER"
+info "Target bin dir: $TARGET_DIR"
+
 mkdir -p "$TARGET_DIR"
 ok  dir_created "$TARGET_DIR"
 
@@ -100,7 +110,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/cleanup.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
+SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/privileges.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/cleanup.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -164,6 +174,11 @@ done
 install_i18n
 install_lib
 
+# --- Исправление владельца пользовательских файлов ---
+info "Fixing ownership of $TARGET_DIR"
+chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
+ok "Ownership set to $REAL_USER:$REAL_USER"
+
 # --- PATH ---
 PATH_ADDED=false
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
@@ -182,7 +197,8 @@ else
 fi
 
 # --- Каталоги ---
-mkdir -p "$WORKDIR" "$LOG_DIR"
+install -d -m 755 -o "$REAL_USER" -g "$REAL_USER" "$WORKDIR"
+install -d -m 755 -o "$REAL_USER" -g "$REAL_USER" "$LOG_DIR"
 ok "Created: $WORKDIR, $LOG_DIR"
 
 check_and_install_deps() {
@@ -278,11 +294,10 @@ info scripts_list
 for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}"; do
     # пропускаем служебные скрипты
     if [[ "$script" == "backup-restore-userdata.sh" || "$script" == "cron-backup-userdata.sh" ]]; then
-        continue
+       continue
     fi
     echo "  - $script"
 done
 
 # --- Завершение ---
-ok "done_ins "$DISTRO_ID $DISTRO_VER"
-
+ok done_ins "$DISTRO_ID $DISTRO_VER"

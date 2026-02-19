@@ -145,7 +145,7 @@ require_root() {
 }
 
 if [[ -n "${REBK_INHIBITED:-}" ]]; then
-    return 0
+    exit 0
 fi
 
 export REBK_INHIBITED=1
@@ -172,7 +172,7 @@ inhibit_run() {
 BACKUP_DIR="/mnt/backups"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
-BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
+BACKUP_NAME="${1:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
 
@@ -222,13 +222,10 @@ restore_packages() {
     case "$mode" in
         manual)
             info packages_manual
-
             if [[ ! -f "$PKG_DIR/manual-packages.list" ]]; then
                 error packages_list_missing "$PKG_DIR/manual-packages.list"
                 return 1
             fi
-
-
             if xargs -a "$PKG_DIR/manual-packages.list" sudo apt install -y \
                 >>"$RUN_LOG" 2>&1; then
                 ok packages_manual_ok
@@ -247,6 +244,20 @@ restore_packages() {
                 exit 1
             fi
             ;;
+        user)
+            info packages_user
+            if [[ -f "$PKG_DIR/user-packages.list" ]]; then
+                if xargs -a "$PKG_DIR/user-packages.list" sudo apt install -y \
+                    >>"$RUN_LOG" 2>&1; then
+                    ok packages_user_ok
+                else
+                    error packages_user_fail
+                    exit 1
+                fi
+            else
+                warn packages_user_missing "$PKG_DIR/user-packages.list"
+            fi
+            ;;
         none)
             warn packages_skip
             ;;
@@ -257,7 +268,10 @@ restore_packages() {
     esac
 }
 
-: "${RESTORE_PACKAGES:=manual}"
+# Для варианта 3 при запуске нужно установить:
+: "${RESTORE_PACKAGES:=manual}"               # default manual
+BACKUP_NAME="${1:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
+
 
 restore_logs() {
     if [ "${RESTORE_LOGS:-false}" = "true" ]; then

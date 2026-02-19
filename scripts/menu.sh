@@ -136,8 +136,8 @@ backup_menu() {
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
         echo "$(say backup_system_full)"
-        echo "$(saybackup_system_manual)"
-        echo "$(saybackup_firefox)"
+        echo "$(say backup_system_manual)"
+        echo "$(say backup_firefox)"
         echo
         echo "$(say userdata)" 
         echo "$(say userdata_backup)"

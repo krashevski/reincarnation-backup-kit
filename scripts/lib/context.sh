@@ -20,9 +20,14 @@ _REBK_CONTEXT_LOADED=1
 # REAL_HOME: домашний каталог RUN_USER
 # -------------------------------------------------------------
 if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+    REAL_USER="$SUDO_USER"
 else
-    REAL_HOME="${HOME:-/home/$USER}"
+    REAL_USER="${USER:-$(whoami)}"
 fi
+
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+
+# fallback, если getent не сработал
+[[ -d "$REAL_HOME" ]] || REAL_HOME="/home/$REAL_USER"
 
 export REAL_HOME

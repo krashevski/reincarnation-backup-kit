@@ -205,6 +205,14 @@ fi
 # -------------------------------------------------------------
 # 13. Запускаем целевой скрипт
 # -------------------------------------------------------------
+# Первый аргумент — архив
+ARCHIVE="${1:-$BACKUP_DIR/backup-${DISTRO}-${VERSION}.tar.gz}"
+
+# Второй аргумент — режим (manual/user/full/none)
+MODE="${2:-manual}"  # по умолчанию manual
+
+export RESTORE_PACKAGES="$MODE"
+
 exec "$TARGET" "$ARCHIVE"
 
 exit 0

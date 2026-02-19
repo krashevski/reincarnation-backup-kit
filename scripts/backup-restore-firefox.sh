@@ -19,6 +19,9 @@
 
 set -euo pipefail
 
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+
 # Стандартная библиотека REBK
 # --- Определяем BIN_DIR относительно скрипта ---
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,11 +41,34 @@ source "$LIB_DIR/guards-firefox.sh"
 # Firefox backup / restore (REBK)
 # -------------------------------------------------------------
 
-BACKUP_ROOT="$HOME/backups/REBK/firefox"
+BACKUP_ROOT="$REAL_HOME/backups/REBK/firefox"
 PROFILE_BACKUP_DIR="$BACKUP_ROOT/profile"
 
-FIREFOX_BASE="$HOME/snap/firefox/common/.mozilla/firefox"
+detect_firefox_base() {
+    local paths=(
+        "$REAL_HOME/snap/firefox/common/.mozilla/firefox"
+        "$REAL_HOME/.mozilla/firefox"
+        "$REAL_HOME/.var/app/org.mozilla.firefox/.mozilla/firefox"
+    )
+
+    for p in "${paths[@]}"; do
+        if [[ -f "$p/profiles.ini" ]]; then
+            echo "$p"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+FIREFOX_BASE="$(detect_firefox_base)" || {
+    error msg_firefox_not_ini
+    read -rp "$(echo_msg menu_firefox_return)"
+    exit 0
+}
+
 PROFILES_INI="$FIREFOX_BASE/profiles.ini"
+
 
 DATE_TAG="$(date +%Y-%m)"
 ARCHIVE_NAME="firefox-profile-$DATE_TAG.tar.gz"
