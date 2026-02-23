@@ -25,6 +25,32 @@ source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
 
+# --- Проверка root только для команд, где нужны права ---
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error run_sudo
+        return 1
+    fi
+}
+
+REAL_HOME="${HOME:-/home/$USER}"
+if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    REAL_HOME="/home/$SUDO_USER"
+fi
+
+REAL_USER="${SUDO_USER:-$USER}"
+
+# --- Inhibit recursion via systemd-inhibit ---
+if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
+    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
+        export INHIBIT_LOCK=1
+        exec systemd-inhibit \
+            --what=handle-lid-switch:sleep:idle \
+            --why="Backup in progress" \
+            "$0" "$@"
+    fi
+fi
+
 # --- Пути к скриптам ---
 BIN_DIR="$REAL_HOME/bin"
 SYS_BACKUP="$BIN_DIR/backup-system.sh"
@@ -308,7 +334,7 @@ tools_menu() {
     echo "-----------------------------------------"
     read -rp "$(say sel_opt)" choice
     case "$choice" in
-        1) "$LAST_ARCHIVE" --list "$USER";;
+        1) "$LAST_ARCHIVE" --list "$REAL_USER";;
         2) "$SYSTEM_MOUNTS" ;;
         3) "$HDD_SETUP" ;;
         4) "$SEIUP_SYMLINKS" ;;
