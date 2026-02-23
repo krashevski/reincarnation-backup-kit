@@ -258,7 +258,7 @@ if echo "$root_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$root_cron" | grep -
   update_crontab_from_var "root" "$new_root_cron"
 
   echo "-----"
-  ecdho_msg after
+  echo_msg after
   if [[ $EUID -eq 0 ]]; then
     crontab -l 2>/dev/null || echo "(empty)"
   else
