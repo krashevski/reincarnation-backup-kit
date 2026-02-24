@@ -318,7 +318,7 @@ tools_menu() {
     echo "$(say menu_tools)"
     echo "-----------------------------------------"
     echo "$(say menu_archive)"
-    echo "$(say last_archive)"
+    echo "$(say menu_last_archive)"
     echo
     echo "$(say menu_system)"
     echo "$(say system_mounts)"

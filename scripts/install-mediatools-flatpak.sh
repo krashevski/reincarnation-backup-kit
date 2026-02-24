@@ -13,88 +13,44 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
 :<<'DOC'
-=============================================================
-install_mediatools_flatpak.sh v1.1 — Multimedia Environment Installer
+install_mediatools_flatpak.sh — multimedia environment installer
 Ubuntu 24.04: Shotcut, GIMP+G'MIC, Krita, Audacity
 Auto-check NVIDIA GPU, CUDA, NVENC, OpenGL, Proxy, Presets
-Author: Vladislav Krashevsky
-=============================================================
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 DOC
 
 set -euo pipefail
 
-# === Двуязычные сообщения ===
-declare -A MSG=(
-  [ru_start]="Старт установки мультимедиа среды"
-  [en_start]="Starting multimedia environment installation"
+# Стандартная библиотека REBK
+# --- Определяем BIN_DIR относительно скрипта ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Путь к библиотекам всегда относительно BIN_DIR
+LIB_DIR="$BIN_DIR/lib"
 
-  [ru_nvidia_detected]="NVIDIA GPU обнаружена."
-  [en_nvidia_detected]="NVIDIA GPU detected."
+# source "$(dirname "$0")/lib/init.sh"
 
-  [ru_nvidia_driver_install]="Драйвер NVIDIA не установлен, устанавливаем..."
-  [en_nvidia_driver_install]="NVIDIA driver not installed, installing..."
+source "$LIB_DIR/i18n.sh"
+init_app_lang
 
-  [ru_nvidia_driver_ok]="Драйвер NVIDIA работает."
-  [en_nvidia_driver_ok]="NVIDIA driver is working."
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
 
-  [ru_cuda_found]="CUDA Toolkit найден."
-  [en_cuda_found]="CUDA Toolkit found."
-
-  [ru_cuda_install]="CUDA Toolkit не найден. Устанавливаем..."
-  [en_cuda_install]="CUDA Toolkit not found. Installing..."
-
-  [ru_cuda_ok]="CUDA Toolkit успешно установлен."
-  [en_cuda_ok]="CUDA Toolkit successfully installed."
-
-  [ru_cuda_fail]="Не удалось установить CUDA Toolkit."
-  [en_cuda_fail]="Failed to install CUDA Toolkit."
-
-  [ru_no_nvidia]="NVIDIA GPU не обнаружена."
-  [en_no_nvidia]="NVIDIA GPU not detected."
-
-  [ru_flatpak_install]="Flatpak не найден, устанавливаем..."
-  [en_flatpak_install]="Flatpak not found, installing..."
-
-  [ru_flathub_add]="Добавляем Flathub репозиторий..."
-  [en_flathub_add]="Adding Flathub repository..."
-
-  [ru_symlinks]="Символические ссылки созданы"
-  [en_symlinks]="Symlinks created"
-
-  [ru_presets_created]="Пресеты Shotcut созданы."
-  [en_presets_created]="Shotcut presets created."
-
-  [ru_nvenc"]="NVENC доступен: 4K будет через GPU."
-  [en_nvenc"]="NVENC available: 4K will use GPU."
-
-  [ru_no_nvenc]="NVENC недоступен: 4K будет через CPU."
-  [en_no_nvenc]="NVENC unavailable: 4K will use CPU."
-
-  [ru_opengl_ok]="OpenGL GPU доступен."
-  [en_opengl_ok]="OpenGL GPU available."
-
-  [ru_opengl_fail]="OpenGL GPU недоступен внутри Flatpak."
-  [en_opengl_fail]="OpenGL GPU not available inside Flatpak."
-
-  [ru_finished]="Установка и настройка завершены!"
-  [en_finished]="Installation and configuration completed!"
-)
-
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}" "${2:-}"; }
-
-# === Цвета ===
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; YELLOW="\033[1;33m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
-
-# --- systemd-inhibit ---
-if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-    export INHIBIT_LOCK=1
-    exec systemd-inhibit --what=handle-lid-switch:sleep:idle --why="$(say start)" "$0" "$@"
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
+
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
+fi
+
+require_root || return 1
+inhibit_run "$0" "$@"
 
 # --- Настройки ---
 BACKUP_DIR="/mnt/backups"
@@ -103,51 +59,51 @@ LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 LOG_FILE="$LOG_DIR/install_mediatools.log"
 
-echo "[`date`] $(say start)" > "$LOG_FILE"
+echo "[`date`] flatpak_start" > "$LOG_FILE"
 
 # ----------------- Шаг 0: NVIDIA GPU и CUDA -----------------
 GPU_AVAILABLE=false
 NVENC_AVAILABLE=false
 
 if lspci | grep -i nvidia &>/dev/null; then
-    info "$(say nvidia_detected)" | tee -a "$LOG_FILE"
+    info flatpak_nvidia_detected | tee -a "$LOG_FILE"
     if ! command -v nvidia-smi &>/dev/null; then
-        info "$(say nvidia_driver_install)" | tee -a "$LOG_FILE"
+        info flatpak_nvidia_driver_install | tee -a "$LOG_FILE"
         sudo ubuntu-drivers autoinstall
     fi
     if nvidia-smi &>/dev/null; then
-        ok "$(say nvidia_driver_ok)" | tee -a "$LOG_FILE"
+        ok flatpak_nvidia_driver_ok | tee -a "$LOG_FILE"
         if command -v nvcc &>/dev/null; then
-            ok "$(say cuda_found)" | tee -a "$LOG_FILE"
+            ok flatpak_cuda_found | tee -a "$LOG_FILE"
             GPU_AVAILABLE=true
         else
-            warn "$(say cuda_install)" | tee -a "$LOG_FILE"
+            warn flatpak_cuda_install | tee -a "$LOG_FILE"
             sudo apt update
             sudo apt install -y nvidia-cuda-toolkit
             if command -v nvcc &>/dev/null; then
-                ok "$(say cuda_ok)" | tee -a "$LOG_FILE"
+                ok flatpak_cuda_ok | tee -a "$LOG_FILE"
                 GPU_AVAILABLE=true
             else
-                error "$(say cuda_fail)" | tee -a "$LOG_FILE"
+                error flatpak_cuda_fail | tee -a "$LOG_FILE"
             fi
         fi
     else
-        warn "NVIDIA driver not working" | tee -a "$LOG_FILE"
+        warn flatpak_driver_not | tee -a "$LOG_FILE"
     fi
 else
-    info "$(say no_nvidia)" | tee -a "$LOG_FILE"
+    info flatpak_no_nvidia | tee -a "$LOG_FILE"
 fi
 
 # ----------------- Шаг 1: Flatpak -----------------
 if ! command -v flatpak &>/dev/null; then
-    info "$(say flatpak_install)" | tee -a "$LOG_FILE"
+    info flatpak_install | tee -a "$LOG_FILE"
     sudo apt update
     sudo apt install -y flatpak
 fi
 
 # ----------------- Шаг 2: Flathub -----------------
 if ! flatpak remotes | grep -q flathub; then
-    info "$(say flathub_add)" | tee -a "$LOG_FILE"
+    info flatpak_flathub_add | tee -a "$LOG_FILE"
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 fi
 
@@ -164,7 +120,7 @@ ln -sfn /mnt/shotcut "$HOME/shotcut"
 ln -sfn /mnt/storage/Видео "$HOME/Видео"
 ln -sfn /mnt/storage/Музыка "$HOME/Музыка"
 ln -sfn /mnt/storage/Изображения "$HOME/Изображения"
-ok "$(say symlinks)" | tee -a "$LOG_FILE"
+ok flatpak_symlinks | tee -a "$LOG_FILE"
 
 # Proxy и Preview
 SHOTCUT_SETTINGS_DIR="$HOME/.config/Shotcut"
@@ -181,11 +137,11 @@ path=/mnt/shotcut
 [Preview]
 scale=50
 EOF
-ok "Proxy и Preview Scaling включены." | tee -a "$LOG_FILE"
+ok flatpak_proxy_enabled | tee -a "$LOG_FILE"
 
 # ----------------- Шаг 5: GPU/NVENC для Flatpak -----------------
 if $GPU_AVAILABLE; then
-    info "Пропуск GPU в Flatpak Shotcut..." | tee -a "$LOG_FILE"
+    info flatpak_gpu_bypass | tee -a "$LOG_FILE"
     flatpak override --user --device=all org.shotcut.Shotcut
     flatpak run --command=ffmpeg org.shotcut.Shotcut -hide_banner -encoders | grep nvenc && NVENC_AVAILABLE=true
 fi
@@ -197,11 +153,11 @@ mkdir -p "$SHOTCUT_PRESET_DIR"
 if $NVENC_AVAILABLE; then
     CODEC_4K="h264_nvenc"
     RESOURCE_4K="GPU"
-    ok "$(say nvenc)" | tee -a "$LOG_FILE"
+    ok flatpak_nvenc | tee -a "$LOG_FILE"
 else
     CODEC_4K="libx264"
     RESOURCE_4K="CPU"
-    warn "$(say no_nvenc)" | tee -a "$LOG_FILE"
+    warn flatpak_no_nvenc | tee -a "$LOG_FILE"
 fi
 
 cat > "$SHOTCUT_PRESET_DIR/4K_export.sml" <<EOF
@@ -238,15 +194,14 @@ cat > "$SHOTCUT_PRESET_DIR/FullHD_CPU_HQ_export.sml" <<'EOF'
   </producer>
 </mlt>
 EOF
-ok "$(say presets_created)" | tee -a "$LOG_FILE"
+ok flatpak_presets_created | tee -a "$LOG_FILE"
 
 # ----------------- Шаг 7: OpenGL -----------------
-info "Проверка OpenGL внутри Flatpak Shotcut..." | tee -a "$LOG_FILE"
+info flatpak_check_opengl | tee -a "$LOG_FILE"
 if flatpak run --command=glxinfo org.shotcut.Shotcut 2>/dev/null | grep -i "OpenGL renderer" &>/dev/null; then
-    ok "$(say opengl_ok)" | tee -a "$LOG_FILE"
+    ok flatpak_opengl_ok | tee -a "$LOG_FILE"
 else
-    warn "$(say opengl_fail)" | tee -a "$LOG_FILE"
+    warn flatpak_opengl_fail | tee -a "$LOG_FILE"
 fi
 
-echo "=== ✅ $(say finished) ===" | tee -a "$LOG_FILE"
-
+info flatpak_finished | tee -a "$LOG_FILE"

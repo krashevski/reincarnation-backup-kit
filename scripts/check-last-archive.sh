@@ -14,54 +14,49 @@
 # =============================================================
 :<<'DOC'
 =============================================================
-check-last-archive.sh v1.3 — Проверка tar-бэкапов пользователя / Check user tar backups
-Part of Backup Kit — minimal restore utility
-Author: Vladislav
+check-last-archive.sh — check user tar backups
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 =============================================================
 DOC
 
 set -euo pipefail
 
-# === Двуязычные сообщения ===
-declare -A MSG=(
-  [ru_usage]="Использование: $0 [--list] <имя_пользователя>"
-  [en_usage]="Usage: $0 [--list] <username>"
+# Стандартная библиотека REBK
+# --- Определяем BIN_DIR относительно скрипта ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Путь к библиотекам всегда относительно BIN_DIR
+LIB_DIR="$BIN_DIR/lib"
 
-  [ru_no_archives]="❌ Нет архивов для пользователя: "
-  [en_no_archives]="❌ No archives found for user: "
+# source "$(dirname "$0")/lib/init.sh"
 
-  [ru_all_archives]="📂 Все архивы для пользователя (новые сверху):"
-  [en_all_archives]="📂 All archives for user (newest first):"
+source "$LIB_DIR/i18n.sh"
+init_app_lang
 
-  [ru_last_archive]="✅ Последний архив для пользователя: "
-  [en_last_archive]="✅ Latest archive for user: "
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
 
-  [ru_file]="   Файл : "
-  [en_file]="   File : "
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
+fi
 
-  [ru_date]="   Дата : "
-  [en_date]="   Date : "
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
+fi
 
-  [ru_size]="   Размер: "
-  [en_size]="   Size: "
-)
-
-# === Выбор языка ===
-L=${LANG_CHOICE:-ru}
-say() { echo -e "${MSG[${L}_$1]}${2:-}"; }
-
-# --- Цвета ---
-RED="\033[0;31m"; GREEN="\033[0;32m"; BLUE="\033[0;34m"; NC="\033[0m"
-ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-error() { echo -e "${RED}[ERROR]${NC} $*"; }
+require_root || return 1
 
 # === Директории ===
 BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
 ARCHIVE_DIR="$BACKUP_DIR/br_workdir/tar_archive"
 
 usage() {
-    say usage
+    say last_usage
     exit 1
 }
 
@@ -84,12 +79,12 @@ files=( "$ARCHIVE_DIR/${USER}"_*.tar.gz )
 shopt -u nullglob
 
 if [[ ${#files[@]} -eq 0 ]]; then
-    error "$(say no_archives "$USER")"
+    error last_no_archives "$USER"
     exit 1
 fi
 
 if [[ $LIST_MODE -eq 1 ]]; then
-    info "$(say all_archives)"
+    info last_all_archives
     # Список архивов с датой и размером
     ls -t "${files[@]}" | while read -r f; do
         size=$(du -h "$f" | cut -f1)
@@ -101,10 +96,10 @@ else
     size=$(du -h "$latest" | cut -f1)
     mtime=$(stat -c %y "$latest" | cut -d. -f1)
 
-    ok "$(say last_archive "$USER")"
-    echo "$(say file)$latest"
-    echo "$(say date)$mtime"
-    echo "$(say size)$size"
+    ok last_archive "$USER"
+    echo_msg last_file $latest
+    echo_msg last_date $mtime
+    echo_msg last_size $size
 fi
 
 exit 0
