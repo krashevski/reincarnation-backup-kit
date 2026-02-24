@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================
-# /lib/cleanup.sh - библиотека только функции
+# /scripts/lib/cleanup.sh - 
 # -------------------------------------------------------------
 # использование cleanup.sh
 :<<'DOC'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$SCRIPT_DIR/lib"
-WORKDIR="/tmp/my_workdir"
 
 source "$LIB_DIR/cleanup.sh"
 
@@ -27,6 +26,11 @@ mkdir -p "$WORKDIR"
 echo "Работаем с $WORKDIR..."
 DOC
 # =============================================================
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR"
+
+source "$LIB_DIR/fs_utils.sh"
 
 register_cleanup() {
     local workdir="$1"

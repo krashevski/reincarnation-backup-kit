@@ -12,26 +12,39 @@
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-# backup-restore-firefox.sh - 
-# Reincarnation Backup Kit — Text Menu Interface (draft)
-# MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
-# =============================================================
+:<<'DOC'
+backup-restore-firefox.sh - 
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
+DOC
 
 set -euo pipefail
 
-REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
-
-# Стандартная библиотека REBK
-# --- Определяем BIN_DIR относительно скрипта ---
+# --- Пути к библиотекам ---
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Путь к библиотекам всегда относительно BIN_DIR
 LIB_DIR="$BIN_DIR/lib"
 
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
 source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/system_detect.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
+fi
+
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
+fi
+
+require_root || return 1
 # inhibit_run "$0" "$@"
 
 # Библиотека Firefox
@@ -41,7 +54,11 @@ source "$LIB_DIR/guards-firefox.sh"
 # Firefox backup / restore (REBK)
 # -------------------------------------------------------------
 
-BACKUP_ROOT="$REAL_HOME/backups/REBK/firefox"
+if ! USER_HOME="$(resolve_target_home)"; then
+    die "Cannot determine user home"
+fi
+
+BACKUP_ROOT="$USER_HOME/backups/REBK/firefox"
 PROFILE_BACKUP_DIR="$BACKUP_ROOT/profile"
 
 detect_firefox_base() {

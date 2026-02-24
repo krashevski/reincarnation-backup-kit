@@ -12,47 +12,43 @@
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-# menu.sh
-# Reincarnation Backup Kit — Text Menu Interface (draft)
-# MIT License — Copyright (c) 2025 Vladislav Krashevsky support ChatGPT
-# =============================================================
+:<<'DOC'
+menu.sh — text menu interface
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
+DOC
 
-set -euo pipefail
+[[ -t 0 ]] || exec </dev/tty
+set -uo pipefail  # НЕ ставим -e
 
-source "$(dirname "$0")/lib/init.sh"
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR/lib"
+
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
 source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
-source "$LIB_DIR/guards-inhibit.sh"
 
-# --- Проверка root только для команд, где нужны права ---
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-REAL_USER="${SUDO_USER:-$USER}"
-
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
 fi
+
+# root / inhibit здесь не используем
+# require_root || return 1
+# inhibit_run "$0" "$@"
 
 # --- Пути к скриптам ---
-BIN_DIR="$REAL_HOME/bin"
+BIN_DIR="$TARGET_HOME/bin"
 SYS_BACKUP="$BIN_DIR/backup-system.sh"
 FIREFOX_BACKUP_RESTORE="$BIN_DIR/backup-restore-firefox.sh"
 USER_BACKUP="$BIN_DIR/backup-userdata.sh"
@@ -163,9 +159,9 @@ backup_menu() {
         info system "$DISTRO_ID $DISTRO_VER"
         echo "$(say backup_system_full)"
         echo "$(say backup_system_manual)"
-        echo "$(say backup_firefox)"
         echo
         echo "$(say userdata)" 
+        echo "$(say backup_firefox)"
         echo "$(say userdata_backup)"
         echo "$(say full_backup)"
         echo
@@ -177,8 +173,7 @@ backup_menu() {
             2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
             3)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
-                   source "$FIREFOX_BACKUP_RESTORE"
-                   backup_firefox_profile
+                    "$FIREFOX_BACKUP_RESTORE"  # запускаем отдельным процессом
                else
                    error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
                fi
@@ -204,9 +199,10 @@ restore_menu() {
         echo
         echo "$(say menu_recover_acconts)"     # Restore user accounts
         echo "$(say restore_system_full)"      # Incremental restore of system packages
-        echo "$(say restore_system_manual)"    # Manual restore of system
-        echo "$(say restore_firefox)"          # Restore Firefox profile
+        echo "$(say restore_system_manual)"    # Manual restore of system       
         echo
+        echo "$(say userdata)" 
+        echo "$(say restore_firefox)"          # Restore Firefox profile
         echo "$(say restore_userdata)"         # Restore userdata
         echo
         echo "$(say back_main)"                # Back to main menu
@@ -222,8 +218,7 @@ restore_menu() {
             3) bash "$SYS_RESTORE" manual ;;       # ручной режим
             4)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
-                   source "$FIREFOX_BACKUP_RESTORE"
-                   restore_firefox_profile
+                    "$FIREFOX_BACKUP_RESTORE"  # запускаем отдельным процессом
                else
                    error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
                fi

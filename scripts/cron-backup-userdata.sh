@@ -14,11 +14,10 @@
 # =============================================================
 :<<'DOC'
 =============================================================
-cron-backup-userdata.sh v1.0 — Backup Kit for cron
+cron-backup-userdata.sh — for cron
 Reincarnation Backup Kit — MIT License
 Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 -------------------------------------------------------------
-Dual language (RU/EN) cron backup script for user data
 Uses rsync for fast mirror backup + tar for archiving changed files
 Automatically checks disk space and calls clean-backup-logs.sh
 =============================================================
@@ -26,158 +25,34 @@ DOC
 
 set -euo pipefail
 
-# -------------------------------------------------------------
-# Colors (safe for set -u)
-# -------------------------------------------------------------
-if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
-    RED="\033[0;31m"
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[0;34m"
-    NC="\033[0m"
-else
-    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+# Стандартная библиотека REBK
+# --- Определяем BIN_DIR относительно скрипта ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Путь к библиотекам всегда относительно BIN_DIR
+LIB_DIR="$BIN_DIR/lib"
+
+# source "$(dirname "$0")/lib/init.sh"
+
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-
-# -------------------------------------------------------------
-# 1. Определяем директорию скрипта
-# -------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# -------------------------------------------------------------
-# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
-# -------------------------------------------------------------
-declare -A MSG
-
-# -------------------------------------------------------------
-# 3. Функция загрузки сообщений
-# -------------------------------------------------------------
-load_messages() {
-    local lang="$1"
-    # очищаем предыдущие ключи
-    MSG=()
-
-    case "$lang" in
-        ru)
-            source "$SCRIPT_DIR/i18n/messages_ru.sh"
-            ;;
-        en)
-            source "$SCRIPT_DIR/i18n/messages_en.sh"
-            ;;
-        *)
-            echo "Unknown language: $lang" >&2
-            return 1
-            ;;
-    esac
-}
-
-# -------------------------------------------------------------
-# 4. Безопасный say
-# -------------------------------------------------------------
-say() {
-    local key="$1"; shift
-    local msg="${MSG[${key}]:-$key}"
-
-    if [[ $# -gt 0 ]]; then
-        printf "$msg\n" "$@"
-    else
-        printf '%s\n' "$msg"
-    fi
-}
-
-
-# -------------------------------------------------------------
-# 5. Kjuuth ok
-# -------------------------------------------------------------
-ok() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[OK]%b %b\n" \
-        "${GREEN:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")"
-}
-
-
-# -------------------------------------------------------------
-# 6. Функция info для логирования
-# -------------------------------------------------------------
-info() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[INFO]%b %b\n" \
-        "${BLUE:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 7. Функция warn для логирования
-# -------------------------------------------------------------
-warn() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[WARN]%b %b\n" \
-        "${YELLOW:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-# -------------------------------------------------------------
-# 8. Функция error для логирования
-# -------------------------------------------------------------
-error() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[ERROR]%b %b\n" \
-        "${RED:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 9. Функция echo_echo_msg для логирования
-# -------------------------------------------------------------
-echo_msg() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b\n" "$(printf "$fmt" "$@")"
-}
-
-# -------------------------------------------------------------
-# 10. Функция die для логирования
-# -------------------------------------------------------------
-die() {
-    error "$@"
-    exit 1
-}
-
-# -------------------------------------------------------------
-# 11. Устанавливаем язык по умолчанию и загружаем переводы
-# -------------------------------------------------------------
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
-
-# --- Проверка root только для команд, где нужны права ---
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
 fi
+
+require_root || return 1
 
 # --- Paths ---
 CURRENT_USER="${SUDO_USER:-$USER}"
@@ -263,4 +138,3 @@ run_backup() {
 run_backup "$TARGET_USER"
 
 exit 0
-

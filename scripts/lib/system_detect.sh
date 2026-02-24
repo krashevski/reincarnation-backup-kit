@@ -5,18 +5,23 @@
 # System detection library
 # -------------------------------------------------------------
 # Использование system_detect.sh
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
-#
+:<<'DOC'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/lib"
+
 # --- Libraries ---
-# source "$LIB_DIR/system_detect.sh"
+source "$LIB_DIR/system_detect.sh"
 
 # --- Detect system ---
-# detect_system || exit 1
-#
+detect_system || exit 1
+
 # Пример:
-# info system "$DISTRO_ID $DISTRO_VER"
+info system "$DISTRO_ID $DISTRO_VER"
+DOC
 # =============================================================
+
+DISTRO_ID=""
+DISTRO_VER=""
 
 detect_system() {
     if [[ -r /etc/os-release ]]; then

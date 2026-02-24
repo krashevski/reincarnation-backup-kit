@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
@@ -13,11 +13,9 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # ============================================================= 
 :<<'DOC'
-=============================================================
-install.sh v3.0 — универсальный установщик Backup Kit (RU/EN)
+install.sh — универсальный установщик Backup Kit (RU/EN)
 Reincarnation Backup Kit — MIT License
 Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
-=============================================================
 DOC
 
 set -euo pipefail
@@ -28,25 +26,35 @@ BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Путь к библиотекам всегда относительно BIN_DIR
 LIB_DIR="$BIN_DIR/lib"
 
-source "$LIB_DIR/logging.sh"
-source "$LIB_DIR/safety.sh"
-source "$LIB_DIR/cleanup.sh"
-source "$LIB_DIR/privileges.sh"
-source "$LIB_DIR/context.sh"
-source "$LIB_DIR/guards-inhibit.sh"
+# source "$(dirname "$0")/lib/init.sh"
 
-# --- Определение реального пользователя ---
-if [[ -n "${SUDO_USER:-}" ]]; then
-    REAL_USER="$SUDO_USER"
-else
-    REAL_USER="$(id -un)"
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
+fi
 
-TARGET_DIR="$REAL_HOME/bin"
-BASHRC="$REAL_HOME/.bashrc"
-PROFILE="$REAL_HOME/.profile"
+require_root || return 1
+
+# inhibit_run "$0" "$@"
+
+TARGET_DIR="$TARGET_HOME/bin"
+BASHRC="$TARGET_HOME/.bashrc"
+PROFILE="$TARGET_HOME/.profile"
+
 EXPORT_LINE='export PATH="$HOME/bin:$PATH"'
 
 ## layout / policy
@@ -54,10 +62,6 @@ BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
 WORKDIR="$BACKUP_DIR/workdir"
 I18N_DIR="$TARGET_DIR/i18n"
-
-# lib privileges
-## Проверка root
-require_root
 
 # --- Проверка и создание BACKUP_DIR ---
 BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
@@ -72,8 +76,6 @@ fi
 
 ## --- Исправление прав (кроме REBK_CHOWN_EXCLUDES) ---
 fix_backup_dir_permissions "$BACKUP_DIR"
-
-# inhibit_run "$0" "$@"
 
 # --- Очистка WORKDIR ---
 # Регистрируем $WORKDIR и устанавливаем trap
@@ -110,7 +112,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/deps.sh" "lib/guards-inhibit.sh" "lib/logging.sh" "lib/init.sh" "lib/privileges.sh" "lib/context.sh" "lib/i18n.sh" "lib/guards-firefox.sh" "lib/cleanup.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh" "lib/user_home.sh")
+SCRIPTS_LIB=("lib/i18n.sh" "lib/logging.sh" "lib/user_home.sh" "lib/real_user.sh" "lib/privileges.sh" "lib/context.sh" "lib/guards-inhibit.sh" "lib/cleanup.sh" "lib/fs_utils.sh" "lib/system_detect.sh" "lib/init.sh" "lib/guards-firefox.sh" "lib/deps.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -280,10 +282,11 @@ fi
 # --- Проверка ошибок ---
 if [[ ${ERROR_COUNT:-0} -eq 0 ]]; then
     # Запуск текстового меню Reincarnation Backup Kit
-    if [[ -x "$REAL_HOME/bin/menu.sh" ]]; then
+    if [[ -x "$TARGET_HOME/bin/menu.sh" ]]; then
         echo -e "${MSG[text_menu]}"
         # Запуск меню от текущего пользователя
-        exec "$REAL_HOME/bin/menu.sh"
+        "$TARGET_HOME/bin/menu.sh"
+        exit 0
     else
         echo -e "${MSG[menu_not]}"
     fi

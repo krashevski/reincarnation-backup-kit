@@ -2,21 +2,24 @@
 # =============================================================
 # /scripts/lib/user_home.sh — правило определения целевого домашнего каталога пользователя
 # -------------------------------------------------------------
-# Использование cuser_home.sh
-# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# LIB_DIR="$SCRIPT_DIR/lib"
+# Использование user_home.sh
+:<<'DOC'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/lib"
 #
-# source "$LIB_DIR/logging.sh"
-# source "$LIB_DIR/cleanup.sh"
-#
-# if ! TARGET_HOME="$(resolve_target_home)"; then
-#    exit 1
-# fi
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/cleanup.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    exit 1
+fi
+DOC
 # =============================================================
 
 # -------------------------------------------------------------
 # Правило определения целевого домашнего каталога пользователя
 # -------------------------------------------------------------
+
 resolve_target_home() {
     local target_home
 

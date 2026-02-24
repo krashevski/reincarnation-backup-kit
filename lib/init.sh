@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================
-# REBKJ/lib/init.sh — единый файл инициализации общих скриптов для REBK
+# REBK/lib/init.sh — единый файл инициализации общих скриптов для REBK
 # -------------------------------------------------------------
 # Использование init.sh
 :<<'DOC'
 source "$(dirname "$0")/lib/init.sh"
 DOC
+# =============================================================
 
 # 1. Защита от повторной инициализации
 [[ -n "${_GITSEC_INIT_LOADED:-}" ]] && return 0
@@ -28,16 +29,17 @@ BIN_DIR="$BASE_DIR/bin"
 STATE_DIR="$BASE_DIR/state"
 LOGS_DIR="$BASE_DIR/logs"
 RUN_LOG="$LOGS_DIR/lib/git-security.log"
-LIB_DIR="$SHARED_LIB"
+LIB_DIR="$SHARED_LIB/lib"
 export BASE_DIR BIN_DIR STATE_DIR LOGS_DIR RUN_LOG LIB_DIR
 
 # 4. Базовые библиотеки
-source "$LIB_DIR/lib/user_home.sh"
-source "$LIB_DIR/logging.sh"
-source "$LIB_DIR/safety.sh"
-source "$LIB_DIR/privileges.sh"
-source "$LIB_DIR/context.sh"
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
 source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/safety.sh"
 
 # 5. Общие traps (если нужно)
 # source "$LIB_DIR/cleanup.sh"

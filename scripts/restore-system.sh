@@ -22,78 +22,61 @@ DOC
 
 set -euo pipefail
 
-# Стандартная библиотека REBK
-# --- Определяем BIN_DIR относительно скрипта ---
+# --- Пути к библиотекам ---
 BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Путь к библиотекам всегда относительно BIN_DIR
 LIB_DIR="$BIN_DIR/lib"
 
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
 source "$LIB_DIR/logging.sh"
-source "$LIB_DIR/safety.sh"
-source "$LIB_DIR/cleanup.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/system_detect.sh"
 
-if [[ "${1:-}" == "--help" ]]; then
-    echo "Usage: $0 [ARCHIVE]"
-    echo restore_help
-    echo
-    exit 0
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-# --- Настройки ---
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
+fi
+
+require_root || return 1
+# inhibit_run "$0" "$@"
+
+# --- Detect system ---
+detect_system || exit 1
+# echo "[DEBUG] DISTRO_ID=$DISTRO_ID, DISTRO_VER=$DISTRO_VER"
+
+## layout / policy
 BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
-RUN_LOG="$LOG_DIR/restore-dispatch-$(date +%F-%H%M%S).log"
-
-cleanup() {
-   info dispatcher_finished
-}
-trap cleanup EXIT INT TERM
-
-# --- Проверки ---
-if [ ! -d "$BACKUP_DIR" ]; then
-    error not_found_dir
-    exit 1
-fi
-
-# --- Определяем систему ---
-if [ -r /etc/os-release ]; then
-    source /etc/os-release
-    DISTRO="$ID"
-    VERSION="$VERSION_ID"
-else
-    error not_system
-    exit 1
-fi
-
-info "$(say detect_system)" "$DISTRO" "$VERSION"
+WORKDIR="$BACKUP_DIR/workdir"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
 ARCHIVE="${1:-}"
 
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
-fi
-
-case "$DISTRO-$VERSION" in
+case "$DISTRO_ID-$DISTRO_VER" in
     ubuntu-24.04)
-        SCRIPT="$REAL_HOME/bin/restore-ubuntu-24.04.sh"
+        SCRIPT="$TARGET_HOME/bin/restore-ubuntu-24.04.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
         ;;
     ubuntu-22.04)
-        SCRIPT="$REAL_HOME/bin/restore-ubuntu-22.04.sh"
+        SCRIPT="$TARGET_HOME/bin/restore-ubuntu-22.04.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-22.04.tar.gz}"
         ;;
     debian-12)
-        SCRIPT="$REAL_HOME/bin/restore-debian-12.sh"
+        SCRIPT="$TARGET_HOME/bin/restore-debian-12.sh"
         ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-debian-12.tar.gz}"
         ;;
     *)
-        error not_supported "$DISTRO" "$VERSION"
+        error not_supported "$DISTRO_ID" "$DISTRO_VER"
         exit 1
         ;;
 esac

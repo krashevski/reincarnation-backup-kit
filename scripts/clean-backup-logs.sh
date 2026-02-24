@@ -13,32 +13,32 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
 :<<'DOC'
-=============================================================
-clean-backup-logs.sh — Remove old logs
+clean-backup-logs.sh — remove old logs
 Reincarnation Backup Kit — MIT License
 Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
-=============================================================
 DOC
 
-LANG_CODE="en"
-[[ "${LANG:-}" == ru* ]] && LANG_CODE="ru"
+# Стандартная библиотека REBK
+# --- Определяем BIN_DIR относительно скрипта ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Путь к библиотекам всегда относительно BIN_DIR
+LIB_DIR="$BIN_DIR/lib"
 
-declare -A MSG_RU MSG_EN
-MSG_RU=(
-  [removing]="Удаляем логи старше %s дней..."
-  [done]="Очистка логов завершена."
-)
-MSG_EN=(
-  [removing]="Removing logs older than %s days..."
-  [done]="Log cleanup complete."
-)
-msg() { case "$LANG_CODE" in ru) printf "${MSG_RU[$1]}\n" "${@:2}" ;; en) printf "${MSG_EN[$1]}\n" "${@:2}" ;; esac; }
+# source "$(dirname "$0")/lib/init.sh"
+
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"       # error / die
+source "$LIB_DIR/user_home.sh"     # resolve_target_home
+source "$LIB_DIR/real_user.sh"     # resolve_real_user
+source "$LIB_DIR/privileges.sh"    # require_root
+source "$LIB_DIR/context.sh"       # контекст выполнения
 
 DAYS="${1:-7}"
 LOG_DIR="/mnt/backups/logs"
 [[ -d "$LOG_DIR" ]] || exit 0
 
-echo "$(msg removing "$DAYS")"
+info clean_logs_removing "$DAYS"
 find "$LOG_DIR" -type f -name "*.log" -mtime +$DAYS -delete
-echo "$(msg done)"
-
+info clean_logs_done
