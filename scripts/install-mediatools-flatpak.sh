@@ -114,15 +114,7 @@ flatpak install -y flathub org.gimp.GIMP
 flatpak install -y flathub org.kde.krita
 flatpak install -y flathub org.audacityteam.Audacity
 
-# ----------------- Шаг 4: Символические ссылки -----------------
-# mkdir -p /mnt/shotcut /mnt/storage/Видео /mnt/storage/Музыка /mnt/storage/Изображения
-# ln -sfn /mnt/shotcut "$HOME/shotcut"
-# ln -sfn /mnt/storage/Видео "$HOME/Видео"
-# ln -sfn /mnt/storage/Музыка "$HOME/Музыка"
-# ln -sfn /mnt/storage/Изображения "$HOME/Изображения"
-# ok flatpak_symlinks | tee -a "$LOG_FILE"
-
-# Proxy и Preview
+# ----------------- Шаг 4: Proxy и Preview -----------------
 SHOTCUT_SETTINGS_DIR="$HOME/.config/Shotcut"
 mkdir -p "$SHOTCUT_SETTINGS_DIR"
 SETTINGS_FILE="$SHOTCUT_SETTINGS_DIR/shotcut.ini"
