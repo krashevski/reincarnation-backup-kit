@@ -112,7 +112,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/i18n.sh" "lib/logging.sh" "lib/user_home.sh" "lib/real_user.sh" "lib/privileges.sh" "lib/context.sh" "lib/guards-inhibit.sh" "lib/cleanup.sh" "lib/fs_utils.sh" "lib/system_detect.sh" "lib/init.sh" "lib/guards-firefox.sh" "lib/deps.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
+SCRIPTS_LIB=("lib/i18n.sh" "lib/logging.sh" "lib/user_home.sh" "lib/real_user.sh" "lib/privileges.sh" "lib/context.sh" "lib/guards-inhibit.sh" "lib/cleanup.sh" "lib/fs_utils.sh" "lib/system_detect.sh" "lib/init.sh" "lib/guards-firefox.sh" "lib/select_user.sh" "lib/deps.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then

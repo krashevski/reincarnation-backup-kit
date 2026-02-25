@@ -19,169 +19,31 @@
 
 set -euo pipefail
 
-# -------------------------------------------------------------
-# Colors (safe for set -u)
-# -------------------------------------------------------------
-if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
-    RED="\033[0;31m"
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[0;34m"
-    NC="\033[0m"
-else
-    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR/lib"
+
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
+source "$LIB_DIR/privileges.sh"
+source "$LIB_DIR/context.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-
-# -------------------------------------------------------------
-# 1. Определяем директорию скрипта
-# -------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# -------------------------------------------------------------
-# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
-# -------------------------------------------------------------
-declare -A MSG
-
-# -------------------------------------------------------------
-# 3. Функция загрузки сообщений
-# -------------------------------------------------------------
-load_messages() {
-    local lang="$1"
-    # очищаем предыдущие ключи
-    MSG=()
-
-    case "$lang" in
-        ru)
-            source "$SCRIPT_DIR/i18n/messages_ru.sh"
-            ;;
-        en)
-            source "$SCRIPT_DIR/i18n/messages_en.sh"
-            ;;
-        *)
-            echo "Unknown language: $lang" >&2
-            return 1
-            ;;
-    esac
-}
-
-# -------------------------------------------------------------
-# 4. Безопасный say
-# -------------------------------------------------------------
-say() {
-    local key="$1"; shift
-    local msg="${MSG[${key}]:-$key}"
-
-    if [[ $# -gt 0 ]]; then
-        printf "$msg\n" "$@"
-    else
-        printf '%s\n' "$msg"
-    fi
-}
-
-
-# -------------------------------------------------------------
-# 5. Kjuuth ok
-# -------------------------------------------------------------
-ok() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[OK]%b %b\n" \
-        "${GREEN:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")"
-}
-
-
-# -------------------------------------------------------------
-# 6. Функция info для логирования
-# -------------------------------------------------------------
-info() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[INFO]%b %b\n" \
-        "${BLUE:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 7. Функция warn для логирования
-# -------------------------------------------------------------
-warn() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[WARN]%b %b\n" \
-        "${YELLOW:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-# -------------------------------------------------------------
-# 8. Функция error для логирования
-# -------------------------------------------------------------
-error() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[ERROR]%b %b\n" \
-        "${RED:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 9. Функция echo_echo_msg для логирования
-# -------------------------------------------------------------
-echo_msg() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b\n" "$(printf "$fmt" "$@")"
-}
-
-# -------------------------------------------------------------
-# 10. Функция die для логирования
-# -------------------------------------------------------------
-die() {
-    error "$@"
-    exit 1
-}
-
-# -------------------------------------------------------------
-# 11. Устанавливаем язык по умолчанию и загружаем переводы
-# -------------------------------------------------------------
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
-
-# --- Проверка root только для команд, где нужны права ---
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
 fi
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
-fi
+# root / inhibit здесь не используем
+require_root || return 1
+# inhibit_run "$0" "$@"
 
 # --- Функция для информации о дисках ---
 show_disks_info() {
@@ -196,32 +58,23 @@ show_disks_info() {
 }
 
 # ----------------------------
-# Determine home of real user
-# ----------------------------
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    USER_HOME="/home/$SUDO_USER"
-else
-    USER_HOME="${HOME:-/home/$USER}"
-fi
-
-# ----------------------------
 # Output
 # ----------------------------
 
 echo
-say physical_disks
+info show_physical_disks
 show_disks_info
 
 echo
-say mounts_header
+info show_mounts_header
 lsblk -o NAME,PATH,LABEL,MOUNTPOINT,FSTYPE,UUID -e 7,11
 
 echo
-info symlinks_header "$USER_HOME"
-find "$USER_HOME" -maxdepth 1 -type l -printf "%f -> %l\n"
+info show_symlinks_header "$TARGET_HOME"
+find "$TARGET_HOME" -maxdepth 1 -type l -printf "%f -> %l\n"
 
 echo
-say crontab_header
+info show_crontab_header
 if [[ "$(id -u)" -eq 0 ]]; then
     crontab -l 2>/dev/null || echo_msg empty
 else

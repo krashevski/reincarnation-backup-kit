@@ -34,6 +34,7 @@ source "$LIB_DIR/user_home.sh"
 source "$LIB_DIR/real_user.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
+source "$LIB_DIR/select_user.sh"
 
 if ! TARGET_HOME="$(resolve_target_home)"; then
     die "Cannot determine target home"
@@ -67,10 +68,6 @@ HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
 SEIUP_SYMLINKS="$BIN_DIR/setup-symlinks.sh"
 CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 
-# Проверка root
-require_root
-# inhibit_run "$0" "$@"
-
 # --- Дистрибутив ---
 DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -97,24 +94,37 @@ show_logs() {
     fi
 }
 
-# Переключатель языка
+# =============================================================
+# Функция смены языка (поддержка ru/en/ja)
+# =============================================================
 change_language() {
     clear
-    echo "Choose language:"
-    echo "1) English"
-    echo "2) Русский"
-    echo "3) 日本語"
+    echo "-----------------------------------------"
+    echo "$(echo_msg menu_lang)"
+    echo "-----------------------------------------"
+    echo " 1) English"
+    echo " 2) Русский"
+    echo " 3) 日本語"
+    echo
+    echo "-----------------------------------------"
 
-    read -r choice
+    read -rp "$(echo_msg sel_opt) " choice
 
     case "$choice" in
         1) APP_LANG="en" ;;
         2) APP_LANG="ru" ;;
         3) APP_LANG="ja" ;;
+        *)
+            warn invalid_choice
+            return
+            ;;
     esac
 
-    export APP_LANG
-    load_messages   # <-- обязательно, чтобы новые сообщения подхватились
+    export APP_LANG       # теперь APP_LANG доступен всем скриптам
+    load_messages        # подгружаем новые сообщения под выбранный язык
+    echo "-----------------------------------------"
+    info menu_language_set "$APP_LANG"
+    echo
 }
 
 
@@ -132,6 +142,7 @@ main_menu() {
         echo " 5) $(say tools)"
         echo " 6) $(say logs)"
         echo " 7) $(say settings)"
+        echo
         echo " 0) $(say exit)"
         echo "-----------------------------------------"
         read -rp "$(echo_msg sel_opt)" choice
@@ -246,17 +257,29 @@ cron_menu() {
     read -rp "$(echo_msg sel_opt)" choice
     case "$choice" in
         1)
+            # Ввод времени для CRON
             read -rp "$(echo_msg enter_time)" CRON_TIME
-            read -rp "$(echo_msg enter_user)" CRON_USER
-            if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                info adding_cron "$CRON_TIME" "$CRON_USER"
-                bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                echo_msg cron_job_installed
+
+            # Выбор пользователя через библиотеку
+            if select_user "$(say menu_cron_shedule)"; then
+                # Для CRON берём первого выбранного пользователя
+                CRON_USER="${SELECTED_USERS[0]}"
+
+                if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
+                    info adding_cron "$CRON_TIME" "$CRON_USER"
+                    bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
+                    echo_msg cron_job_installed
+                else
+                    error empty_entered
+                fi
             else
+                # Если пользователь не выбран
                 error empty_entered
             fi
+
             read -rp "$(echo_msg press_continue)"
-            ;;        
+            ;;
+      
         2) bash "$CLEAN_LOGS" ;;
         3) bash "$REMOVE_CRON" ;;
         0) return ;;
@@ -329,7 +352,13 @@ tools_menu() {
     echo "-----------------------------------------"
     read -rp "$(say sel_opt)" choice
     case "$choice" in
-        1) "$LAST_ARCHIVE" --list "$REAL_USER";;
+        1)
+           if select_user "$(say menu_check_archive)"; then
+               for user in "${SELECTED_USERS[@]}"; do
+                   sudo "$LAST_ARCHIVE" "$user"
+               done
+           fi
+           ;;
         2) "$SYSTEM_MOUNTS" ;;
         3) "$HDD_SETUP" ;;
         4) "$SEIUP_SYMLINKS" ;;
@@ -376,7 +405,7 @@ settings_menu() {
         echo "-----------------------------------------"
         echo "$(say menu_settings)"
         echo "-----------------------------------------"
-        echo "$(say change_language)"
+        echo "$(say menu_change_language)"
         echo "$(say backup_directories)"
         echo "$(say manage_cuda)"
         echo
@@ -386,7 +415,6 @@ settings_menu() {
         case "$choice" in
             1)
                 change_language # <-- здесь вызываем функцию переключения языка
-                export LANG_CODE
                 read -rp "$(echo_msg press_continue)"
                 ;;
             2)
@@ -408,6 +436,7 @@ settings_menu() {
                    echo "$(say menu_cuda_check)"
                    echo "$(say menu_cuda_install)"
                    echo "$(say menu_cuda_uninstall)"
+                   echo
                    echo "$(say menu_return)"
                    echo
                    echo "-----------------------------------------"
@@ -435,7 +464,7 @@ settings_menu() {
                         warn invalid_choice
                         ;;
                    esac
-
+                   echo
                    read -rp "$(echo_msg press_continue)"
                    done
                    ;;
