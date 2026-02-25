@@ -51,12 +51,13 @@ require_root || return 1
 
 # --- Detect system ---
 detect_system || exit 1
-# echo "[DEBUG] DISTRO_ID=$DISTRO_ID, DISTRO_VER=$DISTRO_VER"
 
 ## layout / policy
 BACKUP_DIR="/mnt/backups"
 LOG_DIR="$BACKUP_DIR/logs"
 WORKDIR="$BACKUP_DIR/workdir"
+RUN_LOG="$LOG_DIR/restore-$(date +%F_%H%M%S).log"
+mkdir -p "$LOG_DIR"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
@@ -92,19 +93,34 @@ if [ ! -f "$ARCHIVE" ]; then
     exit 1
 fi
 
-# --- Запуск ---
-info "============================================================="
-info restore_running "$SCRIPT" "$ARCHIVE"
-info "============================================================="
+# --- Начало restore dispatcher ---
+log_separator() {
+    echo "=============================================================" | tee -a "$RUN_LOG"
+}
 
-{
-    echo "[$(date +%F_%T)] dispatcher_started "$SCRIPT" "$ARCHIVE"
-    echo "[$(date +%F_%T)] dispatcher_finished
-} 2>&1 | tee -a "$RUN_LOG"
+log_timestamp() {
+    echo "[$(date +%F_%T)]" | tee -a "$RUN_LOG"
+}
 
-info "============================================================="
-ok restore_finished
-info log_file "$RUN_LOG"
-info "============================================================="
+log_info() {
+    echo "[$(date +%F_%T)] [INFO] $*" | tee -a "$RUN_LOG"
+}
+
+# --- Выводим заголовок ---
+log_separator
+log_timestamp
+info restore_dispatcher_started
+log_separator
+
+# --- Запуск restore ---
+# Всё, что restore_running выводит, идёт и в терминал, и в лог
+info restore_running "$SCRIPT" "$ARCHIVE" 2>&1 | tee -a "$RUN_LOG"
+
+# --- Завершение ---
+log_separator
+log_timestamp
+info restore_dispatcher_finished
+info restore_log_file "$RUN_LOG"
+log_separator
 
 exit 0
