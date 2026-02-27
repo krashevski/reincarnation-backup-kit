@@ -56,8 +56,8 @@ require_root || return 1
 
 # --- Paths ---
 CURRENT_USER="${SUDO_USER:-$USER}"
-BACKUP_DIR="/mnt/backups"
-BR_WORKDIR="$BACKUP_DIR/br_workdir"
+BACKUP_DIR="/mnt/backups/REBK"
+BR_WORKDIR="$BACKUP_DIR/bares_workdir"
 USERDATA_DIR="$BR_WORKDIR/user_data"
 ARCHIVE_DIR="$BR_WORKDIR/tar_archive"
 LOG_DIR="$BACKUP_DIR/logs"

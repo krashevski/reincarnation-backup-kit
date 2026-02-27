@@ -38,8 +38,7 @@ register_cleanup() {
 }
 
 cleanup_workdir() {
-    [[ -n "$CLEANUP_WORKDIR" ]] || return 0
-    safe_rm_rf "$CLEANUP_WORKDIR"
+    rm -rf "$WORKDIR"/*
 }
 
 cleanup_custom() {
@@ -51,4 +50,3 @@ cleanup() {
     cleanup_custom
     cleanup_workdir
 }
-

@@ -51,12 +51,12 @@ require_root || return 1
 inhibit_run "$0" "$@"
 
 # --- Настройки ---
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
-LOG_FILE="$LOG_DIR/check-shotcut-gpu.log"
+RUN_LOG="$LOG_DIR/check-shotcut-gpu.log"
 mkdir -p "$WORKDIR" "$LOG_DIR"
-exec > >(tee -a "$LOG_FILE") 2>&1
+exec > >(tee -a "$RUN_LOG") 2>&1
 
 info gpu_start
 
@@ -143,4 +143,4 @@ else
     info gpu_4k_skip
 fi
 
-info gpu_done $LOG_FILE
+info gpu_done $RUN_LOG

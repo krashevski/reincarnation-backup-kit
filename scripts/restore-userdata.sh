@@ -28,205 +28,74 @@ DOC
 
 set -euo pipefail
 
-# -------------------------------------------------------------
-# Colors (safe for set -u)
-# -------------------------------------------------------------
-if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
-    RED="\033[0;31m"
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[0;34m"
-    NC="\033[0m"
-else
-    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR/lib"
+
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
+source "$LIB_DIR/privileges.sh"
+source "$LIB_DIR/context.sh"
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/system_detect.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-# -------------------------------------------------------------
-# 1. Определяем директорию скрипта
-# -------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# -------------------------------------------------------------
-# 2. Объявляем ассоциативный массив MSG (будет расширяться при source)
-# -------------------------------------------------------------
-declare -A MSG
-
-# -------------------------------------------------------------
-# 3. Функция загрузки сообщений
-# -------------------------------------------------------------
-load_messages() {
-    local lang="$1"
-    # очищаем предыдущие ключи
-    MSG=()
-
-    case "$lang" in
-        ru)
-            source "$SCRIPT_DIR/i18n/messages_ru.sh"
-            ;;
-        en)
-            source "$SCRIPT_DIR/i18n/messages_en.sh"
-            ;;
-        *)
-            echo "Unknown language: $lang" >&2
-            return 1
-            ;;
-    esac
-}
-
-# -------------------------------------------------------------
-# 4. Безопасный say
-# -------------------------------------------------------------
-say() {
-    local key="$1"; shift
-    local msg="${MSG[${key}]:-$key}"
-
-    if [[ $# -gt 0 ]]; then
-        printf "$msg\n" "$@"
-    else
-        printf '%s\n' "$msg"
-    fi
-}
-
-
-# -------------------------------------------------------------
-# 5. Kjuuth ok
-# -------------------------------------------------------------
-ok() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[OK]%b %b\n" \
-        "${GREEN:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")"
-}
-
-
-# -------------------------------------------------------------
-# 6. Функция info для логирования
-# -------------------------------------------------------------
-info() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[INFO]%b %b\n" \
-        "${BLUE:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 7. Функция warn для логирования
-# -------------------------------------------------------------
-warn() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[WARN]%b %b\n" \
-        "${YELLOW:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-# -------------------------------------------------------------
-# 8. Функция error для логирования
-# -------------------------------------------------------------
-error() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b[ERROR]%b %b\n" \
-        "${RED:-}" \
-        "${NC:-}" \
-        "$(printf "$fmt" "$@")" >&2
-}
-
-
-# -------------------------------------------------------------
-# 9. Функция echo_echo_msg для логирования
-# -------------------------------------------------------------
-echo_msg() {
-    local key="$1"; shift
-    local fmt
-    fmt="$(say "$key")"
-    printf "%b\n" "$(printf "$fmt" "$@")"
-}
-
-# -------------------------------------------------------------
-# 10. Функция die для логирования
-# -------------------------------------------------------------
-die() {
-    error "$@"
-    exit 1
-}
-
-# -------------------------------------------------------------
-# 11. Устанавливаем язык по умолчанию и загружаем переводы
-# -------------------------------------------------------------
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
-
-# --- Проверка root только для команд, где нужны права ---
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
 fi
 
-# --- Inhibit recursion via systemd-inhibit ---
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
-fi
+require_root || return 1
+# inhibit_run "$0" "$@"
 
 # === Пути ===
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 RESTORE_SCRIPT="$SCRIPT_DIR/backup-restore-userdata.sh"
-BACKUP_DIR="/mnt/backups"
-BR_USERDATA="$BACKUP_DIR/br_workdir/user_data"
-BR_ARCHIVE="$BACKUP_DIR/br_workdir/tar_archive"
+BACKUP_DIR="${BACKUP_DIR:-/mnt/backups/REBK}"
+BR_WORKDIR="$BACKUP_DIR/bares_workdir"
+USERDATA_DIR="$BR_WORKDIR/user_data"
+ARCHIVE_DIR="$BR_WORKDIR/tar_archive"
 LOG_DIR="$BACKUP_DIR/logs"
-mkdir -p "$LOG_DIR"
-RUN_LOG="$LOG_DIR/restore-$(date +%F-%H%M%S).log"
+mkdir -p "$BACKUP_DIR" "$USERDATA_DIR" "$ARCHIVE_DIR" "$LOG_DIR"
+RUN_LOG="$LOG_DIR/res-userdata-$(date +%F-%H%M%S).log"
 
 # === Проверка скрипта ===
 if [[ ! -x "$RESTORE_SCRIPT" ]]; then
-    error no_restore_script "$RESTORE_SCRIPT"
+    error resud_no_script "$RESTORE_SCRIPT"
     exit 1
 fi
 
 # === Проверка каталогов резервных копий ===
 backup_ok=true
-for dir in "$BR_USERDATA" "$BR_ARCHIVE"; do
+for dir in "$USERDATA_DIR" "$ARCHIVE_DIR"; do
     if [[ ! -d "$dir" ]]; then
-        error no_backup_dir "$dir"
+        error resud_no_dir "$dir"
         backup_ok=false
     fi
 done
 $backup_ok || exit 1
 
+echo "=============================================================" | tee -a "$RUN_LOG"
+
 # === Запуск восстановления ===
-info recovery_info
+info resud_recovery_info
+
 # Перенаправляем вывод в лог с прогрессом
 if SAFE=1 FORCE_COLOR=1 sudo -E bash "$RESTORE_SCRIPT" restore "$@" \
     > >(tee -a "$RUN_LOG") 2>&1; then
-    ok recovery_finished
+    ok resud_recovery_finished
 else
-    warn recovery_warnings "$RUN_LOG"
+    warn resud_recovery_warnings "$RUN_LOG"
     exit 0 
 fi
 
-exit 0
+echo "=============================================================" | tee -a "$RUN_LOG"
 
+exit 0

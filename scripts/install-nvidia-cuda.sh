@@ -54,10 +54,11 @@ if command -v systemd-inhibit &>/dev/null && [[ $EUID -ne 0 ]]; then
 fi
 
 # --- Логирование ---
-LOG_DIR="/mnt/backups/logs"
+BACKUP_DIR="/mnt/backups/REBK"
+LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/install-nvidia-cuda.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
+RUN_LOG="$LOG_DIR/install-nvidia-cuda.log"
+exec > >(tee -a "$RUN_LOG") 2>&1
 
 # === Шаги ===
 info cuda_update
@@ -91,5 +92,7 @@ info cuda_smi
 nvidia-smi -q | grep -i "CUDA Version"
 
 ok cuda_done_nvidia
+
+echo "=============================================================" 
 
 exit 0

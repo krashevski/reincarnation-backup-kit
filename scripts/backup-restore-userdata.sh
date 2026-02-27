@@ -74,34 +74,22 @@ for arg in "$@"; do
 done
 
 if [[ -z "$OPERATION" ]]; then
-    warn usage "$0"
-    info example_backup "$0"
-    info example_restore "$0"
+    warn baresud_usage "$0"
+    info baresud_example_backup "$0"
+    info baresud_example_restore "$0"
     exit 1
 fi
 
-# --- systemd-inhibit only for restore ---
-if [[ "$OPERATION" == "restore" ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Reincarnation Backup Kit: restore in progress" \
-            "$0" "$@"
-    fi
-fi
-
-warn warn_time
+warn baresud_warn_time
 
 # === Paths ===
-CURRENT_USER="${SUDO_USER:-$USER}"
-BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
-BR_WORKDIR="$BACKUP_DIR/br_workdir"
+BACKUP_DIR="${BACKUP_DIR:-/mnt/backups/REBK}"
+BR_WORKDIR="$BACKUP_DIR/bares_workdir"
 USERDATA_DIR="$BR_WORKDIR/user_data"
 ARCHIVE_DIR="$BR_WORKDIR/tar_archive"
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$BACKUP_DIR" "$BR_WORKDIR" "$USERDATA_DIR" "$ARCHIVE_DIR" "$LOG_DIR"
-RUN_LOG="$LOG_DIR/br-$(date +%F-%H%M%S).log"
+RUN_LOG="$LOG_DIR/bares-userdata-$(date +%F-%H%M%S).log"
 
 exec > >(tee -a "$RUN_LOG") 2>&1
 
@@ -126,7 +114,7 @@ run_rsync_backup() {
     local SRC="$1"
     local DST="$USERDATA_DIR/$2"
     mkdir -p "$DST"
-    info rs_backup "$SRC" "$DST"
+    info baresud_rsync_backup "$SRC" "$DST"
     rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update "${RSYNC_EXCLUDES[@]}" \
         "$SRC/" "$DST/"
 }
@@ -134,7 +122,7 @@ run_rsync_backup() {
 fresh_backup_dir() {
     local user_backup_dir="$1"
     if [ -d "$user_backup_dir" ]; then
-        warn fresh_remove "$user_backup_dir"
+        warn baresud_fresh_remove "$user_backup_dir"
         rm -rf "$user_backup_dir"
     fi
     mkdir -p "$user_backup_dir"
@@ -145,37 +133,37 @@ run_tar_backup() {
     local NAME="$2"
     local ARCHIVE="$ARCHIVE_DIR/${NAME}_$(date +%F-%H%M%S).tar.gz"
 
-    info "Archiving changed files from $SRC -> $ARCHIVE"
+    info baresud_changed_files $SRC $ARCHIVE
     LAST_BACKUP_TIME=$(stat -c %Y "$USERDATA_DIR/$NAME" 2>/dev/null || echo 0)
 
     mapfile -t changed_files < <(find "$SRC" -type f -newermt "@$LAST_BACKUP_TIME")
     if [ ${#changed_files[@]} -eq 0 ]; then
-        warn no_new_files "$SRC"
+        warn baresud_no_new_files "$SRC"
         return 0
     fi
 
     printf '%s\n' "${changed_files[@]}" | tar --null -T - -czf - 2>/dev/null | \
         pv -s $(du -sb "$SRC" | awk '{print $1}') > "$ARCHIVE"
 
-    ok archive_created "$ARCHIVE"
+    ok baresud_archive_created "$ARCHIVE"
 }
 
 run_backup() {
     local NAME="$1"
     local SRC="/home/$NAME"
     if [ ! -d "$SRC" ]; then
-        warn dir_missing "$SRC"
+        warn baresud_dir_missing "$SRC"
         return 0
     fi
     
     local DST="$USERDATA_DIR/$NAME"
     if $FRESH_MODE; then
-        fresh_backup_dir "$DST"
+        baresud_fresh_backup_dir "$DST"
     fi
 
     run_rsync_backup "$SRC" "$NAME"
     run_tar_backup "$SRC" "$NAME"
-    ok backup_done_user "$NAME"
+    ok baresud_backup_done "$NAME"
 }
 
 run_restore() {
@@ -184,7 +172,7 @@ run_restore() {
     local LARGE_DIRS=("Videos" "Pictures" "Music" "Видео" "Изображения" "Музыка")
 
     if ! id "$NAME" &>/dev/null; then
-        warn "$(echo_msg user_not_found "$NAME")"
+        warn baresud_user_not "$NAME"
         return 1
     fi
 
@@ -194,7 +182,7 @@ run_restore() {
 
     SRC="$USERDATA_DIR/$NAME"
     if [ -d "$SRC" ]; then
-        info "$(echo_msg rs_restore "$SRC" "$DST")"
+        info baresud_rsync_restore "$SRC" "$DST"
         while IFS= read -r -d '' item; do
             BASENAME=$(basename "$item")        
             if [ -d "$item" ]; then
@@ -210,17 +198,17 @@ run_restore() {
             fi
         done < <(find "$SRC" -mindepth 1 -maxdepth 1 -print0)
     else
-        warn no_backup_found "$NAME"
+        warn baresud_no_backup "$NAME"
     fi
     
     # Last archive
     tarf=$(ls -t "$ARCHIVE_DIR/${NAME}"*.tar.gz 2>/dev/null | head -n1)
     if [[ -n "$tarf" ]]; then
-        info extracting_archive "$tarf"
+        info baresud_extracting_archive "$tarf"
         pv "$tarf" | tar -xzv --keep-newer-files -C "$DST"
     fi
 
-    ok restore_done_user "$NAME"
+    ok baresud_restore_done "$NAME"
 }
 
 # === Parse flags ===
@@ -235,12 +223,12 @@ done
 
 # === Checks ===
 if ! mountpoint -q /mnt/backups; then
-    error not_mounted
+    error baresud_not_mounted
     exit 1
 fi
 
 if ! mountpoint -q /mnt/storage; then
-    error not_mounted_storage
+    error baresud_not_storage
     exit 1
 fi
 
@@ -249,15 +237,15 @@ for d in /home/*; do
     [ -d "$d" ] && users+=("$(basename "$d")")
 done
 if [ ${#users[@]} -eq 0 ]; then
-    error no_users
+    error baresud_no_users
     exit 1
 fi
 
-echo "$(echo_msg user_list)"
+echo_msg baresud_user_list
 for i in "${!users[@]}"; do
     printf "  %d) %s\n" "$((i+1))" "${users[$i]}"
 done
-printf "$(echo_msg select_user "$OPERATION")"
+printf "$(echo_msg baresud_select_user "$OPERATION")"
 read -r -a selections
 
 status=0
@@ -266,15 +254,17 @@ for sel in "${selections[@]}"; do
     if [[ $index -ge 0 && $index -lt ${#users[@]} ]]; then
         [[ "$OPERATION" == "backup" ]] && run_backup "${users[$index]}" || run_restore "${users[$index]}"
     else
-        warn invalid_choice "$sel"
+        warn baresud_invalid_choice "$sel"
         status=1
     fi
 done
 
 if [ $status -eq 0 ]; then
-    ok done_all "$OPERATION"
+    ok baresud_done "$OPERATION"
 else
-    error some_failed "$OPERATION" "$RUN_LOG"
+    error baresud_some_failed "$OPERATION" "$RUN_LOG"
 fi
+
+echo "=============================================================" | tee -a "$RUN_LOG"
 
 exit $status

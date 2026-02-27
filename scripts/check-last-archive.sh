@@ -17,8 +17,8 @@ usage() {
 [[ $# -eq 1 ]] || usage
 USER="$1"
 
-BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
-ARCHIVE_DIR="$BACKUP_DIR/br_workdir/tar_archive"
+BACKUP_DIR="/mnt/backups/REBK"
+ARCHIVE_DIR="$BACKUP_DIR/bares_workdir/tar_archive"
 
 declare -a files=()
 

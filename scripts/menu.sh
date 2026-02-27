@@ -35,6 +35,7 @@ source "$LIB_DIR/real_user.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/select_user.sh"
+source "$LIB_DIR/system_detect.sh"
 
 if ! TARGET_HOME="$(resolve_target_home)"; then
     die "Cannot determine target home"
@@ -49,7 +50,7 @@ fi
 # inhibit_run "$0" "$@"
 
 # --- Пути к скриптам ---
-BIN_DIR="$TARGET_HOME/bin"
+BIN_DIR="$TARGET_HOME/bin/REBK"
 SYS_BACKUP="$BIN_DIR/backup-system.sh"
 FIREFOX_BACKUP_RESTORE="$BIN_DIR/backup-restore-firefox.sh"
 USER_BACKUP="$BIN_DIR/backup-userdata.sh"
@@ -68,9 +69,9 @@ HDD_SETUP="$BIN_DIR/hdd-setup-profiles.sh"
 SEIUP_SYMLINKS="$BIN_DIR/setup-symlinks.sh"
 CUDA_SCRIPT="$BIN_DIR/check-cuda-tools.sh"
 
-# --- Дистрибутив ---
-DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+# --- Detect system ---
+detect_system || exit 1
+# echo "[DEBUG] DISTRO_ID=$DISTRO_ID, DISTRO_VER=$DISTRO_VER"
 
 # === Функция просмотра логов ===
 show_logs() {
@@ -184,9 +185,10 @@ backup_menu() {
             2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
             3)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
-                    "$FIREFOX_BACKUP_RESTORE"  # запускаем отдельным процессом
+                   # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
+                   "$FIREFOX_BACKUP_RESTORE" backup_firefox_profile
                else
-                   error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
+                   error firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
             4) bash "$USER_BACKUP" ;;
@@ -225,13 +227,14 @@ restore_menu() {
                MAINT_DIR="$(dirname "$0")/maintenance"
                bash "$MAINT_DIR/install-man.sh"
                ;;
-            2) bash "$SYS_RESTORE" ;;              # default
+            2) bash "$SYS_RESTORE" full ;;              # default
             3) bash "$SYS_RESTORE" manual ;;       # ручной режим
             4)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
-                    "$FIREFOX_BACKUP_RESTORE"  # запускаем отдельным процессом
+                   # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
+                   "$FIREFOX_BACKUP_RESTORE" restore_firefox_profile
                else
-                   error firefox_script_not_found $FIREFOX_BACKUP_RESTORE
+                   error firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
             5) bash "$USER_RESTORE" ;;             # restore userdata

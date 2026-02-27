@@ -54,11 +54,7 @@ source "$LIB_DIR/guards-firefox.sh"
 # Firefox backup / restore (REBK)
 # -------------------------------------------------------------
 
-if ! USER_HOME="$(resolve_target_home)"; then
-    die "Cannot determine user home"
-fi
-
-BACKUP_ROOT="$USER_HOME/backups/REBK/firefox"
+BACKUP_ROOT="$TARGET_HOME/backups/REBK/firefox"
 PROFILE_BACKUP_DIR="$BACKUP_ROOT/profile"
 
 detect_firefox_base() {
@@ -245,8 +241,21 @@ menu() {
 }
 
 # -------------------------------------------------------------
-# Проверка: если скрипт запущен напрямую, показываем меню
+# Если скрипт запущен напрямую
 # -------------------------------------------------------------
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    menu
+    # Если передано имя функции, вызываем её
+    if [[ $# -ge 1 ]]; then
+        func="$1"
+        if declare -f "$func" > /dev/null; then
+            "$func"
+        else
+            echo "Function '$func' not found"
+            exit 1
+        fi
+    else
+        # Иначе запускаем меню
+        menu
+    fi
 fi
+

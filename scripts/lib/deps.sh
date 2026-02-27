@@ -70,7 +70,7 @@ check_and_install_commands() {
     elif command -v zypper >/dev/null 2>&1; then
         sudo zypper install -y "${MISSING_PKGS[@]}"
     else
-        die unknown_manager "${MISSING_PKGS[*]}"
+        die deps_unknown_manager "${MISSING_PKGS[*]}"
     fi
 
     # --- повторная проверка ---

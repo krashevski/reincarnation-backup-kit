@@ -20,91 +20,81 @@ DOC
 
 set -euo pipefail
 
-# Стандартная библиотека REBK
-# --- Определяем BIN_DIR относительно скрипта ---
-BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Путь к библиотекам всегда относительно BIN_DIR
-LIB_DIR="$BIN_DIR/lib"
+# -------------------------------------------------------------
+# BOOTSTRAP (no external libs)
+# -------------------------------------------------------------
+log()  { echo "[INFO]  $*" | tee -a "$RUN_LOG"; }
+warn() { echo "[WARN]  $*" | tee -a "$RUN_LOG" >&2; }
+error(){ echo "[ERROR] $*" | tee -a "$RUN_LOG" >&2; }
+die()  { error "$*"; exit 1; }
+ok()   { echo "[ OK ]  $*" | tee -a "$RUN_LOG"; }
 
-# source "$(dirname "$0")/lib/init.sh"
+[[ $EUID -eq 0 ]] || { echo "Run as root"; exit 1; }
 
-source "$LIB_DIR/i18n.sh"
-init_app_lang
+# -------------------------------------------------------------
+# REQUIRED ENV / DEFAULTS (safe with -u)
+# -------------------------------------------------------------
+REAL_USER="${SUDO_USER:-$USER}"
+TARGET_HOME="$(eval echo "~$REAL_USER")"
 
-source "$LIB_DIR/logging.sh"       # error / die
-source "$LIB_DIR/user_home.sh"     # resolve_target_home
-source "$LIB_DIR/real_user.sh"     # resolve_real_user
-source "$LIB_DIR/privileges.sh"    # require_root
-source "$LIB_DIR/context.sh"       # контекст выполнения
-source "$LIB_DIR/guards-inhibit.sh"
-source "$LIB_DIR/cleanup.sh"
+BACKUP_DIR="/mnt/backups/REBK"
+TARGET_DIR="$TARGET_HOME/bin/REBK"
+readonly LOG_DIR="$BACKUP_DIR/logs"
+readonly WORKDIR="$BACKUP_DIR/workdir"
+readonly RUN_LOG="$LOG_DIR/REBK_install.log"
 
-if ! TARGET_HOME="$(resolve_target_home)"; then
-    die "Cannot determine target home"
+readonly BASHRC="$TARGET_HOME/.bashrc"
+readonly PROFILE="$TARGET_HOME/.profile"
+
+mkdir -p "$TARGET_HOME" "$TARGET_DIR" "$BACKUP_DIR" "$LOG_DIR" "$WORKDIR"
+touch "$RUN_LOG"
+
+# --- PATH ---
+EXPORT_LINE='export PATH="$HOME/bin/REBK:$PATH"'
+
+# Добавляем только если нет в PATH
+if [[ ":$PATH:" != *":$HOME/bin/REBK:"* ]]; then
+    # Добавляем в .bashrc если есть права
+    [[ -w "$HOME/.bashrc" ]] && echo "$EXPORT_LINE" >> "$HOME/.bashrc"
+    # Добавляем в .profile если есть права
+    [[ -w "$HOME/.profile" ]] && echo "$EXPORT_LINE" >> "$HOME/.profile"
 fi
-
-if ! REAL_USER="$(resolve_real_user)"; then
-    die "Cannot determine real user"
-fi
-
-require_root || return 1
-
-# inhibit_run "$0" "$@"
-
-TARGET_DIR="$TARGET_HOME/bin"
-BASHRC="$TARGET_HOME/.bashrc"
-PROFILE="$TARGET_HOME/.profile"
-
-EXPORT_LINE='export PATH="$HOME/bin:$PATH"'
-
-## layout / policy
-BACKUP_DIR="/mnt/backups"
-LOG_DIR="$BACKUP_DIR/logs"
-WORKDIR="$BACKUP_DIR/workdir"
-I18N_DIR="$TARGET_DIR/i18n"
 
 # --- Проверка и создание BACKUP_DIR ---
-BACKUP_DIR="${BACKUP_DIR:-/mnt/backups}"
-
 if [[ ! -d "$BACKUP_DIR" ]]; then
-    info dir_not_exist "$BACKUP_DIR"
+    info install_dir_not "$BACKUP_DIR"
     mkdir -p "$BACKUP_DIR" || {
-        error failed_create_dir "$BACKUP_DIR"
+        error install_failed_dir "$BACKUP_DIR"
         exit 1
     }
 fi
 
-## --- Исправление прав (кроме REBK_CHOWN_EXCLUDES) ---
-fix_backup_dir_permissions "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR" 2>/dev/null || true
+chown -R "$REAL_USER:$REAL_USER" "$BACKUP_DIR" 2>/dev/null || true
 
-# --- Очистка WORKDIR ---
-# Регистрируем $WORKDIR и устанавливаем trap
-register_cleanup "$WORKDIR"
-trap 'cleanup_custom; cleanup_workdir' EXIT INT TERM
+rm -rf "$WORKDIR" 2>/dev/null || true
+mkdir -p "$WORKDIR"
 
-info msg_install_cleaning $WORKDIR
-cleanup_workdir
-ok msg_install_cleaned
+log "Cleaning workdir: $WORKDIR"
+log "Workdir ready"
 
-info installer
-
-# --- Дистрибутив ---
-DISTRO_ID=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-DISTRO_VER=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-info distro_found "$DISTRO_ID" "$DISTRO_VER"
-
-# --- ~/bin ---
-info "Installing for user: $REAL_USER"
-info "Target bin dir: $TARGET_DIR"
-
-mkdir -p "$TARGET_DIR"
-ok  dir_created "$TARGET_DIR"
+# --- Detect system ---
+. /etc/os-release || exit 1
+DISTRO_ID="$ID"
+DISTRO_VER="$VERSION_ID"
 
 # --- Списки скриптов ---
 SCRIPTS_SYSTEM=("backup-system.sh" "restore-system.sh" "backup-restore-firefox.sh")
+SCRIPTS_OS=(
+  backup-ubuntu-22.04.sh
+  restore-ubuntu-22.04.sh
+  backup-ubuntu-24.04.sh
+  restore-ubuntu-24.04.sh
+  backup-debian-12.sh
+  restore-debian-12.sh
+)
 SCRIPTS_USERDATA=("backup-restore-userdata.sh" "backup-userdata.sh" "restore-userdata.sh" "check-last-archive.sh")
 SCRIPTS_MEDIA=("install-nvidia-cuda.sh" "install-mediatools-flatpak.sh" "check-shotcut-gpu.sh" "install-mediatools-apt.sh")
-SCRIPTS_OS=()
 SCRIPTS_CRON=("add-cron-backup.sh" "cron-backup-userdata.sh" "clean-backup-logs.sh" "remove-cron-backup.sh")
 HDD_SETUP=("menu.sh" "hdd-setup-profiles.sh" "show-system-mounts.sh" "check-cuda-tools.sh" "setup-symlinks.sh")
 SCRIPTS_I18N=(
@@ -112,7 +102,7 @@ SCRIPTS_I18N=(
   "i18n/messages_en.sh"
   "i18n/messages_ja.sh"
 )
-SCRIPTS_LIB=("lib/i18n.sh" "lib/logging.sh" "lib/user_home.sh" "lib/real_user.sh" "lib/privileges.sh" "lib/context.sh" "lib/guards-inhibit.sh" "lib/cleanup.sh" "lib/fs_utils.sh" "lib/system_detect.sh" "lib/init.sh" "lib/guards-firefox.sh" "lib/select_user.sh" "lib/deps.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
+SCRIPTS_LIB=("lib/i18n.sh" "lib/logging.sh" "lib/runner.sh" "lib/user_home.sh" "lib/real_user.sh" "lib/privileges.sh" "lib/context.sh" "lib/guards-inhibit.sh" "lib/cleanup.sh" "lib/fs_utils.sh" "lib/system_detect.sh" "lib/init.sh" "lib/guards-firefox.sh" "lib/select_user.sh" "lib/deps.sh" "maintenance/cleanup.sh" "maintenance/install-man.sh")
 
 # --- OS-specific ---
 if [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -121,22 +111,25 @@ if [[ "$DISTRO_ID" == "ubuntu" ]]; then
     elif [[ "$DISTRO_VER" == "24.04" ]]; then
         SCRIPTS_OS=("backup-ubuntu-24.04.sh" "restore-ubuntu-24.04.sh")
     else
-        error distro_ver_not_supported "$DISTRO_VER"
+        error install_ubuntu_not "$DISTRO_VER"
         exit 1
     fi
 elif [[ "$DISTRO_ID" == "debian" ]]; then
     SCRIPTS_OS=("backup-debian-12.sh" "restore-debian-12.sh")
 else
-    error distro not_supported "$DISTRO_ID"
+    error install_distro_not "$DISTRO_ID"
     exit 1
 fi
+
+mkdir -p \
+  "$TARGET_DIR/i18n" \
+  "$TARGET_DIR/lib" \
+  "$TARGET_DIR/maintenance"
 
 # -------------------------------------------------------------
 # Функция установки файлов i18n
 # -------------------------------------------------------------
 install_i18n() {
-  info install_i18n
-
   for file in "${SCRIPTS_I18N[@]}"; do
      install -Dm644 "$file" "$TARGET_DIR/$file"
   done
@@ -146,8 +139,6 @@ install_i18n() {
 # Функция установки файлов библиотеки lib
 # -------------------------------------------------------------
 install_lib() {
-    info install_lib
-
     for file in "${SCRIPTS_LIB[@]}"; do
         install -Dm644 "$file" "$TARGET_DIR/$file"
     done
@@ -168,7 +159,7 @@ for script in "${SCRIPTS[@]}"; do
         chmod +x "$TARGET_DIR/$script"
         ok "$script → $TARGET_DIR"
     else
-        warn script_skipped "$script" "$SCRIPT_DIR"
+        warn install_script_skipped "$script" "$SCRIPT_DIR"
     fi
 done
 
@@ -177,130 +168,62 @@ install_i18n
 install_lib
 
 # --- Исправление владельца пользовательских файлов ---
-info "Fixing ownership of $TARGET_DIR"
+# info install_fixing_owner "$TARGET_DIR"
 chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
-ok "Ownership set to $REAL_USER:$REAL_USER"
-
-# --- PATH ---
-PATH_ADDED=false
-if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
-    if [ -w "$BASHRC" ] && ! grep -Fxq "$EXPORT_LINE" "$BASHRC"; then
-        echo "$EXPORT_LINE" >> "$BASHRC"
-        PATH_ADDED=true
-        warn path_added_bashrc
-    fi
-    if [ -w "$PROFILE" ] && ! grep -Fxq "$EXPORT_LINE" "$PROFILE"; then
-        echo "$EXPORT_LINE" >> "$PROFILE"
-        PATH_ADDED=true
-        warn path_added_profile
-    fi
-else
-    ok "~/bin already in PATH"
-fi
+ok install_owner "$REAL_USER" "$REAL_USER"
 
 # --- Каталоги ---
 install -d -m 755 -o "$REAL_USER" -g "$REAL_USER" "$WORKDIR"
 install -d -m 755 -o "$REAL_USER" -g "$REAL_USER" "$LOG_DIR"
-ok "Created: $WORKDIR, $LOG_DIR"
+ok "install_dirs: $WORKDIR, $LOG_DIR"
 
 check_and_install_deps() {
     local REQUIRED_PKGS=("$@")
     local MISSING_PKGS=()
 
-    # --- проверка наличия команд ---
     for pkg in "${REQUIRED_PKGS[@]}"; do
-        if ! command -v "$pkg" >/dev/null 2>&1; then
-            MISSING_PKGS+=("$pkg")
-        fi
+        command -v "$pkg" >/dev/null 2>&1 || MISSING_PKGS+=("$pkg")
     done
 
-    # --- если всё есть ---
-    if [ "${#MISSING_PKGS[@]}" -eq 0 ]; then
-        ok deps_ok
-        return 0
-    fi
-
-    warn deps_missing_list "${MISSING_PKGS[*]}"
-    info deps_install_try
-
-    # --- определение пакетного менеджера ---
-    if command -v apt-get >/dev/null 2>&1; then
-        sudo apt-get update
-        sudo apt-get install -y "${MISSING_PKGS[@]}"
-        # ВНИМАНИЕ: предполагается, что имя команды совпадает с именем пакета# 
-
-    elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y "${MISSING_PKGS[@]}"
-
-    elif command -v yum >/dev/null 2>&1; then
-        sudo yum install -y "${MISSING_PKGS[@]}"
-
-    elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -Sy --noconfirm "${MISSING_PKGS[@]}"
-
-    elif command -v zypper >/dev/null 2>&1; then
-        sudo zypper install -y "${MISSING_PKGS[@]}"
-
-    else
-        error unknown_manager ${MISSING_PKGS[*]}
-        return 1
-    fi
-
-    # --- повторная проверка ---
-    missing=()
-    for pkg in "${REQUIRED_PKGS[@]}"; do
-        if ! command -v "$pkg" >/dev/null 2>&1; then
-            missing+=("$pkg")
+    if [ "${#MISSING_PKGS[@]}" -gt 0 ]; then
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y "${MISSING_PKGS[@]}" || true
+        elif command -v dnf >/dev/null 2>&1; then
+            sudo dnf install -y "${MISSING_PKGS[@]}" || true
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y "${MISSING_PKGS[@]}" || true
+        elif command -v pacman >/dev/null 2>&1; then
+            sudo pacman -Sy --noconfirm "${MISSING_PKGS[@]}" || true
+        elif command -v zypper >/dev/null 2>&1; then
+            sudo zypper install -y "${MISSING_PKGS[@]}" || true
         fi
-    done
-
-    if [ ${#missing[@]} -gt 0 ]; then
-        error deps_missing_list "${missing[*]}"
-        return 1
     fi
-
-    ok deps_ok
 }
 
 check_and_install_deps rsync tar gzip pv
 
 # --- Копирование backup_kit ---
-SRC_DIR="$HOME/scripts/backup_kit"
-DEST_DIR="$BACKUP_DIR/backup_kit"
-if [[ -d "$SRC_DIR" ]]; then
+SRC_DIR="$TARGET_HOME/scripts/REBK"
+DEST_DIR="$BACKUP_DIR/REBK"
+
+if [[ -d "$SRC_DIR" && ! -d "$DEST_DIR" ]]; then
     mkdir -p "$BACKUP_DIR"
-    if [[ -d "$DEST_DIR" ]]; then
-        info copy_skip $DEST_DIR
-    else
-        cp -r "$SRC_DIR" "$BACKUP_DIR/"
-        ok copy_done → $DEST_DIR
-    fi
-else
-    warn copy_missing $SRC_DIR
+    cp -r "$SRC_DIR" "$DEST_DIR"
 fi
 
-# --- Проверка ошибок ---
-if [[ ${ERROR_COUNT:-0} -eq 0 ]]; then
-    # Запуск текстового меню Reincarnation Backup Kit
-    if [[ -x "$TARGET_HOME/bin/menu.sh" ]]; then
-        echo -e "${MSG[text_menu]}"
-        # Запуск меню от текущего пользователя
-        "$TARGET_HOME/bin/menu.sh"
-        exit 0
-    else
-        echo -e "${MSG[menu_not]}"
-    fi
+if [[ -x "$TARGET_DIR/menu.sh" ]]; then
+    "$TARGET_DIR/menu.sh" || true
 fi
 
 # --- Итоговый вывод скриптов для запуска пользователем ---
-info scripts_list
-for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_USERDATA[@]}" "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}"; do
-    # пропускаем служебные скрипты
+echo
+echo "Installed scripts:"
+for script in "${SCRIPTS_SYSTEM[@]}" "${SCRIPTS_OS[@]}" "${SCRIPTS_USERDATA[@]}" \
+              "${HDD_SETUP[@]}" "${SCRIPTS_MEDIA[@]}" "${SCRIPTS_CRON[@]}"; do
+    # пропускаем служебные скрипты, которые не нужны пользователю
     if [[ "$script" == "backup-restore-userdata.sh" || "$script" == "cron-backup-userdata.sh" ]]; then
-       continue
+        continue
     fi
     echo "  - $script"
 done
-
-# --- Завершение ---
-ok done_ins "$DISTRO_ID $DISTRO_VER"

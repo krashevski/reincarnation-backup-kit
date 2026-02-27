@@ -36,15 +36,14 @@ WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 
 # --- Бинарники ---
-TARGET_DIR="$USER_HOME/bin"
+TARGET_DIR="$USER_HOME/bin/REBK"
 
 # --- Архивы ---
 BACKUP_NAME="$SYSTEM_DIR/backup-ubuntu-24.04.tar.gz"
 
-# --- Пути проекта ---
-LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_DIR="$(cd "$LIB_DIR/.." && pwd)"
-I18N_DIR="$SCRIPT_DIR/i18n"
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR/lib"
 
 # LOG_FILE="$LOG_DIR/install-nvidia-cuda.log"
 # RUN_LOG="$LOG_DIR/backres-$(date +%F-%H%M%S).log"

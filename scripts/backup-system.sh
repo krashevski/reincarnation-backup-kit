@@ -51,18 +51,15 @@ require_root || return 1
 detect_system || exit 1
 # echo "[DEBUG] DISTRO_ID=$DISTRO_ID, DISTRO_VER=$DISTRO_VER"
 
-# -------------------------------------------------------------
 # Определяем целевой скрипт
-TARGET="$TARGET_HOME/bin/backup-${DISTRO_ID}-${DISTRO_VER}.sh"
+TARGET_SCRIPT="$TARGET_HOME/bin/REBK/backup-${DISTRO_ID}-${DISTRO_VER}.sh"
 
-if [[ ! -x "$TARGET" ]]; then
-    error no_script "$DISTRO_ID" "$DISTRO_VER" "$TARGET"
+if [[ ! -x "$TARGET_SCRIPT" ]]; then
+    error bap_no_script "$DISTRO_ID" "$DISTRO_VER" "$TARGET"
     exit 1
 fi
 
-# -------------------------------------------------------------
 # Запускаем целевой скрипт
-# -------------------------------------------------------------
-exec "$TARGET" "$@"
+exec "$TARGET_SCRIPT" "$@"
 
 exit 0

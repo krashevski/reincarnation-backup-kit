@@ -53,57 +53,57 @@ require_root || return 1
 inhibit_run "$0" "$@"
 
 # --- Настройки ---
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
-LOG_FILE="$LOG_DIR/install_mediatools.log"
+RUN_LOG="$LOG_DIR/install_mediatools.log"
 
-echo "[`date`] flatpak_start" > "$LOG_FILE"
+info "flatpak_start" | tee -a "$RUN_LOG"
 
 # ----------------- Шаг 0: NVIDIA GPU и CUDA -----------------
 GPU_AVAILABLE=false
 NVENC_AVAILABLE=false
 
 if lspci | grep -i nvidia &>/dev/null; then
-    info flatpak_nvidia_detected | tee -a "$LOG_FILE"
+    info flatpak_nvidia_detected | tee -a "$RUN_LOG"
     if ! command -v nvidia-smi &>/dev/null; then
-        info flatpak_nvidia_driver_install | tee -a "$LOG_FILE"
+        info flatpak_nvidia_driver_install | tee -a "$RUN_LOG"
         sudo ubuntu-drivers autoinstall
     fi
     if nvidia-smi &>/dev/null; then
-        ok flatpak_nvidia_driver_ok | tee -a "$LOG_FILE"
+        ok flatpak_nvidia_driver_ok | tee -a "$RUN_LOG"
         if command -v nvcc &>/dev/null; then
-            ok flatpak_cuda_found | tee -a "$LOG_FILE"
+            ok flatpak_cuda_found | tee -a "$RUN_LOG"
             GPU_AVAILABLE=true
         else
-            warn flatpak_cuda_install | tee -a "$LOG_FILE"
+            warn flatpak_cuda_install | tee -a "$RUN_LOG"
             sudo apt update
             sudo apt install -y nvidia-cuda-toolkit
             if command -v nvcc &>/dev/null; then
-                ok flatpak_cuda_ok | tee -a "$LOG_FILE"
+                ok flatpak_cuda_ok | tee -a "$RUN_LOG"
                 GPU_AVAILABLE=true
             else
-                error flatpak_cuda_fail | tee -a "$LOG_FILE"
+                error flatpak_cuda_fail | tee -a "$RUN_LOG"
             fi
         fi
     else
-        warn flatpak_driver_not | tee -a "$LOG_FILE"
+        warn flatpak_driver_not | tee -a "$RUN_LOG"
     fi
 else
-    info flatpak_no_nvidia | tee -a "$LOG_FILE"
+    info flatpak_no_nvidia | tee -a "$RUN_LOG"
 fi
 
 # ----------------- Шаг 1: Flatpak -----------------
 if ! command -v flatpak &>/dev/null; then
-    info flatpak_install | tee -a "$LOG_FILE"
+    info flatpak_install | tee -a "$RUN_LOG"
     sudo apt update
     sudo apt install -y flatpak
 fi
 
 # ----------------- Шаг 2: Flathub -----------------
 if ! flatpak remotes | grep -q flathub; then
-    info flatpak_flathub_add | tee -a "$LOG_FILE"
+    info flatpak_flathub_add | tee -a "$RUN_LOG"
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 fi
 
@@ -129,11 +129,11 @@ path=/mnt/shotcut
 [Preview]
 scale=50
 EOF
-ok flatpak_proxy_enabled | tee -a "$LOG_FILE"
+ok flatpak_proxy_enabled | tee -a "$RUN_LOG"
 
 # ----------------- Шаг 5: GPU/NVENC для Flatpak -----------------
 if $GPU_AVAILABLE; then
-    info flatpak_gpu_bypass | tee -a "$LOG_FILE"
+    info flatpak_gpu_bypass | tee -a "$RUN_LOG"
     flatpak override --user --device=all org.shotcut.Shotcut
     flatpak run --command=ffmpeg org.shotcut.Shotcut -hide_banner -encoders | grep nvenc && NVENC_AVAILABLE=true
 fi
@@ -145,11 +145,11 @@ mkdir -p "$SHOTCUT_PRESET_DIR"
 if $NVENC_AVAILABLE; then
     CODEC_4K="h264_nvenc"
     RESOURCE_4K="GPU"
-    ok flatpak_nvenc | tee -a "$LOG_FILE"
+    ok flatpak_nvenc | tee -a "$RUN_LOG"
 else
     CODEC_4K="libx264"
     RESOURCE_4K="CPU"
-    warn flatpak_no_nvenc | tee -a "$LOG_FILE"
+    warn flatpak_no_nvenc | tee -a "$RUN_LOG"
 fi
 
 cat > "$SHOTCUT_PRESET_DIR/4K_export.sml" <<EOF
@@ -186,14 +186,18 @@ cat > "$SHOTCUT_PRESET_DIR/FullHD_CPU_HQ_export.sml" <<'EOF'
   </producer>
 </mlt>
 EOF
-ok flatpak_presets_created | tee -a "$LOG_FILE"
+ok flatpak_presets_created | tee -a "$RUN_LOG"
 
 # ----------------- Шаг 7: OpenGL -----------------
-info flatpak_check_opengl | tee -a "$LOG_FILE"
+info flatpak_check_opengl | tee -a "$RUN_LOG"
 if flatpak run --command=glxinfo org.shotcut.Shotcut 2>/dev/null | grep -i "OpenGL renderer" &>/dev/null; then
-    ok flatpak_opengl_ok | tee -a "$LOG_FILE"
+    ok flatpak_opengl_ok | tee -a "$RUN_LOG"
 else
-    warn flatpak_opengl_fail | tee -a "$LOG_FILE"
+    warn flatpak_opengl_fail | tee -a "$RUN_LOG"
 fi
 
-info flatpak_finished | tee -a "$LOG_FILE"
+info flatpak_finished | tee -a "$RUN_LOG"
+
+echo "=============================================================" 
+
+exit 0

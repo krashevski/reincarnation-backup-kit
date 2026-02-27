@@ -64,7 +64,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 TIME="$1"
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 mkdir -p "$BACKUP_DIR"
 
 if ! [[ "$TIME" =~ ^([01]?[0-9]|2[0-3]):([0-5][0-9])$ ]]; then
@@ -83,9 +83,9 @@ fi
 
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/backup-userdata_${REAL_USER}_$(date +%F).log"
+RUN_LOG="$LOG_DIR/bapud-cron_${REAL_USER}_$(date +%F).log"
 
-CRON_LINE="$MINUTE $HOUR * * * ionice -c2 -n7 nice -n10 "$SCRIPT_PATH" "$REAL_USER" >> "$LOG_FILE" 2>&1"
+CRON_LINE="$MINUTE $HOUR * * * ionice -c2 -n7 nice -n10 "$SCRIPT_PATH" "$REAL_USER" >> "$RUN_LOG" 2>&1"
 
 CURRENT_CRON=$(crontab -l 2>/dev/null || true)
 NEW_CRON=$(echo "$CURRENT_CRON" | grep -v "$SCRIPT_PATH" || true)
@@ -98,16 +98,19 @@ info current_jobs
 crontab -l
 
 run_cron_test() {
-   /usr/bin/ionice -c2 -n7 /usr/bin/nice -n10 "$SCRIPT_PATH" "$REAL_USER" >> "$LOG_FILE" 2>&1
+   /usr/bin/ionice -c2 -n7 /usr/bin/nice -n10 "$SCRIPT_PATH" "$REAL_USER" >> "$RUN_LOG" 2>&1
 }
 
 info run_test
 
 if run_cron_test; then
-    ok test_done "$LOG_FILE"
+    ok test_done "$RUN_LOG"
 else
-    error test_failed "$LOG_FILE"
+    error test_failed "$RUN_LOG"
     return 1
 fi
+
+
+echo "=============================================================" 
 
 exit 0

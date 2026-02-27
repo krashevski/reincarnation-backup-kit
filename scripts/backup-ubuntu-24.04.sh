@@ -31,9 +31,11 @@ init_app_lang
 source "$LIB_DIR/logging.sh"
 source "$LIB_DIR/user_home.sh"
 source "$LIB_DIR/real_user.sh"
+source "$LIB_DIR/runner.sh"
 source "$LIB_DIR/privileges.sh"
 source "$LIB_DIR/context.sh"
 source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
 source "$LIB_DIR/system_detect.sh"
 
 if ! TARGET_HOME="$(resolve_target_home)"; then
@@ -50,51 +52,42 @@ require_root || return 1
 # -------------------------------------------------------------
 # Настройки
 # -------------------------------------------------------------
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-readonly RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
-
-# -------------------------------------------------------------
-# Ownership check
-# -------------------------------------------------------------
-require_root || die run_sudo
+readonly RUN_LOG="$LOG_DIR/bap-ubuntu-$(date +%F-%H%M%S).log"
 
 if [ -d "$BACKUP_DIR" ]; then
-    real_user="${SUDO_USER:-$USER}"
     owner=$(stat -c %U "$BACKUP_DIR")
-    if [ "$owner" != "$real_user" ]; then
-        info change_owner "$real_user:$real_user"
-        chown -R "$real_user:$real_user" "$BACKUP_DIR"
+    if [ "$owner" != "$REAL_USER" ]; then
+        info backup_change_owner "$REAL_USER:$REAL_USER"
+        chown -R "$REAL_USER:$REAL_USER" "$BACKUP_DIR"
         chmod -R u+rwX,go+rX "$BACKUP_DIR"
     fi
 else
-    die no_dir
+    die backup_no_dir
 fi
 
-# -------------------------------------------------------------
-# Cleanup on exit
-# -------------------------------------------------------------
-cleanup() {
-    info clean_tmp
-    rm -rf "$WORKDIR"
-    ok tmp_cleaned
-}
-trap cleanup EXIT INT TERM
+# --- Очистка WORKDIR ---
+# Регистрируем $WORKDIR и устанавливаем trap
+register_cleanup "$WORKDIR"
+trap 'cleanup' EXIT INT TERM
+info install_workdir_cleaning $WORKDIR
+cleanup_workdir
+mkdir -p "$WORKDIR"
+ok install_workdir_cleaned
 
 # -------------------------------------------------------------
 # Backup packages
 # -------------------------------------------------------------
-backup_packages() {
-    info backup_pkgs
+backup_system_packages() {
     PKG_DIR="$BACKUP_DIR/system/packages"
     mkdir -p "$PKG_DIR"
 
     dpkg --get-selections > "$PKG_DIR/installed-packages.list"
     dpkg-query -W -f='${Package} ${Version}\n' > "$PKG_DIR/installed-packages-versions.list"
-    apt-mark showmanual > "$PKG_DIR/manual-packages.list"
 
     cp /etc/apt/sources.list "$PKG_DIR/sources.list"
     mkdir -p "$PKG_DIR/sources.list.d"
@@ -103,75 +96,94 @@ backup_packages() {
     mkdir -p "$PKG_DIR/keyrings"
     cp -a /etc/apt/keyrings/* "$PKG_DIR/keyrings/" 2>/dev/null || true
 
-    cat > "$PKG_DIR/README" <<'EOF'
+    cat > "$PKG_DIR/README_SYSTEM_PACKAGES" <<'EOF'
 =============================================================
-System Packages Backup and Restore (Ubuntu 24.04)
+System packages backup (Ubuntu 24.04)
 =============================================================
-This module is part of Backup Kit v1.16.
+This module is part of REBK
 Contains package lists, repositories and GPG keyrings.
 EOF
 
-    ok pkgs_done
+    ok backup_system_pkgs
 }
 
-# -------------------------------------------------------------
-# Run step
-# -------------------------------------------------------------
-run_step() {
-    local step_key="$1"
-    local func="$2"
+backup_user_packages() {
+    PKG_DIR="$BACKUP_DIR/system/packages"
+    mkdir -p "$PKG_DIR"
 
-    declare -F "$func" >/dev/null || die not_function "$func"
+    apt-mark showmanual > "$PKG_DIR/manual-packages.list"
 
-    if "$func"; then
-        ok step_ok "$step_key"
-    else
-        error step_fail "$step_key" "$RUN_LOG" || true
-        return 1
-    fi
+    cat > "$PKG_DIR/README_USER_PACKAGES" <<'EOF'
+=============================================================
+User packages backup (Ubuntu 24.04)
+=============================================================
+This module is part of REBK
+Contains User-installed packages
+EOF
+
+    ok backup_user_pkgs
 }
+
 
 # -------------------------------------------------------------
 # Create archive
 # -------------------------------------------------------------
 create_archive() {
-    info create_archive "$BACKUP_NAME..."
+    info backup_create_archive "$BACKUP_NAME..."
 
-    SIZE=$(du -sb "$WORKDIR" | awk '{print $1}')
+    [[ -d "$WORKDIR" ]] || die "WORKDIR missing: $WORKDIR"
+
+    SIZE=$(du -sb "$WORKDIR" 2>/dev/null | awk '{print $1}')
+    SIZE=${SIZE:-0}
 
     if [[ -f "$BACKUP_NAME" ]]; then
-        warn archive_exists
+        warn backup_archive_exists
         rm -f "${BACKUP_NAME}.old"
         mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
     fi
 
-    if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" | gzip > "$BACKUP_NAME"; then
-        ok archive_done "$BACKUP_NAME"
+    if tar -C "$BACKUP_DIR" -cf - system | pv -s "$SIZE" | gzip > "$BACKUP_NAME"; then
+        ok backup_archive_done "$BACKUP_NAME"
     else
-        error archive_fail
+        error backup_archive_fail
         return 1
     fi
 }
 
+MODE="${1:-full}"
+
+case "$MODE" in
+    full)
+        DO_SYSTEM=1
+        DO_USER=0
+        ;;
+    manual)
+        DO_SYSTEM=0
+        DO_USER=1
+        ;;
+    *)
+        die "Unknown mode: $MODE"
+        ;;
+esac
+
 # -------------------------------------------------------------
 # Основной процесс
 # -------------------------------------------------------------
-info "======================================================"
+echo "=============================================================" | tee -a "$RUN_LOG"
 info "REBK — $(echo_msg backup_start)"
-info "======================================================"
-
 info backup_started
 
-run_step "$(say system_packages)" backup_packages || die backup_fail
-run_step "$(say archive)" create_archive
+if [[ $DO_SYSTEM -eq 1 ]]; then
+    run_step "$(say step_system_packages)" backup_system_packages || die step_backup_fail
+fi
 
-info "======================================================"
+if [[ $DO_USER -eq 1 ]]; then
+    run_step "$(say step_user_packages)" backup_user_packages || die step_backup_fail
+fi
+run_step "$(say step_archive)" create_archive
+
 ok "REBK — $(echo_msg backup_sucess)"
-info log_file "$RUN_LOG"
-info "======================================================"
-
-info backup_finished
+info backup_log_file "$RUN_LOG"
+echo "=============================================================" | tee -a "$RUN_LOG"
 
 exit 0
-
-

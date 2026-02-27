@@ -14,7 +14,7 @@
 # =============================================================
 :<<'DOC'
 =============================================================
-restore-sytem.sh v1.0 — Universal Restore Dispatcher (Ubuntu/Debian)
+restore-sytem.sh — universal restore dispatcher (Ubuntu/Debian)
 Part of Backup Kit — minimal restore script with logging
 Author: Vladislav Krashevsky with support from ChatGPT
 =============================================================
@@ -49,78 +49,65 @@ fi
 require_root || return 1
 # inhibit_run "$0" "$@"
 
-# --- Detect system ---
-detect_system || exit 1
-
 ## layout / policy
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 LOG_DIR="$BACKUP_DIR/logs"
 WORKDIR="$BACKUP_DIR/workdir"
-RUN_LOG="$LOG_DIR/restore-$(date +%F_%H%M%S).log"
+RUN_LOG="$LOG_DIR/res-packages-$(date +%F_%H%M%S).log"
 mkdir -p "$LOG_DIR"
+
+echo "=============================================================" | tee -a "$RUN_LOG"
+echo "[$(date +%F_%T)]" | tee -a "$RUN_LOG"
+info restore_dispatcher_started
+
+# --- Detect system ---
+detect_system || exit 1 | tee -a "$RUN_LOG"
 
 # --- Определяем скрипт и архив ---
 SCRIPT=""
-ARCHIVE="${1:-}"
+
+# $1 = режим (full/manual)
+# $2 = архив (необязательно)
+MODE="${1:-full}"
 
 case "$DISTRO_ID-$DISTRO_VER" in
     ubuntu-24.04)
-        SCRIPT="$TARGET_HOME/bin/restore-ubuntu-24.04.sh"
-        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
+        TARGET_SCRIPT="$TARGET_HOME/bin/REBK/restore-ubuntu-24.04.sh"
+        ARCHIVE="${2:-$BACKUP_DIR/backup-ubuntu-24.04.tar.gz}"
         ;;
     ubuntu-22.04)
-        SCRIPT="$TARGET_HOME/bin/restore-ubuntu-22.04.sh"
-        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-ubuntu-22.04.tar.gz}"
+        TARGET_SCRIPT="$TARGET_HOME/bin/REBK/restore-ubuntu-22.04.sh"
+        ARCHIVE="${2:-$BACKUP_DIR/backup-ubuntu-22.04.tar.gz}"
         ;;
     debian-12)
-        SCRIPT="$TARGET_HOME/bin/restore-debian-12.sh"
-        ARCHIVE="${ARCHIVE:-$BACKUP_DIR/backup-debian-12.tar.gz}"
+        TARGET_SCRIPT="$TARGET_HOME/bin/REBK/restore-debian-12.sh"
+        ARCHIVE="${2:-$BACKUP_DIR/backup-debian-12.tar.gz}"
         ;;
     *)
-        error not_supported "$DISTRO_ID" "$DISTRO_VER"
+        error restore_not_supported "$DISTRO_ID" "$DISTRO_VER"
         exit 1
         ;;
 esac
 
+
+
 # --- Проверки наличия ---
-if [ ! -x "$SCRIPT" ]; then
-    error not_found_script "$SCRIPT"
+if [ ! -x "$TARGET_SCRIPT" ]; then
+    error restore_not_found_script "$TARGET_SCRIPT"
     exit 1
 fi
 
 if [ ! -f "$ARCHIVE" ]; then
-    error not_found_archive "$ARCHIVE"
+    error restore_not_found_archive "$ARCHIVE"
     exit 1
 fi
 
-# --- Начало restore dispatcher ---
-log_separator() {
-    echo "=============================================================" | tee -a "$RUN_LOG"
-}
-
-log_timestamp() {
-    echo "[$(date +%F_%T)]" | tee -a "$RUN_LOG"
-}
-
-log_info() {
-    echo "[$(date +%F_%T)] [INFO] $*" | tee -a "$RUN_LOG"
-}
-
-# --- Выводим заголовок ---
-log_separator
-log_timestamp
-info restore_dispatcher_started
-log_separator
-
 # --- Запуск restore ---
-# Всё, что restore_running выводит, идёт и в терминал, и в лог
-info restore_running "$SCRIPT" "$ARCHIVE" 2>&1 | tee -a "$RUN_LOG"
+# Передаём режим и архив целевому скрипту:
+exec "$TARGET_SCRIPT" "$MODE" "$ARCHIVE"
 
-# --- Завершение ---
-log_separator
-log_timestamp
 info restore_dispatcher_finished
 info restore_log_file "$RUN_LOG"
-log_separator
+echo "=============================================================" | tee -a "$RUN_LOG"
 
 exit 0
