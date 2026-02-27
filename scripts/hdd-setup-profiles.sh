@@ -58,7 +58,6 @@ LOG_FILE="/mnt/backups/logs/hdd_setup_profiles.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 exec 3>&1 4>&2
 trap 'exec 1>&3 2>&4' EXIT
-info log_enabled "$LOG_FILE"
 
 # --- Поиск доступных дисков ---
 info hdd_detect
@@ -77,64 +76,64 @@ for d in "${ALL_DISKS[@]}"; do
     
     # Пропускаем диск с ОС
     if [[ "$d" == "$ROOT_DISK_NAME" ]]; then
-        warn skip_os_disk "$dev"
+        warn hdd_skip_os_disk "$dev"
         continue
     fi
     
     # проверяем, есть ли у диска смонтированные разделы как архивы
     if mount | grep -qE "^$dev.* (/(mnt/)?backups?|/(mnt/)?backup)(\\s|$)"; then
-        warn skip_archive "$dev"
+        warn hdd_skip_archive "$dev"
         continue
     fi
     AVAILABLE_DISKS+=("$d")
 done
 
 if [ ${#AVAILABLE_DISKS[@]} -eq 0 ]; then
-    error no_partitioning
+    error hdd_no_partitioning
     exit 1
 fi
 
 # --- Выбор диска пользователем ---
-echo_msg sel_partition
+echo_msg hdd_sel_partition
 
 select_prompt() {
     local key="$1"
     PS3="$(say "$key") "
 }
 
-select_prompt select_disk
+select_prompt hdd_select_disk
 
 select DISK in "${AVAILABLE_DISKS[@]}"; do
     case "$REPLY" in
         0)
-            info exit_selected
+            info hdd_exit_selected
             return 0    # или break / exit 0 — по архитектуре меню
             ;;
         *)
             if [[ -n "$DISK" ]]; then
                 break
             else
-                warn invalid_choice
+                warn hdd_invalid_choice
             fi
             ;;
     esac
 done
 
 HDD="/dev/$DISK"
-info disk_selected "$HDD"
+info hdd_disk_selected "$HDD"
 
 # Проверка монтирования разделов на выбранном диске
 # Проверка значения переменной
 if [ -z "$HDD" ]; then
-    error var_empty
+    error hdd_var_empty
     exit 1
 fi
 
-info check_mounts "$HDD"
+info hdd_check_mounts "$HDD"
 
 ensure_disk_free() {
     local disk="$1"
-    info freeing_disk "$disk"
+    info hdd_freeing_disk "$disk"
 
     # 1) Отключаем авто-монтирование GNOME (без фейлов, если нет gsettings)
     gsettings set org.gnome.desktop.media-handling automount false 2>/dev/null || true
@@ -156,9 +155,9 @@ ensure_disk_free() {
     local pids
     pids=$(fuser -km "$disk" 2>/dev/null || true)
     if [ -n "$pids" ]; then
-        info term_holding_processes "$pids"
+        info hdd_term_holding_processes "$pids"
     else
-        info no_found_holding
+        info hdd_no_found_holding
     fi
 
     # 5) Синхронизируем и даём ядру время
@@ -172,7 +171,7 @@ ensure_disk_free() {
 
     # 7) Финальная проверка — если всё ещё есть процессы, считаем диск занятым
     if fuser -vm "$disk" 2>/dev/null | tail -n +2 | grep -q .; then
-        error disk_busy "$disk"
+        error hdd_disk_busy "$disk"
         exit 1
     fi
 }
@@ -186,14 +185,14 @@ if [[ -z "$DISK_SIZE" ]]; then
 fi
 
 DISK_SIZE_GB=$((DISK_SIZE / 1024 / 1024 / 1024))
-info disk_size "${DISK_SIZE_GB} GB"
+info hdd_disk_size "$DISK_SIZE_GB GB"
 
 # Покажем предупреждение прямо в терминале (и оно же попадёт в лог, если нужно)
-printf '%s\n' "$(say warn_delete)" >/dev/tty
+printf '%s\n' "$(say hdd_warn_delete)" >/dev/tty
 
 # Прочитаем ответ с управляющего терминала, чтобы read видел ввод
 # Используем /dev/tty напрямую, чтобы read работал даже под sudo/systemd
-read -r -p "$(say confirm_action)" answer </dev/tty
+read -r -p "$(say hdd_confirm_action)" answer </dev/tty
 
 if [[ ! "$answer" =~ ^[Yy]$ ]]; then
     echo "Aborted by user" >/dev/tty
@@ -220,62 +219,62 @@ USER_HOME="$(getent passwd "$EXISTING_USER" | cut -d: -f6)"
 
 # Проверка существования домашней директории
 if [[ ! -d "$USER_HOME" ]]; then
-    echo "ERROR: Home directory not found for user $EXISTING_USER"
+    error hdd_home_not "$EXISTING_USER"
     exit 1
 fi
 
-echo_msg only_user "$EXISTING_USER" "$DISK"
+echo_msg hdd_only_user "$EXISTING_USER" "$DISK"
 
 # --- $USER2 ---
-read -rp "$(echo_msg create_second_user)" CREATE_USER2
+read -rp "$(echo_msg hdd_create_second_user)" CREATE_USER2
 
 if [[ "$CREATE_USER2" == "y" ]]; then
-    read -rp "$(echo_msg second_user_name)" USER2
-    echo_msg be_second_user "$USER2"
+    read -rp "$(echo_msg hdd_second_user_name)" USER2
+    echo_msg hdd_be_second_user "$USER2"
 else
     USER2=""   # ← инициализация пустым значением
-    echo_msg no_second_user
+    echo_msg hdd_no_second_user
 fi
 
 # --- $USER3 ---
-read -rp "$(echo_msg create_third_user)" CREATE_USER3
+read -rp "$(echo_msg hdd_create_third_user)" CREATE_USER3
 
 if [[ "$CREATE_USER3" == "y" ]]; then
-    read -rp "$(echo_msg third_user_name)" USER3
+    read -rp "$(echo_msg hdd_third_user_name)" USER3
     echo_msg be_third_user "$USER3"
 else
     USER3=""   # ← инициализация пустым значением
-    echo_msg no_third_user
+    echo_msg hdd_no_third_user
 fi
 
 # Задание размеров разделов для созданных пользователей
-info disk_size "$DISK_SIZE_GB GB"
+info hdd_disk_size "$DISK_SIZE_GB GB"
 
 # Ввод размера для существующего пользователя
-read -r -p "$(echo_msg existing_partition_size "$EXISTING_USER")" SIZE1
+read -r -p "$(echo_msg hdd_existing_partition_size "$EXISTING_USER")" SIZE1
 
 # Очищаем от всего, кроме цифр
 SIZE1=$(echo "$SIZE1" | tr -cd '0-9')
 
 # Проверяем, что это число
 if ! [[ "$SIZE1" =~ ^[0-9]+$ ]]; then
-    error "$(say invalid_size)" $SIZE1
+    error hdd_invalid_size "$SIZE1"
     exit 1
 fi
 
 FREE=$((DISK_SIZE_GB - SIZE1))
 
-info remaining "$FREE GB"
+info hdd_remaining "$FREE GB"
 
 if [[ $CREATE_USER2 == [Yy] && -n "$USER2" ]]; then
-    read -r -p "$(say second_partition_size "$USER2")" SIZE2
+    read -r -p "$(say hdd_second_partition_size "$USER2")" SIZE2
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2))
-    info remaining "$FREE GB"
+    info hdd_remaining "$FREE GB"
 fi
 if [[ "$CREATE_USER3" == [Yy] && -n "$USER3" ]]; then
-    read -r -p "$(say third_partition_size "$USER3")" SIZE3
+    read -r -p "$(say hdd_third_partition_size "$USER3")" SIZE3
     FREE=$((DISK_SIZE_GB - SIZE1 - SIZE2 - SIZE3))
-    info remaining "$FREE GB"
+    info hdd_remaining "$FREE GB"
 fi
 
 # --- Создание таблицы разделов ---
@@ -289,7 +288,7 @@ START=1
 END=$((START + SIZE1))
 PART=1
 
-info create_existing_partition "$EXISTING_USER"
+info hdd_create_existing_partition "$EXISTING_USER"
 
 # ensure_disk_free "$HDD"
 parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
@@ -299,9 +298,9 @@ udevadm settle --timeout=10 || true
 mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}"
 
 if mkfs.ext4 -F -L "${EXISTING_USER}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
-    info done_fs "${HDD}${PART}" "${EXISTING_USER}"   # Вывод: "Готово: FS /dev/$PART для USER"
+    info hdd_done_fs "${HDD}${PART}" "${EXISTING_USER}"   # Вывод: "Готово: FS /dev/$PART для USER"
 else
-    error fs_failed "${HDD}${PART}" "${EXISTING_USER}"  # Вывод: "[ERROR] Не удалось создать FS"
+    error hdd_fs_failed "${HDD}${PART}" "${EXISTING_USER}"  # Вывод: "[ERROR] Не удалось создать FS"
     exit 1
 fi
 
@@ -312,7 +311,7 @@ PART=$((PART + 1))
 # --- Создание раздела для USER2 (если задан) ---
 if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     END=$((START + SIZE2))
-    info create_second_partition "$USER2"
+    info hdd_create_second_partition "$USER2"
     
 #   ensure_disk_free "$HDD"
     parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
@@ -322,9 +321,9 @@ if [[ -n "$USER2" && -n "$SIZE2" ]]; then
     mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}"
     
     if mkfs.ext4 -F -L "${USER2}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
-        info done_fs "${HDD}${PART}" "${USER2}"   # Вывод: "Готово: FS /dev/$PART для USER"
+        info hdd_done_fs "${HDD}${PART}" "${USER2}"   # Вывод: "Готово: FS /dev/$PART для USER"
     else
-        error fs_failed "${HDD}${PART}" "${USER2}"  # Вывод: "[ERROR] Не удалось создать FS"
+        error hdd_fs_failed "${HDD}${PART}" "${USER2}"  # Вывод: "[ERROR] Не удалось создать FS"
     exit 1
     fi
     START=$END
@@ -334,7 +333,7 @@ fi
 # --- Создание раздела для USER3 (если задан) ---
 if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     END=$((START + SIZE3))
-    info create_third_partition "$USER3"
+    info hdd_create_third_partition "$USER3"
     ensure_disk_free "$HDD" && parted -s "$HDD" mkpart primary ext4 "${START}GiB" "${END}GiB"
     
 #   ensure_disk_free "$HDD"
@@ -345,9 +344,9 @@ if [[ -n "$USER3" && -n "$SIZE3" ]]; then
     mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}"
 
     if mkfs.ext4 -F -L "${USER3}" "${HDD}${PART}" >>"$LOG_FILE" 2>&1; then
-        info done_fs "${HDD}${PART}" "${USER3}"   # Вывод: "Готово: FS /dev/$PART для USER"
+        info hdd_done_fs "${HDD}${PART}" "${USER3}"   # Вывод: "Готово: FS /dev/$PART для USER"
     else
-        error fs_failed "${HDD}${PART}" "${USER3}"  # Вывод: "[ERROR] Не удалось создать FS"
+        error hdd_fs_failed "${HDD}${PART}" "${USER3}"  # Вывод: "[ERROR] Не удалось создать FS"
     exit 1
     fi
     START=$END
@@ -370,7 +369,7 @@ add_fstab_entry() {
             MOUNTPOINT="${base}${n}"
             n=$((n+1))
         done
-        info mountpoint_exists "$MOUNTPOINT"
+        info hdd_mountpoint_exists "$MOUNTPOINT"
     fi
 
     # создаём каталог
@@ -378,10 +377,10 @@ add_fstab_entry() {
 
     # проверка: нет ли уже записи с этим UUID или этим MOUNTPOINT
     if grep -q "UUID=$UUID" /etc/fstab || grep -q "[[:space:]]$MOUNTPOINT[[:space:]]" /etc/fstab; then
-        warn fstab_exists
+        warn hdd_fstab_exists
     else
         echo "UUID=$UUID  $MOUNTPOINT  $FSTYPE  $OPTIONS  $PASS" | sudo tee -a /etc/fstab
-        echo_msg fstab_added "$MOUNTPOINT"
+        echo_msg hdd_fstab_added "$MOUNTPOINT"
     fi
 }
 
@@ -428,13 +427,13 @@ mount_partitions() {
 }
 
 if is_usb_disk "$HDD"; then
-    info no_write_usb
+    info hdd_no_write_usb
 else
     mount_partitions
 fi
 
 if mountpoint -q /mnt/storage; then
-    info part_mounted
+    info hdd_part_mounted
 
     # multi-user support
     export EXISTING_USER
@@ -443,14 +442,14 @@ if mountpoint -q /mnt/storage; then
     SCRIPT_DIR="$(dirname "$(realpath "$0")")"
     exec "$SCRIPT_DIR/setup-symlinks.sh"
 else
-    warn say no_part_mounted
+    warn hdd_no_part_mounted
 fi
 
 # --- Проверка ---
 df -h | grep -E "$EXISTING_USER|$USER2|$USER3" >&3
 
-echo_msg done_disks_users
-info restore_hint
+echo_msg hdd_done_disks_users
+info hdd_restore_hint
 
 exit 0
 

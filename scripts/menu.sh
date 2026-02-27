@@ -116,7 +116,7 @@ change_language() {
         2) APP_LANG="ru" ;;
         3) APP_LANG="ja" ;;
         *)
-            warn invalid_choice
+            warn menu_invalid_choice
             return
             ;;
     esac
@@ -134,19 +134,19 @@ main_menu() {
     while true; do
         clear
         echo "========================================="
-        echo "   Reincarnation Backup Kit — $(echo_msg main_menu)"
+        echo "   Reincarnation Backup Kit — $(echo_msg menu_main)"
         echo "========================================="
-        echo " 1) $(say backup)"
-        echo " 2) $(say restore)"
-        echo " 3) $(say cron_jobs)"
-        echo " 4) $(say media)"
-        echo " 5) $(say tools)"
-        echo " 6) $(say logs)"
-        echo " 7) $(say settings)"
+        echo " 1) $(say menu_backup)"
+        echo " 2) $(say menu_restore)"
+        echo " 3) $(say menu_cron_jobs)"
+        echo " 4) $(say menu_media)"
+        echo " 5) $(say menu_tools)"
+        echo " 6) $(say menu_logs)"
+        echo " 7) $(say menu_settings)"
         echo
-        echo " 0) $(say exit)"
+        echo " 0) $(say menu_exit)"
         echo "-----------------------------------------"
-        read -rp "$(echo_msg sel_opt)" choice
+        read -rp "$(echo_msg menu_sel_opt)" choice
         case "$choice" in
             1) backup_menu ;;
             2) restore_menu ;;
@@ -155,8 +155,8 @@ main_menu() {
             5) tools_menu ;;
             6) logs_menu ;;
             7) settings_menu ;;
-            0) echo_msg exit; exit 0 ;;
-            *) warn invalid_choice ;;
+            0) echo_msg menu_exit; exit 0 ;;
+            *) warn menu_invalid_choice ;;
         esac
     done
 }
@@ -166,20 +166,20 @@ backup_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo_msg backup_options
+        echo_msg menu_backup_options
         echo "-----------------------------------------"
         info system "$DISTRO_ID $DISTRO_VER"
-        echo "$(say backup_system_full)"
-        echo "$(say backup_system_manual)"
+        echo "$(say menu_backup_system_full)"
+        echo "$(say menu_backup_system_manual)"
         echo
-        echo "$(say userdata)" 
-        echo "$(say backup_firefox)"
-        echo "$(say userdata_backup)"
-        echo "$(say full_backup)"
+        echo "$(say menu_userdata)" 
+        echo "$(say menu_backup_firefox)"
+        echo "$(say menu_backup_userdata)"
+        echo "$(say menu_backup_full)"
         echo
-        echo "$(say back_main)"
+        echo "$(say menu_back_main)"
         echo "-----------------------------------------"
-        read -rp "$(echo_msg sel_opt)" choice
+        read -rp "$(echo_msg menu_sel_opt)" choice
         case "$choice" in
             1) bash "$SYS_BACKUP" full ;;      # Создаём full backup
             2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
@@ -188,15 +188,15 @@ backup_menu() {
                    # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
                    "$FIREFOX_BACKUP_RESTORE" backup_firefox_profile
                else
-                   error firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
+                   error menu_firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
             4) bash "$USER_BACKUP" ;;
             5) bash "$USER_BACKUP" --fresh ;;
             0) return ;;
-            *) warn invalid_choice ;;
+            *) warn menu_invalid_choice ;;
         esac
-        read -rp "$(echo_msg press_return)"
+        read -rp "$(echo_msg menu_press_return)"
     done
 }
 
@@ -206,21 +206,21 @@ restore_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo_msg restore_options
+        echo_msg menu_restore_options
         echo "-----------------------------------------"
-        info system "$DISTRO_ID $DISTRO_VER"
+        info menu_system "$DISTRO_ID $DISTRO_VER"
         echo
         echo "$(say menu_recover_acconts)"     # Restore user accounts
-        echo "$(say restore_system_full)"      # Incremental restore of system packages
-        echo "$(say restore_system_manual)"    # Manual restore of system       
+        echo "$(say menu_restore_system_full)"      # Incremental restore of system packages
+        echo "$(say menu_restore_system_manual)"    # Manual restore of system       
         echo
-        echo "$(say userdata)" 
-        echo "$(say restore_firefox)"          # Restore Firefox profile
-        echo "$(say restore_userdata)"         # Restore userdata
+        echo "$(say menu_userdata)" 
+        echo "$(say menu_restore_firefox)"          # Restore Firefox profile
+        echo "$(say menu_restore_userdata)"         # Restore userdata
         echo
-        echo "$(say back_main)"                # Back to main menu
+        echo "$(say menu_back_main)"                # Back to main menu
         echo "-----------------------------------------"
-        read -rp "$(echo_msg sel_opt)" choice
+        read -rp "$(echo_msg menu_sel_opt)" choice
 
         case "$choice" in
             1)  
@@ -234,14 +234,14 @@ restore_menu() {
                    # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
                    "$FIREFOX_BACKUP_RESTORE" restore_firefox_profile
                else
-                   error firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
+                   error menu_firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
             5) bash "$USER_RESTORE" ;;             # restore userdata
             0) return ;;
-            *) warn invalid_choice ;;
+            *) warn menu_invalid_choice ;;
         esac
-        read -rp "$(echo_msg press_return)"
+        read -rp "$(echo_msg menu_press_return)"
     done
 }
 
@@ -249,19 +249,19 @@ restore_menu() {
 cron_menu() {
     clear
     echo "-----------------------------------------"
-    echo "$(say manage_cron)"
+    echo "$(say menu_manage_cron)"
     echo "-----------------------------------------"
     echo "$(say menu_cron)"
-    echo "$(say clean_backup_logs)"
-    echo "$(say remove_cron_task)"
+    echo "$(say menu_clean_backup_logs)"
+    echo "$(say menu_remove_cron_task)"
     echo
-    echo "$(say back_main)"
+    echo "$(say menu_back_main)"
     echo "-----------------------------------------"
-    read -rp "$(echo_msg sel_opt)" choice
+    read -rp "$(echo_msg menu_sel_opt)" choice
     case "$choice" in
         1)
             # Ввод времени для CRON
-            read -rp "$(echo_msg enter_time)" CRON_TIME
+            read -rp "$(echo_msg menu_enter_time)" CRON_TIME
 
             # Выбор пользователя через библиотеку
             if select_user "$(say menu_cron_shedule)"; then
@@ -269,27 +269,27 @@ cron_menu() {
                 CRON_USER="${SELECTED_USERS[0]}"
 
                 if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
-                    info adding_cron "$CRON_TIME" "$CRON_USER"
+                    info menu_adding_cron "$CRON_TIME" "$CRON_USER"
                     bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
-                    echo_msg cron_job_installed
+                    echo_msg menu_cron_job_installed
                 else
-                    error empty_entered
+                    error menu_empty_entered
                 fi
             else
                 # Если пользователь не выбран
-                error empty_entered
+                error menu_empty_entered
             fi
 
-            read -rp "$(echo_msg press_continue)"
+            read -rp "$(echo_msg menu_press_continue)"
             ;;
       
         2) bash "$CLEAN_LOGS" ;;
         3) bash "$REMOVE_CRON" ;;
         0) return ;;
-        *) warn invalid_choice ;;
+        *) warn menu_invalid_choice ;;
     esac
     echo
-    read -rp "$(echo_msg press_return)"
+    read -rp "$(echo_msg menu_press_return)"
 }
 
 # --- Подменю Media ---
@@ -298,14 +298,14 @@ media_menu() {
     echo "-----------------------------------------"
     echo "$(say menu_media)"
     echo "-----------------------------------------"
-    echo "$(say install_flatpak)"
-    echo "$(say install_nvidia)"
-    echo "$(say checks_gpu)"
-    echo "$(say install_apt)"
+    echo "$(say menu_install_flatpak)"
+    echo "$(say menu_install_nvidia)"
+    echo "$(say menu_checks_gpu)"
+    echo "$(say menu_install_apt)"
     echo
-    echo "$(say back_main)"
+    echo "$(say menu_back_main)"
     echo "-----------------------------------------"
-    read -rp "$(echo_msg sel_opt)" choice
+    read -rp "$(echo_msg menu_sel_opt)" choice
     case "$choice" in     
         1) "$MEDIA_FLATPAK" ;;
         2) sudo bash "$NVIDIA_CUDA" ;;
@@ -318,23 +318,23 @@ media_menu() {
 
            case "$status" in
               0)
-                 info apt_installed
+                 info menu_apt_installed
               ;;
               10)
-                 warn apt_busy
-                 info returned_main_menu
+                 warn menu_apt_busy
+                 info menu_returned_main_menu
               ;;
               *)
-                 error installation_error "$status"
-                 info returned_menu
+                 error menu_installation_error "$status"
+                 info menu_returned_menu
               ;;
           esac
         ;;
         0) return ;;
-        *) warn invalid_choice ;;
+        *) warn menu_invalid_choice ;;
     esac
     echo
-    read -rp "$(echo_msg press_return)"
+    read -rp "$(echo_msg menu_press_return)"
 }
 
 # --- Подменю Tools ---
@@ -347,13 +347,13 @@ tools_menu() {
     echo "$(say menu_last_archive)"
     echo
     echo "$(say menu_system)"
-    echo "$(say system_mounts)"
-    echo "$(say hdd_setup)"
-    echo "$(say setup_symlinks)"
+    echo "$(say menu_system_mounts)"
+    echo "$(say menu_hdd_setup)"
+    echo "$(say menu_setup_symlinks)"
     echo
-    echo "$(say back_main)"
+    echo "$(say menu_back_main)"
     echo "-----------------------------------------"
-    read -rp "$(say sel_opt)" choice
+    read -rp "$(say menu_sel_opt)" choice
     case "$choice" in
         1)
            if select_user "$(say menu_check_archive)"; then
@@ -366,25 +366,25 @@ tools_menu() {
         3) "$HDD_SETUP" ;;
         4) "$SEIUP_SYMLINKS" ;;
         0) return ;;
-        *) warn invalid_choice ;;
+        *) warn menu_invalid_choice ;;
     esac
     echo
-    read -rp "$(echo_msg press_return)"
+    read -rp "$(echo_msg menu_press_return)"
 }
 
 logs_menu() {
     clear
     echo "-----------------------------------------"
-    echo "$(say log_files)"
+    echo "$(say menu_log_files)"
     echo "-----------------------------------------"
-    echo "$(say list_logs)"
-    echo "$(say in_ranger)"
-    echo "$(say sel_file)"
-    echo "$(say exit_file)"
-    echo "$(say exit_ranger)"
+    echo "$(say menu_list_logs)"
+    echo "$(say menu_in_ranger)"
+    echo "$(say mrnu_sel_file)"
+    echo "$(say menu_exit_file)"
+    echo "$(say menu_exit_ranger)"
     echo "-----------------------------------------"
 
-    read -rp "$(echo_msg run_return) " choice
+    read -rp "$(echo_msg menu_run_return) " choice
 
     case "$choice" in
         "" )
@@ -394,7 +394,7 @@ logs_menu() {
             return
             ;;
         * )
-            echo_msg return_menu
+            echo_msg menu_return_menu
             sleep 1
             ;;
     esac
@@ -409,25 +409,25 @@ settings_menu() {
         echo "$(say menu_settings)"
         echo "-----------------------------------------"
         echo "$(say menu_change_language)"
-        echo "$(say backup_directories)"
-        echo "$(say manage_cuda)"
+        echo "$(say menu_backup_directories)"
+        echo "$(say menu_manage_cuda)"
         echo
-        echo "$(say back_main)"
+        echo "$(say menu_back_main)"
         echo "-----------------------------------------"
-        read -rp "$(echo_msg sel_opt)" choice
+        read -rp "$(echo_msg menu_sel_opt)" choice
         case "$choice" in
             1)
                 change_language # <-- здесь вызываем функцию переключения языка
-                read -rp "$(echo_msg press_continue)"
+                read -rp "$(echo_msg menu_press_continue)"
                 ;;
             2)
-                echo_msg backupdir_not
-                read -rp "$(echo_msg press_continue)"
+                echo_msg menu_backupdir_not
+                read -rp "$(echo_msg menu_press_continue)"
                 ;;
             3)
                 if [[ ! -x "$CUDA_SCRIPT" ]]; then
-                   warn checkcuda_not
-                   read -rp "$(echo_msg press_continue)"
+                   warn menu_checkcuda_not
+                   read -rp "$(echo_msg menu_press_continue)"
                    break
                 fi
 
@@ -443,7 +443,7 @@ settings_menu() {
                    echo "$(say menu_return)"
                    echo
                    echo "-----------------------------------------"
-                   read -rp "$(echo_msg choose_option) " cuda_choice
+                   read -rp "$(echo_msg menu_choose_option) " cuda_choice
                    case "$cuda_choice" in
                    1)
                         if "$CUDA_SCRIPT" check; then
@@ -464,15 +464,15 @@ settings_menu() {
                         ;;                     
 
                    *)
-                        warn invalid_choice
+                        warn menu_invalid_choice
                         ;;
                    esac
                    echo
-                   read -rp "$(echo_msg press_continue)"
+                   read -rp "$(echo_msg menu_press_continue)"
                    done
                    ;;
             0) return ;;
-            *) warn invalid_choice ;;
+            *) warn menu_invalid_choice ;;
         esac
     done
 }

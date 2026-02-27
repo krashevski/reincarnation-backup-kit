@@ -67,15 +67,15 @@ mkdir -p "$BR_WORKDIR" "$USERDATA_DIR" "$ARCHIVE_DIR" "$LOG_DIR"
 # --- Disk space check and log cleanup ---
 FREE_PERC=$(df --output=pcent "$BACKUP_DIR" | tail -1 | tr -dc '0-9')
 if (( FREE_PERC < 10 )); then
-    warn low_free_space "$BACKUP_DIR" "$FREE_PERC"
+    warn cronud_free_space "$BACKUP_DIR" "$FREE_PERC"
     if [[ -x "$SCRIPT_DIR/clean-backup-logs.sh" ]]; then
         "$SCRIPT_DIR/clean-backup-logs.sh"
     else
-        warn not_script_found "$SCRIPT_DIR"
+        warn cronud_not_script "$SCRIPT_DIR"
     fi
     FREE_PERC=$(df --output=pcent "$BACKUP_DIR" | tail -1 | tr -dc '0-9')
     if (( FREE_PERC < 10 )); then
-        error not_space_after
+        error cronud_not_space
         exit 1
     fi
 fi
@@ -107,22 +107,22 @@ run_backup() {
     local ARCHIVE="$ARCHIVE_DIR/${NAME}_$(date +%F-%H%M%S).tar.gz"
 
     if [ ! -d "$SRC" ]; then
-        warn dir_skip "$SRC"
+        warn cronud_dir_skip "$SRC"
         return
     fi
 
     mkdir -p "$DST"
-    info rs_backup "$SRC" "$DST"
+    info cronud_backup "$SRC" "$DST"
     rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update $(rsync_exclude) \
         "$SRC/" "$DST/"
         
-    info archiving_changed "$SRC" "$ARCHIVE"
+    info cronud_archiving_changed "$SRC" "$ARCHIVE"
     LAST_BACKUP_TIME=$(stat -c %Y "$USERDATA_DIR/$NAME" 2>/dev/null || echo 0) 
     
     # Собираем только изменённые файлы 
     mapfile -t changed_files < <(find "$SRC" -type f -newermt "@$LAST_BACKUP_TIME") 
     if [ ${#changed_files[@]} -eq 0 ]; then 
-       warn  "$SRC" 
+       warn cronud_no_files "$SRC" 
        return 0 
     fi 
     
@@ -131,7 +131,7 @@ run_backup() {
        cd "$SRC" 
        printf '%s\0' "${changed_files[@]#"$SRC"/}" | tar --null -T - -czf "$ARCHIVE" 
     ) 
-    ok backup_done "$SRC"
+    ok cronud_done "$SRC"
 }    
 
 # --- Run backup ---

@@ -59,7 +59,7 @@ require_root || return 1
 
 # --- Args ---
 if [[ $# -lt 1 ]]; then
-    echo_msg usage "$0" >&2
+    echo_msg cron_usage "$0" >&2
     exit 1
 fi
 
@@ -68,7 +68,7 @@ BACKUP_DIR="/mnt/backups/REBK"
 mkdir -p "$BACKUP_DIR"
 
 if ! [[ "$TIME" =~ ^([01]?[0-9]|2[0-3]):([0-5][0-9])$ ]]; then
-    error invalid_format
+    error cron_invalid_format
     exit 1
 fi
 HOUR="${TIME%:*}"
@@ -77,7 +77,7 @@ MINUTE="${TIME#*:}"
 # --- Script path ---
 SCRIPT_PATH="$(realpath "$(dirname "$0")/cron-backup-userdata.sh")"
 if [[ ! -x "$SCRIPT_PATH" ]]; then
-    error script_error
+    error cron_error
     exit 1
 fi
 
@@ -94,19 +94,19 @@ NEW_CRON=$(echo "$NEW_CRON" | sed '/^$/d')
 echo "$NEW_CRON" | crontab -
 
 ok cron_task "$REAL_USER"
-info current_jobs
+info cron_current_jobs
 crontab -l
 
 run_cron_test() {
    /usr/bin/ionice -c2 -n7 /usr/bin/nice -n10 "$SCRIPT_PATH" "$REAL_USER" >> "$RUN_LOG" 2>&1
 }
 
-info run_test
+info cron_test_run
 
 if run_cron_test; then
-    ok test_done "$RUN_LOG"
+    ok cron_test_done "$RUN_LOG"
 else
-    error test_failed "$RUN_LOG"
+    error cron_test_fail "$RUN_LOG"
     return 1
 fi
 

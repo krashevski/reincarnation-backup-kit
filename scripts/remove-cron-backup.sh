@@ -93,7 +93,7 @@ TARGET_USER="${SUDO_USER:-$USER}"
 if user_cron=$(crontab -l -u "$TARGET_USER" 2>/dev/null || true); then
   if echo "$user_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$user_cron" | grep -Fq "$SCRIPT_PATH"; then
     echo "-----"
-    echo_msg before
+    echo_msg rmcron_before
     echo "$user_cron"
     echo "-----"
 
@@ -102,15 +102,15 @@ if user_cron=$(crontab -l -u "$TARGET_USER" 2>/dev/null || true); then
     update_crontab_from_var "$TARGET_USER" "$new_user_cron"
 
     echo "-----"
-    echo_msg after
+    echo_msg rmcron_after
     crontab -l -u "$TARGET_USER" 2>/dev/null || echo "(empty)"
-    echo_msg removed_user "$TARGET_USER"
+    echo_msg rmcron_user "$TARGET_USER"
     found_any=1
     exit 0
   fi
 else
   # could not read user crontab (permission), warn but continue
-  printf "%s\n" echo_msg err_read "$TARGET_USER" >&2
+  printf "%s\n" echo_msg rmcron_fail "$TARGET_USER" >&2
 fi
 
 # 2) Check root crontab
@@ -137,11 +137,11 @@ if echo "$root_cron" | grep -Fq "$SCRIPT_BASENAME" || echo "$root_cron" | grep -
   else
     sudo crontab -l 2>/dev/null || echo "(empty)"
   fi
-  echo_msg removed_root
+  echo_msg rmcron_root
   found_any=1
   exit 0
 fi
 
 # nothing found
-echo_msg none
+echo_msg rmcron_none
 exit 0

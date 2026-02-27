@@ -117,7 +117,7 @@ ensure_dir() {
     local dir="$1"
     if [[ ! -d "$dir" ]]; then
         mkdir -p "$dir"
-        info dir_created "$dir"
+        info slinks_dir_created "$dir"
     fi
 }
 
@@ -128,7 +128,7 @@ ensure_symlink() {
     # already correct
 #    if [[ -L "$link" && "$(readlink -f "$link")" == "$target" ]]; then
     if [[ -L "$link" && "$(realpath -m "$link")" == "$(realpath -m "$target")" ]]; then
-        info link_ok "$link" "$target"
+        info slinks_ok "$link" "$target"
         return
     fi
 
@@ -138,39 +138,39 @@ ensure_symlink() {
 #        rm -r "$link"
         rm -rf -- "$link"
         ln -s "$target" "$link"
-        info link_replaced "$link" "$target"
+        info slinks_replaced "$link" "$target"
         return
     fi
 
     # non-empty dir → ask
     if [[ -d "$link" ]]; then
-        read -rp "$(say confirm_replace "$link") [y/N]: " ans
+        read -rp "$(say slinks_confirm_replace "$link") [y/N]: " ans
         if [[ "$ans" =~ ^[Yy]$ ]]; then
             rm -r "$link"
             ln -s "$target" "$link"
-            info link_replaced "$link" "$target"
+            info slinks_replaced "$link" "$target"
         else
-            warn link_skipped "$link"
+            warn slinks_skipped "$link"
         fi
         return
     fi
 
     # exists but not dir or symlink
     if [[ -e "$link" ]]; then
-        warn link_conflict "$link"
+        warn slinks_conflict "$link"
         return
     fi
 
     # create
     ln -s "$target" "$link"
-    info link_created "$link" "$target"
+    info slinks_created "$link" "$target"
 }
 
 # -------------------------------------------------------------
 # 14. Main logic (pure declarative)
 # -------------------------------------------------------------
 
-info start_symlinks
+info slinks_start
 
 for key in "${!TARGET_DIRS[@]}"; do
     target="$BASE_DIR/${TARGET_DIRS[$key]}"
@@ -183,7 +183,7 @@ done
 
 for pair in "${EXTRA_SYMLINKS[@]}"; do
     [[ "$pair" == *:* ]] || {
-        warn invalid_symlink_spec "$pair"
+        warn slinks_invalid_symlink "$pair"
         continue
     }
 
@@ -195,6 +195,6 @@ for pair in "${EXTRA_SYMLINKS[@]}"; do
     ensure_symlink "$link_path" "$target"
 done
 
-info done_symlinks
+info slinks_done
 
 exit 0
