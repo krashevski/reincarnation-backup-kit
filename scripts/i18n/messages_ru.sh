@@ -39,7 +39,7 @@ MSG[inhibit_failed]="Не удалось выполнить блокировку
 # select_user.sh
 MSG[user_no_home]="Нет пользователей в /home"
 MSG[user_available]="Доступные пользователи:"
-MSG[user_select]="Выберите пользователя(ей) для операции "%s" (например: 1 или 1 3):"
+MSG[user_select]="Выберите пользователя(ей) для операции "%s" (например: 1 или 1 3): "
 MSG[user_invalid_select]="Игнорируется недопустимый выбор: %s"
 MSG[user_no_selected]="Пользователи не выбраны"
 # system_detect.sh

@@ -20,28 +20,28 @@ select_user() {
     done
 
     if [ ${#users[@]} -eq 0 ]; then
-        echo "[ERROR] Нет пользователей в /home"
+        error user_no_home
         return 1
     fi
 
-    echo "Доступные пользователи:"
+    info user_available
     for i in "${!users[@]}"; do
         printf "  %d) %s\n" "$((i+1))" "${users[$i]}"
     done
 
-    printf "Выберите пользователя(ей) для операции «%s» (например: 1 или 1 3): " "$OPERATION"
+    printf "${MSG[user_select]}" "$OPERATION"
     read -r -a selections
 
     for sel in "${selections[@]}"; do
         if ! [[ "$sel" =~ ^[0-9]+$ ]] || (( sel < 1 || sel > ${#users[@]} )); then
-            echo "[WARN] Игнорируется некорректный выбор: $sel"
+            warn user_invalid_select "$sel"
             continue
         fi
         SELECTED_USERS+=("${users[$((sel-1))]}")
     done
 
     if [ ${#SELECTED_USERS[@]} -eq 0 ]; then
-        echo "[ERROR] Не выбран ни один пользователь"
+        error user_no_selected
         return 1
     fi
 }
