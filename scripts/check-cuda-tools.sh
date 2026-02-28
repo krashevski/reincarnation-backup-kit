@@ -12,7 +12,7 @@
 # be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
-# check-cuda-tools.sh — Проверка и управление CUDA Toolkit
+# check-cuda-tools.sh — проверка и управление CUDA Toolkit
 # Reincarnation Backup Kit — MIT License
 # Copyright (c) 2025 Vladislav Krashevsky
 # =============================================================

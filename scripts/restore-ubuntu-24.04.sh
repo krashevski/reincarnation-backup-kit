@@ -13,24 +13,9 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 # =============================================================
 :<<'DOC'
-=============================================================
-restore-ubuntu-24.04.sh v1.15 — System Restore (Ubuntu 24.04)
-Part of Backup Kit — minimal restore script with simple logging
-   Author: Vladislav Krashevsky with support from ChatGPT
-   License: MIT
--------------------------------------------------------------
-Description:
-   Restores system packages, APT sources, and keyrings
-   from backup archive backup-ubuntu-24.04.tar.gz
-Notes:
-   - Designed and tested for Ubuntu 24.04 LTS.
-   - Requires a backup archive created by backup-ubuntu-24.04.sh.
-   - User home data must be restored separately with
-     `backup-restore-userdata.sh`.
-Environment variables:
-   RESTORE_PACKAGES=manual|full|none (default: manual)
-   RESTORE_LOGS=true|false (default: false)
-=============================================================
+restore-ubuntu-24.04.sh — system restore (Ubuntu 24.04)
+Reincarnation Backup Kit — MIT License
+Copyright (c) 2025 Vladislav Krashevsky with support from ChatGPT
 DOC
 
 set -euo pipefail
@@ -151,7 +136,6 @@ restore_repos_and_keys() {
     sudo apt update >>"$RUN_LOG" 2>&1 || warn res_apt_fail
     ok res_apt_ok
 }
-
 
 MODE="${1:-full}"
 

@@ -22,184 +22,74 @@ DOC
 
 set -euo pipefail
 
-# -------------------------------------------------------------
-# Colors (safe for set -u)
-# -------------------------------------------------------------
-if [[ "${FORCE_COLOR:-0}" == "1" || -t 1 ]]; then
-    RED="\033[0;31m"
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[0;34m"
-    NC="\033[0m"
-else
-    RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+# --- Пути к библиотекам ---
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$BIN_DIR/lib"
+
+# --- Подключение библиотек ---
+source "$LIB_DIR/i18n.sh"
+init_app_lang
+
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/user_home.sh"
+source "$LIB_DIR/real_user.sh"
+source "$LIB_DIR/runner.sh"
+source "$LIB_DIR/privileges.sh"
+source "$LIB_DIR/context.sh"
+source "$LIB_DIR/guards-inhibit.sh"
+source "$LIB_DIR/cleanup.sh"
+source "$LIB_DIR/system_detect.sh"
+
+if ! TARGET_HOME="$(resolve_target_home)"; then
+    die "Cannot determine target home"
 fi
 
-# -------------------------------------------------------------
-# 1. Определяем директорию скрипта
-# -------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# -------------------------------------------------------------
-# 2. Объявляем ассоциативный массив MSG
-# -------------------------------------------------------------
-declare -A MSG
-
-# -------------------------------------------------------------
-# 3. Функция загрузки сообщений
-# -------------------------------------------------------------
-load_messages() {
-    local lang="$1"
-    MSG=()
-    case "$lang" in
-        ru) source "$SCRIPT_DIR/i18n/messages_ru.sh" ;;
-        en) source "$SCRIPT_DIR/i18n/messages_en.sh" ;;
-        *) echo "Unknown language: $lang" >&2; return 1 ;;
-    esac
-}
-
-# -------------------------------------------------------------
-# 4. Безопасный say
-# -------------------------------------------------------------
-say() {
-    local key="$1"; shift
-    local msg="${MSG[$key]:-$key}"
-    if [[ $# -gt 0 ]]; then
-        printf "$msg" "$@"
-    else
-        printf '%s' "$msg"
-    fi
-}
-
-# -------------------------------------------------------------
-# 4a. echo_msg безопасный (возвращает строку)
-# -------------------------------------------------------------
-echo_msg() {
-    say "$@"
-}
-
-# -------------------------------------------------------------
-# 5-8. Логирование
-# -------------------------------------------------------------
-ok() {
-    local key="$1"; shift
-    local msg
-    msg="$(say "$key" "$@")"
-    printf "%b[OK]%b %b\n" "${GREEN:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
-}
-
-info() {
-    local key="$1"; shift
-    local msg
-    msg="$(say "$key" "$@")"
-    printf "%b[INFO]%b %s\n" "${BLUE:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
-}
-
-warn() {
-    local key="$1"; shift
-    local msg
-    msg="$(say "$key" "$@")"
-    printf "%b[WARN]%b %b\n" "${YELLOW:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
-}
-
-error() {
-    local key="$1"; shift
-    local msg
-    msg="$(say "$key" "$@")"
-    printf "%b[ERROR]%b %b\n" "${RED:-}" "${NC:-}" "$msg" | tee -a "$RUN_LOG" >&2
-}
-
-# -------------------------------------------------------------
-# 10. die
-# -------------------------------------------------------------
-die() {
-    error "$@"
-    exit 1
-}
-
-# -------------------------------------------------------------
-# 11. Язык и загрузка сообщений
-# -------------------------------------------------------------
-LANG_CODE="${LANG_CODE:-ru}"
-load_messages "$LANG_CODE"
-
-# -------------------------------------------------------------
-# Проверка root
-# -------------------------------------------------------------
-require_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error run_sudo
-        return 1
-    fi
-}
-
-REAL_HOME="${HOME:-/home/$USER}"
-if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
-    REAL_HOME="/home/$SUDO_USER"
+if ! REAL_USER="$(resolve_real_user)"; then
+    die "Cannot determine real user"
 fi
 
-# -------------------------------------------------------------
-# Inhibit recursion via systemd-inhibit
-# -------------------------------------------------------------
-if [[ -t 1 ]] && command -v systemd-inhibit >/dev/null 2>&1; then
-    if [[ -z "${INHIBIT_LOCK:-}" ]]; then
-        export INHIBIT_LOCK=1
-        exec systemd-inhibit \
-            --what=handle-lid-switch:sleep:idle \
-            --why="Backup in progress" \
-            "$0" "$@"
-    fi
-fi
+require_root || return 1
+# inhibit_run "$0" "$@"
 
 # -------------------------------------------------------------
-# Paths
+# Настройки
 # -------------------------------------------------------------
-BACKUP_DIR="/mnt/backups"
+BACKUP_DIR="/mnt/backups/REBK"
 WORKDIR="$BACKUP_DIR/workdir"
 LOG_DIR="$BACKUP_DIR/logs"
 mkdir -p "$WORKDIR" "$LOG_DIR"
 BACKUP_NAME="$BACKUP_DIR/backup-ubuntu-24.04.tar.gz"
-readonly RUN_LOG="$LOG_DIR/backup-$(date +%F-%H%M%S).log"
-
-# -------------------------------------------------------------
-# Ownership check
-# -------------------------------------------------------------
-require_root || die run_sudo
+readonly RUN_LOG="$LOG_DIR/bap-ubuntu-$(date +%F-%H%M%S).log"
 
 if [ -d "$BACKUP_DIR" ]; then
-    real_user="${SUDO_USER:-$USER}"
     owner=$(stat -c %U "$BACKUP_DIR")
-    if [ "$owner" != "$real_user" ]; then
-        info change_owner "$real_user:$real_user"
-        chown -R "$real_user:$real_user" "$BACKUP_DIR"
+    if [ "$owner" != "$REAL_USER" ]; then
+        info backup_change_owner "$REAL_USER:$REAL_USER"
+        chown -R "$REAL_USER:$REAL_USER" "$BACKUP_DIR"
         chmod -R u+rwX,go+rX "$BACKUP_DIR"
     fi
 else
-    die no_dir
+    die backup_no_dir
 fi
 
-# -------------------------------------------------------------
-# Cleanup on exit
-# -------------------------------------------------------------
-cleanup() {
-    info clean_tmp
-    rm -rf "$WORKDIR"
-    ok tmp_cleaned
-}
-trap cleanup EXIT INT TERM
+# --- Очистка WORKDIR ---
+# Регистрируем $WORKDIR и устанавливаем trap
+register_cleanup "$WORKDIR"
+trap 'cleanup' EXIT INT TERM
+info install_workdir_cleaning $WORKDIR
+cleanup_workdir
+mkdir -p "$WORKDIR"
+ok install_workdir_cleaned
 
 # -------------------------------------------------------------
 # Backup packages
 # -------------------------------------------------------------
-# === Functions ===
 backup_packages() {
-    info "${MSG[PKG]}"
-    PKG_DIR="$WORKDIR/system_packages"
+    PKG_DIR="$BACKUP_DIR/system/packages"
     mkdir -p "$PKG_DIR"
 
     dpkg --get-selections > "$PKG_DIR/installed-packages.list"
-    apt-mark showmanual > "$PKG_DIR/manual-packages.list"
-    
+
     ls /etc/apt/sources.list.d/ > "$PKG_DIR/custom-repos.list" || true
     cp /etc/apt/sources.list "$PKG_DIR/sources.list"
     mkdir -p "$PKG_DIR/sources.list.d"
@@ -214,72 +104,85 @@ This module is part of Backup Kit v1.16.
 Contains package lists, repositories and GPG keyrings.
 EOF
 
-    ok pkgs_done
+    ok backup_system_pkgs
 }
 
-# -------------------------------------------------------------
-# Run step
-# -------------------------------------------------------------
-step_ok="completed successfully"
-step_fail="failed"
+backup_user_packages() {
+    PKG_DIR="$BACKUP_DIR/system/packages"
+    mkdir -p "$PKG_DIR"
 
-run_step() {
-    local name="$1"
-    local func="$2"
+    apt-mark showmanual > "$PKG_DIR/manual-packages.list"
 
-    declare -F "$func" >/dev/null || die "Function not found: $func"
+    cat > "$PKG_DIR/README_USER_PACKAGES" <<'EOF'
+=============================================================
+User packages backup (Debian 12)
+=============================================================
+This module is part of REBK
+Contains User-installed packages
+EOF
 
-    if "$func"; then
-        ok "$name - $step_ok"
-    else
-        error "$name - $step_fail (see $RUN_LOG)"
-        return 1
-    fi
+    ok backup_user_pkgs
 }
 
 # -------------------------------------------------------------
 # Create archive
 # -------------------------------------------------------------
 create_archive() {
-    require_root || return 1
+    info backup_create_archive "$BACKUP_NAME..."
 
-    info create_archive "$BACKUP_NAME..."
+    [[ -d "$WORKDIR" ]] || die "WORKDIR missing: $WORKDIR"
 
-    SIZE=$(du -sb "$WORKDIR" | awk '{print $1}')
+    SIZE=$(du -sb "$WORKDIR" 2>/dev/null | awk '{print $1}')
+    SIZE=${SIZE:-0}
 
     if [[ -f "$BACKUP_NAME" ]]; then
-        warn archive_exists
+        warn backup_archive_exists
         rm -f "${BACKUP_NAME}.old"
         mv "$BACKUP_NAME" "${BACKUP_NAME}.old"
     fi
 
-    if tar -C "$WORKDIR" -cf - . | pv -s "$SIZE" | gzip > "$BACKUP_NAME"; then
-        ok archive_done "$BACKUP_NAME"
+    if tar -C "$BACKUP_DIR" -cf - system | pv -s "$SIZE" | gzip > "$BACKUP_NAME"; then
+        ok backup_archive_done "$BACKUP_NAME"
     else
-        error archive_fail
+        error backup_archive_fail
         return 1
     fi
 }
 
-# -------------------------------------------------------------
-# Main
-# -------------------------------------------------------------
-info "======================================================"
-info "Backup Kit — $(echo_msg backup_start)"
-info "======================================================"
+MODE="${1:-full}"
 
+case "$MODE" in
+    full)
+        DO_SYSTEM=1
+        DO_USER=0
+        ;;
+    manual)
+        DO_SYSTEM=0
+        DO_USER=1
+        ;;
+    *)
+        die "Unknown mode: $MODE"
+        ;;
+esac
+
+# -------------------------------------------------------------
+# Основной процесс
+# -------------------------------------------------------------
+echo "=============================================================" | tee -a "$RUN_LOG"
+info "REBK — $(echo_msg backup_start)"
 info backup_started
 
-run_step "System packages" backup_packages || die "Backup failed"
-run_step "Archive" create_archive
+if [[ $DO_SYSTEM -eq 1 ]]; then
+    run_step "$(say step_system_packages)" backup_system_packages || die step_backup_fail
+fi
 
-info "======================================================"
-ok "Backup Kit — $(echo_msg backup_sucess)"
-info log_file "$RUN_LOG"
-info "======================================================"
+if [[ $DO_USER -eq 1 ]]; then
+    run_step "$(say step_user_packages)" backup_user_packages || die step_backup_fail
+fi
+run_step "$(say step_archive)" create_archive
 
-info backup_finished
+ok "REBK — $(echo_msg backup_sucess)"
+info backup_log_file "$RUN_LOG"
+echo "=============================================================" | tee -a "$RUN_LOG"
 
 exit 0
-
-
