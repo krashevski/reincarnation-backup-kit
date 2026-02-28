@@ -74,10 +74,10 @@ fi
 # Регистрируем $WORKDIR и устанавливаем trap
 register_cleanup "$WORKDIR"
 trap 'cleanup' EXIT INT TERM
-info install_workdir_cleaning $WORKDIR
+info msg_workdir_cleaning $WORKDIR
 cleanup_workdir
 mkdir -p "$WORKDIR"
-ok install_workdir_cleaned
+ok msg_workdir_cleaned
 
 # -------------------------------------------------------------
 # Backup packages

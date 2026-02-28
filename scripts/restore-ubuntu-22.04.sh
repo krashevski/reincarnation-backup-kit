@@ -78,10 +78,10 @@ fi
 # Регистрируем $WORKDIR и устанавливаем trap
 register_cleanup "$WORKDIR"
 trap 'cleanup' EXIT INT TERM
-info res_workdir_cleaning $WORKDIR
+info msg_workdir_cleaning $WORKDIR
 cleanup_workdir
 mkdir -p "$WORKDIR"
-ok res_workdir_cleaned $WORKDIR
+ok msg_workdir_cleaned $WORKDIR
 
 # === Функции ===
 extract_archive() {
