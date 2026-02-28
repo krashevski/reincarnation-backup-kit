@@ -2,7 +2,7 @@
 
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [2.0.0] - 2026-02-28
+## [3.0.0] - 2026-02-28
 ### Added
 - Bash library of common functions.
 - Centralized translation system (i18n) with language support:
