@@ -2,6 +2,27 @@
 
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [3.0.4] - 2026-02-28 (Stable)
+### Added
+- Bash library of common functions.
+- Centralized translation system (i18n) with language support:
+  - Russian
+  - English
+  - Japanese
+
+### Changed
+- Completely redesigned the REBK installation directory structure.
+- Changed the backup directory structure.
+- Improved man-page handling with locale awareness (`rebk_man` function).
+- Updated menu system to dynamically check for installed man pages and show prompts.
+
+### Fixed
+- Corrected `printf` usage with i18n messages (`say` function).
+- Minor bug fixes in restore and backup scripts.
+
+### Breaking Changes
+- REBK installation paths and backup directories have been changed; user scripts and documentation need to be updated.
+
 ## [3.0.0] - 2026-02-28
 ### Added
 - Bash library of common functions.
