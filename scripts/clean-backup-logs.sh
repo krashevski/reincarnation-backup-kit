@@ -36,7 +36,7 @@ source "$LIB_DIR/privileges.sh"    # require_root
 source "$LIB_DIR/context.sh"       # контекст выполнения
 
 DAYS="${1:-7}"
-LOG_DIR="/mnt/backups/logs"
+LOG_DIR="/mnt/backups/REBK/logs"
 [[ -d "$LOG_DIR" ]] || exit 0
 
 info clean_logs_removing "$DAYS"
