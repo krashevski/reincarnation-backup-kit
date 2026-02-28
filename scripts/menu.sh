@@ -223,10 +223,7 @@ restore_menu() {
         read -rp "$(echo_msg menu_sel_opt)" choice
 
         case "$choice" in
-            1)  
-               MAINT_DIR="$(dirname "$0")/maintenance"
-               bash "$MAINT_DIR/install-man.sh"
-               ;;
+            1) rebk_man rebk-users-home-restore ;;
             2) bash "$SYS_RESTORE" full ;;              # default
             3) bash "$SYS_RESTORE" manual ;;       # ручной режим
             4)
@@ -296,7 +293,7 @@ cron_menu() {
 media_menu() {
     clear
     echo "-----------------------------------------"
-    echo "$(say menu_media)"
+    echo "$(say menu_media_title)"
     echo "-----------------------------------------"
     echo "$(say menu_install_flatpak)"
     echo "$(say menu_install_nvidia)"
@@ -341,7 +338,7 @@ media_menu() {
 tools_menu() {
     clear
     echo "-----------------------------------------"
-    echo "$(say menu_tools)"
+    echo "$(say menu_tools_title)"
     echo "-----------------------------------------"
     echo "$(say menu_archive)"
     echo "$(say menu_last_archive)"
@@ -406,11 +403,12 @@ settings_menu() {
     while true; do
         clear
         echo "-----------------------------------------"
-        echo "$(say menu_settings)"
+        echo "$(say menu_settings_title)"
         echo "-----------------------------------------"
         echo "$(say menu_change_language)"
-        echo "$(say menu_backup_directories)"
+        echo "$(say menu_backup_directories)"      
         echo "$(say menu_manage_cuda)"
+        echo "$(say menu_install_man)"
         echo
         echo "$(say menu_back_main)"
         echo "-----------------------------------------"
@@ -471,6 +469,10 @@ settings_menu() {
                    read -rp "$(echo_msg menu_press_continue)"
                    done
                    ;;
+            4) 
+               MAINT_DIR="$(dirname "$0")/maintenance"
+               bash "$MAINT_DIR/install-man.sh"
+               ;;
             0) return ;;
             *) warn menu_invalid_choice ;;
         esac

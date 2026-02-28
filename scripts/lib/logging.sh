@@ -59,6 +59,26 @@ load_messages() {
 
 load_messages
 
+# -------------------------------------------------------------
+# man helper (i18n-aware + check)
+# -------------------------------------------------------------
+rebk_man() {
+    local page="$1"
+    local locale
+
+    case "${APP_LANG:-en}" in
+        ru) locale="ru_RU.UTF-8" ;;
+        ja) locale="ja_JP.UTF-8" ;;
+        *)  locale="en_US.UTF-8" ;;
+    esac
+
+    if man -w "$page" >/dev/null 2>&1; then
+        LC_MESSAGES="$locale" man "$page"
+    else
+        warn man_not_installed_hint
+    fi
+}
+
 say() {
     local key="$1"; shift
     local msg="${MSG[$key]:-$key}"
@@ -102,5 +122,4 @@ die() {
 # -------------------------------------------------------------
 # Экспорт say как readonly API
 # -------------------------------------------------------------
-readonly -f say ok info warn error die
-
+readonly -f say ok info warn error die rebk_man
