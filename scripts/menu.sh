@@ -85,9 +85,9 @@ show_logs() {
     if command -v ranger >/dev/null 2>&1; then
         ranger "$LOG_DIR"
     else
-        info install_ranger
+        info menu_install_ranger
         require_root && sudo apt update && sudo apt install -y ranger || {
-            warn failed_ranger
+            warn menu_failed_ranger
             ls -lh "$LOG_DIR"
             return
         }
@@ -384,7 +384,7 @@ logs_menu() {
 
     case "$choice" in
         "" )
-            ranger /mnt/backups/REBK/logs || warn no_logs
+            ranger /mnt/backups/REBK/logs || warn menu_no_logs
             ;;
         q|Q )
             return
