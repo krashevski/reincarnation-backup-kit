@@ -109,7 +109,7 @@ change_language() {
     echo
     echo "-----------------------------------------"
 
-    read -rp "$(echo_msg sel_opt) " choice
+    read -rp "$(echo_msg menu_sel_opt) " choice
 
     case "$choice" in
         1) APP_LANG="en" ;;
@@ -168,7 +168,7 @@ backup_menu() {
         echo "-----------------------------------------"
         echo_msg menu_backup_options
         echo "-----------------------------------------"
-        info system "$DISTRO_ID $DISTRO_VER"
+        info menu_system_info "$DISTRO_ID $DISTRO_VER"
         echo "$(say menu_backup_system_full)"
         echo "$(say menu_backup_system_manual)"
         echo
@@ -208,8 +208,7 @@ restore_menu() {
         echo "-----------------------------------------"
         echo_msg menu_restore_options
         echo "-----------------------------------------"
-        info menu_system "$DISTRO_ID $DISTRO_VER"
-        echo
+        info menu_system_info "$DISTRO_ID $DISTRO_VER"
         echo "$(say menu_recover_acconts)"     # Restore user accounts
         echo "$(say menu_restore_system_full)"      # Incremental restore of system packages
         echo "$(say menu_restore_system_manual)"    # Manual restore of system       
@@ -376,7 +375,7 @@ logs_menu() {
     echo "-----------------------------------------"
     echo "$(say menu_list_logs)"
     echo "$(say menu_in_ranger)"
-    echo "$(say mrnu_sel_file)"
+    echo "$(say menu_sel_file)"
     echo "$(say menu_exit_file)"
     echo "$(say menu_exit_ranger)"
     echo "-----------------------------------------"
@@ -385,7 +384,7 @@ logs_menu() {
 
     case "$choice" in
         "" )
-            ranger /mnt/backups/logs || warn no_logs
+            ranger /mnt/backups/REBK/logs || warn no_logs
             ;;
         q|Q )
             return
