@@ -82,7 +82,13 @@ rebk_man() {
 say() {
     local key="$1"; shift
     local msg="${MSG[$key]:-$key}"
-    [[ $# -gt 0 ]] && printf "$msg" "$@" || printf '%s' "$msg"
+
+    if [[ $# -gt 0 ]]; then
+        # безопасная подстановка аргументов
+        printf "$msg" "$@" 2>/dev/null || printf '%s' "$msg"
+    else
+        printf '%s' "$msg"
+    fi
 }
 
 echo_msg() {

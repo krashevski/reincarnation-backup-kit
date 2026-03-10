@@ -121,6 +121,14 @@ run_rsync_backup() {
 
 fresh_backup_dir() {
     local user_backup_dir="$1"
+
+    
+    # --- Защита: путь должен быть внутри USERDATA_DIR ---
+    if [[ "$user_backup_dir" != "$USERDATA_DIR/"* ]]; then
+        error "Refusing to delete '$user_backup_dir': outside USERDATA_DIR!"
+        return 1
+    fi
+
     if [ -d "$user_backup_dir" ]; then
         warn baresud_fresh_remove "$user_backup_dir"
         rm -rf "$user_backup_dir"
@@ -129,21 +137,25 @@ fresh_backup_dir() {
 }
 
 run_tar_backup() {
-    local SRC="$1"
-    local NAME="$2"
+    local SRC="$1"      # /home/$NAME
+    local NAME="$2"     # имя пользователя
     local ARCHIVE="$ARCHIVE_DIR/${NAME}_$(date +%F-%H%M%S).tar.gz"
 
-    info baresud_changed_files $SRC $ARCHIVE
-    LAST_BACKUP_TIME=$(stat -c %Y "$USERDATA_DIR/$NAME" 2>/dev/null || echo 0)
+    info baresud_changed_files "$SRC" "$ARCHIVE"
 
-    mapfile -t changed_files < <(find "$SRC" -type f -newermt "@$LAST_BACKUP_TIME")
+    # получаем список изменившихся файлов с путями относительно $SRC
+    mapfile -t changed_files < <(
+        cd "$SRC" && find . -type f -newermt "@$(stat -c %Y "$USERDATA_DIR/$NAME" 2>/dev/null || echo 0)"
+    )
+
     if [ ${#changed_files[@]} -eq 0 ]; then
         warn baresud_no_new_files "$SRC"
         return 0
     fi
 
-    printf '%s\n' "${changed_files[@]}" | tar --null -T - -czf - 2>/dev/null | \
-        pv -s $(du -sb "$SRC" | awk '{print $1}') > "$ARCHIVE"
+    # архивируем с сохранением структуры относительно имени пользователя
+    cd "$SRC"
+    printf '%s\n' "${changed_files[@]}" | tar --null -T - -czf "$ARCHIVE"
 
     ok baresud_archive_created "$ARCHIVE"
 }
@@ -158,7 +170,7 @@ run_backup() {
     
     local DST="$USERDATA_DIR/$NAME"
     if $FRESH_MODE; then
-        baresud_fresh_backup_dir "$DST"
+        fresh_backup_dir "$DST"
     fi
 
     run_rsync_backup "$SRC" "$NAME"
@@ -169,45 +181,89 @@ run_backup() {
 run_restore() {
     local NAME="$1"
     local DST="/home/$NAME"
-    local LARGE_DIRS=("Videos" "Pictures" "Music" "Видео" "Изображения" "Музыка")
 
     if ! id "$NAME" &>/dev/null; then
         warn baresud_user_not "$NAME"
         return 1
     fi
-
     [ -d "$DST" ] || mkdir -p "$DST"
-    HDD_MOUNT="/mnt/storage"
+
+    local HDD_MOUNT="/mnt/storage"
     mkdir -p "$HDD_MOUNT"
 
-    SRC="$USERDATA_DIR/$NAME"
-    if [ -d "$SRC" ]; then
-        info baresud_rsync_restore "$SRC" "$DST"
-        while IFS= read -r -d '' item; do
-            BASENAME=$(basename "$item")        
-            if [ -d "$item" ]; then
-                DST_DIR="$DST/$BASENAME"
-                [[ " ${LARGE_DIRS[*]} " == *" $BASENAME "* ]] && DST_DIR="$HDD_MOUNT/$BASENAME"
-                rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update --ignore-existing \
-                    "${RSYNC_EXCLUDES[@]}" \
-                    "$item/" "$DST_DIR/"
-            elif [ -f "$item" ]; then
-                rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update --ignore-existing \
-                    "${RSYNC_EXCLUDES[@]}" \
-                    "$item" "$DST/"
-            fi
-        done < <(find "$SRC" -mindepth 1 -maxdepth 1 -print0)
-    else
+    local SRC="$USERDATA_DIR/$NAME"
+    if [ ! -d "$SRC" ]; then
         warn baresud_no_backup "$NAME"
-    fi
-    
-    # Last archive
-    tarf=$(ls -t "$ARCHIVE_DIR/${NAME}"*.tar.gz 2>/dev/null | head -n1)
-    if [[ -n "$tarf" ]]; then
-        info baresud_extracting_archive "$tarf"
-        pv "$tarf" | tar -xzv --keep-newer-files -C "$DST"
+        return 1
     fi
 
+    # --- соответствия: имя каталога в домашней папке -> рабочий каталог на /mnt/storage
+    # Можно добавлять любые языки, например японский
+    local LARGE_DIRS_MAP=(
+        "Видео:Videos"
+        "Музыка:Music"
+        "Изображения:Pictures"
+        "Videos:Videos"
+        "Music:Music"
+        "Pictures:Pictures"
+        "ビデオ:Videos"
+        "音楽:Music"
+        "画像:Pictures"
+    )
+
+    # Создаём хэш для быстрого поиска
+    declare -A LARGE_DIRS_HASH
+    for mapping in "${LARGE_DIRS_MAP[@]}"; do
+        IFS=":" read -r USER_NAME TARGET_NAME <<< "$mapping"
+        LARGE_DIRS_HASH["$USER_NAME"]="$TARGET_NAME"
+    done
+
+    info baresud_rsync_restore "$SRC" "$DST"
+
+    # --- восстанавливаем директории
+    while IFS= read -r -d '' item; do
+        BASENAME=$(basename "$item")
+
+        # Определяем куда восстанавливать
+        if [[ -n "${LARGE_DIRS_HASH[$BASENAME]:-}" ]]; then
+            # большой каталог → HDD
+            DST_DIR="$HDD_MOUNT/${LARGE_DIRS_HASH[$BASENAME]}"
+            mkdir -p "$DST_DIR"
+        else
+            # всё остальное → домашняя папка
+            DST_DIR="$DST/$BASENAME"
+            mkdir -p "$DST_DIR"
+        fi
+
+        # rsync: каталоги и файлы
+        if [ -d "$item" ]; then
+            rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update --ignore-existing \
+                "${RSYNC_EXCLUDES[@]}" \
+                "$item/" "$DST_DIR/"
+        elif [ -f "$item" ]; then
+            rsync -aHAX --numeric-ids --info=progress2 --ignore-errors --update --ignore-existing \
+                "${RSYNC_EXCLUDES[@]}" \
+                "$item" "$DST_DIR/"
+        fi
+    done < <(find "$SRC" -mindepth 1 -maxdepth 1 -print0)
+
+    # --- восстановление последнего tar-архива без больших каталогов
+    if [[ -n "$tarf" ]]; then
+        info baresud_extracting_archive "$tarf"
+        # создаём временный список файлов для извлечения
+        TMP_LIST=$(mktemp)
+        tar -tzf "$tarf" | while read -r f; do
+            BASENAME=$(echo "$f" | cut -d/ -f1)
+            if [[ -z "${LARGE_DIRS_HASH[$BASENAME]:-}" ]]; then
+                echo "$f"
+            fi
+        done > "$TMP_LIST"
+
+       # извлекаем только "малые" файлы/каталоги
+       pv "$tarf" |  tar -xvz -C "$DST" --keep-newer-files -T "$TMP_LIST" -f "$tarf"
+       rm -f "$TMP_LIST"
+    fi
+    
     ok baresud_restore_done "$NAME"
 }
 
@@ -245,7 +301,7 @@ echo_msg baresud_user_list
 for i in "${!users[@]}"; do
     printf "  %d) %s\n" "$((i+1))" "${users[$i]}"
 done
-printf "$(echo_msg baresud_select_user "$OPERATION")"
+echo -n "$(echo_msg baresud_select_user "$OPERATION") "
 read -r -a selections
 
 status=0
