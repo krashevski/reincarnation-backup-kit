@@ -2,6 +2,13 @@
 
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [3.0.5] - 2026-03-11 (Stable)
+### Changed
+In backup-restore-userdata.sh the creation of directories for large files has been changed to be in English only, which is convenient for a multilingual system, is well connected with the creation of symbolic links by the script setup-symlinks.sh, and is applicable for the future media panel.
+
+### Breaking Changes
+- REBK installation paths and backup directories have been changed; user scripts and documentation need to be updated.
+
 ## [3.0.4] - 2026-02-28 (Stable)
 ### Added
 - Bash library of common functions.
