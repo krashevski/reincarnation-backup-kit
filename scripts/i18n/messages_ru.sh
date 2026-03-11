@@ -410,6 +410,7 @@ MSG[hdd_start]="Запуск разметки HDD и создания польз
 MSG[hdd_detect]="Поиск доступных дисков"
 MSG[hdd_skip_os_disk]="Пропускаем диск с установленной системой: %s"
 MSG[hdd_skip_archive]="Пропускаем %s — содержит раздел архивов"
+MSG[hdd_skip_media_storage]="Пропускаем диск с медиахранилищем: %s"
 MSG[hdd_no_partitioning]="Нет доступных дисков для разметки!"
 MSG[hdd_sel_partition]="Выберите диск для разметки:"
 MSG[hdd_select_disk]="Введите номер для выбора диска: "

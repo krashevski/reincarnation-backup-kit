@@ -85,6 +85,19 @@ for d in "${ALL_DISKS[@]}"; do
         warn hdd_skip_archive "$dev"
         continue
     fi
+
+    # --- Пропускаем диск с медиахранилищем ---
+    while read -r part; do
+    mp=$(lsblk -no MOUNTPOINT "/dev/$part")
+
+        if [[ -n "$mp" ]]; then
+            if [[ -d "$mp/Videos" || -d "$mp/Pictures" || -d "$mp/Music" ]]; then
+                warn hdd_skip_media_storage "$dev"
+                continue 2
+            fi
+        fi
+    done < <(lsblk -ln "$dev" -o NAME)
+
     AVAILABLE_DISKS+=("$d")
 done
 
