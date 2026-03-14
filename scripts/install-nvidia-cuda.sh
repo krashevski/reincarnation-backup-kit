@@ -75,7 +75,9 @@ fi
 ok cuda_smi_ok
 
 info cuda_modprobe
-sudo modprobe nvidia
+if ! sudo modprobe nvidia 2>/dev/null; then
+    warn sudo_nvidia_module_missing
+fi
 
 info cuda_gpu_info
 nvidia-smi

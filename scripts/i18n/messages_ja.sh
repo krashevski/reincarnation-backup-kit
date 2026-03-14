@@ -349,6 +349,7 @@ MSG[cuda_driver_check]="ステップ 3: NVIDIA ドライバーがインストー
 MSG[cuda_driver_error]="NVIDIA ドライバーが見つかりません。インストールログを確認してください。"
 MSG[cuda_smi_ok]="nvidia-smi OK"
 MSG[cuda_modprobe]="ステップ4: NVIDIAカーネルモジュールの再読み込み"
+MSG[sudo_nvidia_module_missing]="NVIDIAカーネルモジュールがロードされていません。GPUアクセラレーションは利用できません。"
 MSG[cuda_gpu_info]="ステップ5: GPUとドライバーのバージョンを確認"
 MSG[cuda_manage]="ステップ6: CUDAサポートを確認"
 MSG[cuda_install]="CUDAツールキットをインストール"

@@ -347,6 +347,7 @@ MSG[cuda_driver_check]="Шаг 3: Проверка, что драйвер уст
 MSG[cuda_driver_error]="Драйвер NVIDIA не найден. Проверьте логи установки."
 MSG[cuda_smi_ok]="nvidia-smi OK"
 MSG[cuda_modprobe]="Шаг 4: Перезагрузка модулей ядра NVIDIA"
+MSG[sudo_nvidia_module_missing]="Модуль NVIDIA не загружен. GPU ускорение недоступно."
 MSG[cuda_gpu_info]="Шаг 5: Проверка карты и версии драйвера"
 MSG[cuda_manage]="Шаг 6: Проверка поддержки CUDA"
 MSG[cuda_install]="Установка CUDA Toolkit"

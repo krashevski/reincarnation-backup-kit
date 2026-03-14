@@ -37,6 +37,28 @@ source "$LIB_DIR/context.sh"
 source "$LIB_DIR/select_user.sh"
 source "$LIB_DIR/system_detect.sh"
 
+run_safe() {
+    echo
+    info "Running: $*"
+    echo
+
+    set +e
+    "$@"
+    status=$?
+    set -e
+
+    echo
+
+    if [[ $status -ne 0 ]]; then
+        warn "Command exited with code: $status"
+    else
+        info "Completed successfully"
+    fi
+
+    read -rp "Press Enter to continue..." _dummy
+    return $status
+}
+
 if ! TARGET_HOME="$(resolve_target_home)"; then
     die "Cannot determine target home"
 fi
@@ -181,8 +203,8 @@ backup_menu() {
         echo "-----------------------------------------"
         read -rp "$(echo_msg menu_sel_opt)" choice
         case "$choice" in
-            1) bash "$SYS_BACKUP" full ;;      # Создаём full backup
-            2) bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
+            1) run_safe bash "$SYS_BACKUP" full ;;      # Создаём full backup
+            2) run_safe bash "$SYS_BACKUP" manual ;;    # Создаём manual backup
             3)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
                    # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
@@ -191,8 +213,8 @@ backup_menu() {
                    error menu_firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
-            4) bash "$USER_BACKUP" ;;
-            5) bash "$USER_BACKUP" --fresh ;;
+            4) run_safe bash "$USER_BACKUP" ;;
+            5) run_safe bash "$USER_BACKUP" --fresh ;;
             0) return ;;
             *) warn menu_invalid_choice ;;
         esac
@@ -223,8 +245,8 @@ restore_menu() {
 
         case "$choice" in
             1) rebk_man rebk-users-home-restore ;;
-            2) bash "$SYS_RESTORE" full ;;              # default
-            3) bash "$SYS_RESTORE" manual ;;       # ручной режим
+            2) run_safe bash "$SYS_RESTORE" full ;;              # default
+            3) run_safe bash "$SYS_RESTORE" manual ;;       # ручной режим
             4)
                if [[ -f "$FIREFOX_BACKUP_RESTORE" ]]; then
                    # Запускаем backup_firefox_profile из внешнего скрипта в отдельном процессе
@@ -233,7 +255,7 @@ restore_menu() {
                    error menu_firefox_script_not_found "$FIREFOX_BACKUP_RESTORE"
                fi
                ;;
-            5) bash "$USER_RESTORE" ;;             # restore userdata
+            5) run_safe bash "$USER_RESTORE" ;;             # restore userdata
             0) return ;;
             *) warn menu_invalid_choice ;;
         esac
@@ -266,7 +288,7 @@ cron_menu() {
 
                 if [[ -n "$CRON_TIME" && -n "$CRON_USER" ]]; then
                     info menu_adding_cron "$CRON_TIME" "$CRON_USER"
-                    bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
+                    run_safe bash "$CRON_BACKUP" "$CRON_TIME" "$CRON_USER"
                     echo_msg menu_cron_job_installed
                 else
                     error menu_empty_entered
@@ -279,8 +301,8 @@ cron_menu() {
             read -rp "$(echo_msg menu_press_continue)"
             ;;
       
-        2) bash "$CLEAN_LOGS" ;;
-        3) bash "$REMOVE_CRON" ;;
+        2) run_safe bash "$CLEAN_LOGS" ;;
+        3) run_safe bash "$REMOVE_CRON" ;;
         0) return ;;
         *) warn menu_invalid_choice ;;
     esac
@@ -303,9 +325,9 @@ media_menu() {
     echo "-----------------------------------------"
     read -rp "$(echo_msg menu_sel_opt)" choice
     case "$choice" in     
-        1) "$MEDIA_FLATPAK" ;;
-        2) sudo bash "$NVIDIA_CUDA" ;;
-        3) "$SHOTCUT_GPU" ;;
+        1) run_safe "$MEDIA_FLATPAK" ;;
+        2) run_safe sudo bash "$NVIDIA_CUDA" ;;
+        3) run_safe "$SHOTCUT_GPU" ;;
         4)
            set +e
            "$MEDIA_APT"
@@ -470,7 +492,7 @@ settings_menu() {
                    ;;
             4) 
                MAINT_DIR="$(dirname "$0")/maintenance"
-               bash "$MAINT_DIR/install-man.sh"
+               run_safe bash "$MAINT_DIR/install-man.sh"
                ;;
             0) return ;;
             *) warn menu_invalid_choice ;;

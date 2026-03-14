@@ -2,6 +2,14 @@
 
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [3.0.7] - 2026-03-14 (Stable)
+### Changed
+Added Safe Script Runner function run_safe for running scripts menu.sh.
+Fixed Nvidea installation error in script install-nvidia-cuda.sh.
+
+### Breaking Changes
+- REBK installation paths and backup directories have been changed; user scripts and documentation need to be updated.
+
 ## [3.0.6] - 2026-03-11 (Stable)
 ### Changed
 In the script hdd-setup-profiles.sh the disk /mnt/storage containing the media storage is excluded from formatting.
